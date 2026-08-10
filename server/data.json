@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": "user_1",
+      "name": "",
+      "email": "",
+      "district": "",
+      "contact_preference": "In-App Message",
+      "avatar_url": "",
+      "bio": "",
+      "children": []
+    }
+  ],
+  "places": [],
+  "meetups": [],
+  "rsvps": [],
+  "comments": []
+}

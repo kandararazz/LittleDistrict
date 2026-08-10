@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LittleDistrict - Dubai Community Kids</title>
+
+    <!-- Tailwind CDN with Custom Config -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006565",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#008080",
+                        "on-primary-container": "#e3fffe",
+                        "secondary": "#8d4f11",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#feac67",
+                        "on-secondary-container": "#773e00",
+                        "background": "#f4fafd",
+                        "on-background": "#161d1f",
+                        "surface": "#f4fafd",
+                        "on-surface": "#161d1f",
+                        "on-surface-variant": "#3e4949",
+                        "surface-container": "#e8eff1",
+                        "surface-container-low": "#eef5f7",
+                        "surface-container-high": "#e2e9ec",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#6e7979",
+                        "outline-variant": "#bdc9c8"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "headline-md": ["Plus Jakarta Sans", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4fafd;
+            font-family: 'Inter', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .card-shadow {
+            box-shadow: 0px 4px 15px rgba(22, 29, 31, 0.08);
+        }
+        .card-shadow-hover:hover {
+            box-shadow: 0px 8px 24px rgba(22, 29, 31, 0.14);
+            transform: translateY(-2px);
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Mobile Header -->
+    <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-5 h-16 bg-surface border-b border-outline-variant/40 lg:hidden">
+        <div class="flex items-center gap-2.5">
+            <img src="/assets/logo.png" alt="LittleDistrict Logo" class="w-8 h-8 object-contain">
+            <span class="font-display font-bold text-xl text-primary tracking-tight">LittleDistrict</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="mobileNotifBtn" class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-xl">notifications</span>
+            </button>
+            <button id="mobileAddPlaceBtn" class="p-2 hover:bg-surface-container rounded-full text-secondary font-semibold transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-xl">add_location_alt</span>
+            </button>
+            <img id="mobileUserAvatar" alt="User Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant cursor-pointer" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
+        </div>
+    </header>
+
+    <!-- Desktop Sidebar Nav -->
+    <nav class="hidden lg:flex flex-col h-screen p-6 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/60 shadow-sm w-72 z-30">
+        <div class="flex items-center gap-3 px-2 mb-8">
+            <img src="/assets/logo.png" alt="LittleDistrict Logo" class="w-10 h-10 object-contain">
+            <div>
+                <h1 class="font-display font-bold text-xl text-primary leading-tight">LittleDistrict</h1>
+                <p class="text-xs text-on-surface-variant font-medium">Dubai Community Kids</p>
+            </div>
+        </div>
+
+        <ul class="flex flex-col gap-2 flex-1">
+            <li>
+                <button data-tab="feed" class="nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-semibold text-sm transition-all shadow-sm">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+                    Community Feed
+                </button>
+            </li>
+            <li>
+                <button data-tab="places" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors">
+                    <span class="material-symbols-outlined">add_location_alt</span>
+                    Add Neighborhood Place
+                </button>
+            </li>
+            <li>
+                <button data-tab="create-meetup" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    Host a Meetup
+                </button>
+            </li>
+            <li>
+                <button data-tab="my-meetups" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    My Meetups
+                </button>
+            </li>
+            <li>
+                <button data-tab="profile" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors">
+                    <span class="material-symbols-outlined">person</span>
+                    Family Profile
+                </button>
+            </li>
+        </ul>
+
+        <div class="mt-auto pt-4 border-t border-outline-variant/40 space-y-3">
+            <button id="sidebarAddPlaceBtn" class="w-full bg-surface-container-lowest border border-secondary/40 text-secondary hover:bg-secondary/10 font-semibold text-sm py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all">
+                <span class="material-symbols-outlined text-lg">add_location</span>
+                + Add Place / Park
+            </button>
+            <button id="sidebarHostBtn" class="w-full bg-secondary-container text-on-secondary-container hover:bg-secondary-container/90 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all">
+                <span class="material-symbols-outlined text-xl">add</span>
+                Host a Playdate
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 w-full lg:ml-72 mt-16 lg:mt-0 h-full overflow-y-auto bg-background pb-28 lg:pb-12">
+
+        <!-- Top Desktop Sticky Header -->
+        <div class="hidden lg:flex justify-between items-center px-12 py-6 sticky top-0 bg-background/90 backdrop-blur-md z-20 border-b border-outline-variant/30">
+            <div>
+                <h2 id="pageTitle" class="font-display text-2xl font-bold text-on-background">Explore Community</h2>
+                <p id="pageSubtitle" class="text-xs text-on-surface-variant">Connecting neighborhood families across Dubai parks & public spots</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
+                    <input id="searchInput" class="pl-11 pr-4 py-2.5 rounded-full border border-outline/50 bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all w-72 text-sm text-on-surface placeholder:text-outline" placeholder="Search..." type="text">
+                </div>
+                <button id="desktopNotifBtn" class="p-2.5 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant relative">
+                    <span class="material-symbols-outlined text-xl">notifications</span>
+                </button>
+                <div class="flex items-center gap-3 pl-3 border-l border-outline-variant/40">
+                    <img id="desktopUserAvatar" alt="User profile" class="w-9 h-9 rounded-full object-cover border border-outline-variant" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
+                    <div class="text-xs">
+                        <p id="navParentName" class="font-bold text-on-background">Your Name</p>
+                        <p id="navDistrict" class="text-on-surface-variant">District</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic View Container -->
+        <div class="px-5 lg:px-12 py-6">
+
+            <!-- TAB 1: FEED VIEW -->
+            <section id="tab-feed" class="tab-content space-y-6">
+
+                <!-- Filtering Toolbar -->
+                <div class="bg-surface-container-low/70 border border-outline-variant/40 p-5 rounded-2xl space-y-4 shadow-sm">
+                    
+                    <!-- Neighborhood Communities Filter Header & Chips -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2.5">
+                            <h3 class="font-semibold text-xs text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base text-primary">location_city</span>
+                                Neighborhood Places
+                            </h3>
+                            <button id="addPlaceChipBtn" class="text-xs text-primary hover:text-primary-container font-bold flex items-center gap-1 bg-surface-container-lowest border border-primary/30 px-3 py-1 rounded-full transition-all hover:bg-primary/5">
+                                <span class="material-symbols-outlined text-sm">add_location_alt</span>
+                                + Add Neighborhood / Place
+                            </button>
+                        </div>
+                        <div id="districtFilterContainer" class="flex overflow-x-auto gap-2 pb-1.5 no-scrollbar">
+                            <button data-district="All" class="district-chip shrink-0 bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm border border-transparent">All</button>
+                            <!-- Dynamic place/district chips injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Interest Tags Filter -->
+                    <div>
+                        <h3 class="font-semibold text-xs text-on-surface-variant mb-2.5 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-secondary">sports_soccer</span>
+                            Interests & Hobbies
+                        </h3>
+                        <div id="interestFilterContainer" class="flex flex-wrap gap-2">
+                            <button data-interest="All" class="interest-chip bg-secondary-container text-on-secondary-container px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-sm border border-transparent">All</button>
+                            <button data-interest="Park Play" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Park Play</button>
+                            <button data-interest="Swimming" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Swimming</button>
+                            <button data-interest="Football" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Football</button>
+                            <button data-interest="Cycling" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Cycling</button>
+                            <button data-interest="Board Games" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Board Games</button>
+                            <button data-interest="Roblox" class="interest-chip bg-surface-container-lowest text-on-surface border border-outline-variant px-3.5 py-1.5 rounded-full text-xs font-medium hover:bg-surface-container transition-colors">Roblox / Gaming</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feed Header Banner -->
+                <div class="flex justify-between items-center">
+                    <h3 id="feedSubhead" class="font-display font-bold text-lg text-on-surface">Available Playdates & Meetups</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="meetupCountBadge" class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">0 meetups</span>
+                    </div>
+                </div>
+
+                <!-- Feed Cards Grid -->
+                <div id="meetupsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Cards dynamically rendered here -->
+                </div>
+
+                <!-- Empty Feed State -->
+                <div id="emptyFeedState" class="hidden text-center py-16 bg-surface-container-lowest border border-dashed border-outline-variant rounded-2xl p-8 space-y-4">
+                    <div class="w-16 h-16 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mx-auto text-3xl">
+                        <span class="material-symbols-outlined text-4xl">park</span>
+                    </div>
+                    <h4 class="font-display font-bold text-xl text-on-surface">No meetups posted yet</h4>
+                    <p class="text-sm text-on-surface-variant max-w-md mx-auto">Register your neighborhood park or host a community meetup to get started!</p>
+                    <div class="flex justify-center gap-3 pt-2">
+                        <button id="emptyAddPlaceBtn" class="bg-surface-container border border-outline text-on-surface font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-surface-container-high transition-all">
+                            + Add Neighborhood Place
+                        </button>
+                        <button id="emptyHostBtn" class="bg-primary text-white font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-primary/90 shadow-sm transition-all">
+                            + Host First Meetup
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- TAB 2: MY MEETUPS VIEW -->
+            <section id="tab-my-meetups" class="tab-content hidden space-y-6">
+                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/40 shadow-sm">
+                    <h3 class="font-display font-bold text-xl text-on-surface mb-1">My Activity & RSVPs</h3>
+                    <p class="text-xs text-on-surface-variant">Meetups you are hosting or attending</p>
+                </div>
+                <div id="myMeetupsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- My meetups rendered here -->
+                </div>
+            </section>
+
+            <!-- TAB 3: FAMILY PROFILE VIEW -->
+            <section id="tab-profile" class="tab-content hidden space-y-6">
+                <div class="max-w-2xl bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant/40 shadow-sm space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 border-b border-outline-variant/40 pb-6">
+                        <div class="relative group">
+                            <img id="profileAvatar" class="w-20 h-20 rounded-full object-cover border-4 border-primary shadow-md" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
+                            <label for="avatarFileInput" class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-primary/90 transition-all" title="Upload profile photo">
+                                <span class="material-symbols-outlined text-sm">photo_camera</span>
+                            </label>
+                            <input id="avatarFileInput" type="file" accept="image/*" class="hidden">
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <h3 id="profileParentName" class="font-display font-bold text-2xl text-on-surface">Your Name</h3>
+                                <span id="profileDistrictBadge" class="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">Neighborhood Resident</span>
+                            </div>
+                            <p class="text-xs text-on-surface-variant">Click camera icon to upload profile photo</p>
+                        </div>
+                    </div>
+
+                    <form id="profileForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Parent Name *</label>
+                            <input id="editParentName" type="text" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" placeholder="Parent name" value="">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Home District / Neighborhood *</label>
+                                <input id="editDistrict" type="text" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" placeholder="Home district" value="">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Preferred Contact Method</label>
+                                <select id="editContactPref" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium">
+                                    <option value="In-App Message">In-App Message</option>
+                                    <option value="WhatsApp">WhatsApp</option>
+                                    <option value="Email">Email</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Family Bio</label>
+                            <textarea id="editBio" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" placeholder="Family bio"></textarea>
+                        </div>
+
+                        <!-- Children Profiles Section -->
+                        <div class="pt-4 border-t border-outline-variant/40 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-display font-bold text-sm text-on-surface flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-lg">child_care</span>
+                                    Children Profiles
+                                </h4>
+                                <button type="button" id="addChildBtn" class="text-xs text-primary font-bold hover:underline">+ Add Child</button>
+                            </div>
+                            <div id="childrenContainer" class="space-y-3">
+                                <!-- Child cards dynamically rendered or empty state -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="bg-primary text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-primary/90 transition-all shadow-sm">
+                                Save Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-4 h-16 bg-surface border-t border-outline-variant/40 lg:hidden shadow-lg">
+        <button data-tab="feed" class="mobile-nav-btn flex flex-col items-center justify-center text-primary font-bold">
+            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+            <span class="text-[10px] tracking-tight">Feed</span>
+        </button>
+        <button id="mobileAddPlaceNavBtn" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">add_location_alt</span>
+            <span class="text-[10px] tracking-tight">+ Place</span>
+        </button>
+        <button id="mobileHostFab" class="flex flex-col items-center justify-center text-white bg-primary p-2.5 rounded-full -mt-5 shadow-lg active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-2xl">add</span>
+        </button>
+        <button data-tab="my-meetups" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">calendar_today</span>
+            <span class="text-[10px] tracking-tight">Meetups</span>
+        </button>
+        <button data-tab="profile" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">person</span>
+            <span class="text-[10px] tracking-tight">Profile</span>
+        </button>
+    </nav>
+
+    <!-- MODAL 1: ADD NEIGHBORHOOD PLACE ("dont add any places let make us add it") -->
+    <div id="addPlaceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-outline-variant">
+            <div class="flex justify-between items-center border-b border-outline-variant/40 pb-4">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary text-2xl">add_location_alt</span>
+                    <div>
+                        <h3 class="font-display font-bold text-lg text-on-surface">Add Neighborhood Place</h3>
+                        <p class="text-xs text-on-surface-variant">Register a public park or spot for playdates</p>
+                    </div>
+                </div>
+                <button id="closeAddPlaceModalBtn" class="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="addPlaceForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Place Name *</label>
+                    <input id="placeNameInput" type="text" placeholder="Place name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">District / Neighborhood *</label>
+                        <input id="placeDistrictInput" type="text" placeholder="District name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Public Spot Type *</label>
+                        <select id="placeTypeInput" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                            <option value="Park">Park</option>
+                            <option value="Playground">Playground</option>
+                            <option value="Clubhouse">Clubhouse</option>
+                            <option value="Recreation Center">Recreation Center</option>
+                            <option value="Pool">Pool</option>
+                            <option value="Sports Court">Sports Court</option>
+                            <option value="Beach">Beach</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Description</label>
+                    <textarea id="placeDescInput" rows="2" placeholder="Place description" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium"></textarea>
+                </div>
+
+                <div id="addPlaceError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl"></div>
+
+                <div class="flex justify-end gap-3 pt-3 border-t border-outline-variant/40">
+                    <button type="button" id="cancelAddPlaceBtn" class="px-4 py-2.5 rounded-xl border border-outline-variant text-xs font-semibold hover:bg-surface-container">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-secondary-container text-on-secondary-container font-bold text-xs hover:bg-secondary-container/90 shadow-sm transition-all">Register Place</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: HOST A MEETUP (WITH PUBLIC SPOT ZOD VALIDATION) -->
+    <div id="hostMeetupModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-outline-variant max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-outline-variant/40 pb-4">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-2xl">add_circle</span>
+                    <div>
+                        <h3 class="font-display font-bold text-lg text-on-surface">Host a Community Playdate</h3>
+                        <p class="text-xs text-on-surface-variant">Schedule a casual group activity in a public space</p>
+                    </div>
+                </div>
+                <button id="closeHostModalBtn" class="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="hostMeetupForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Meetup Title *</label>
+                    <input id="meetupTitleInput" type="text" placeholder="Title" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Neighborhood Area *</label>
+                        <input id="meetupDistrictInput" type="text" placeholder="District name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Interest Category *</label>
+                        <select id="meetupInterestInput" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                            <option value="Park Play">Park Play</option>
+                            <option value="Swimming">Swimming</option>
+                            <option value="Football">Football</option>
+                            <option value="Cycling">Cycling</option>
+                            <option value="Board Games">Board Games</option>
+                            <option value="Roblox">Roblox / Gaming</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Public Location Name * (Parks, Clubhouses, Recreation Areas)</label>
+                    <input id="meetupLocationInput" type="text" placeholder="Public location name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                    <p class="text-[11px] text-primary/80 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">info</span>
+                        Public spot restriction enforced: Must contain keywords like Park, Playground, Clubhouse, Pool, Sports Court, Beach, or Recreation.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Date & Time *</label>
+                        <input id="meetupDateTimeInput" type="text" placeholder="Date & time" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Target Age Range</label>
+                        <div class="flex items-center gap-2">
+                            <input id="meetupMinAgeInput" type="number" min="0" max="18" value="4" class="w-full px-3 py-2.5 rounded-xl border border-outline/40 bg-surface text-sm font-medium">
+                            <span class="text-xs font-semibold text-outline">to</span>
+                            <input id="meetupMaxAgeInput" type="number" min="0" max="18" value="10" class="w-full px-3 py-2.5 rounded-xl border border-outline/40 bg-surface text-sm font-medium">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Max Spots</label>
+                        <input id="meetupMaxAttendeesInput" type="number" min="2" max="30" value="8" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium">
+                    </div>
+                </div>
+
+                <div id="hostMeetupError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl space-y-1"></div>
+
+                <div class="flex justify-end gap-3 pt-3 border-t border-outline-variant/40">
+                    <button type="button" id="cancelHostModalBtn" class="px-4 py-2.5 rounded-xl border border-outline-variant text-xs font-semibold hover:bg-surface-container">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary/90 shadow-sm transition-all">Schedule Playdate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: MEETUP DETAIL & Q&A CHAT -->
+    <div id="meetupDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl border border-outline-variant max-h-[92vh] overflow-y-auto">
+            <div class="relative h-56 overflow-hidden rounded-t-2xl">
+                <img id="detailImage" class="w-full h-full object-cover" src="/assets/football.png">
+                <button id="closeDetailModalBtn" class="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur transition-all">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+                <div id="detailTag" class="absolute bottom-4 left-4 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                    Tag
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6 pt-0">
+                <div>
+                    <h3 id="detailTitle" class="font-display font-bold text-2xl text-on-surface">Title</h3>
+                    <div class="flex items-center gap-2 text-on-surface-variant text-sm mt-1">
+                        <span class="material-symbols-outlined text-base text-primary">location_on</span>
+                        <span id="detailLocation">Location</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <span class="inline-flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-xl text-xs font-semibold text-on-surface">
+                        <span class="material-symbols-outlined text-sm text-primary">child_care</span>
+                        <span id="detailAge">Age</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-xl text-xs font-semibold text-on-surface">
+                        <span class="material-symbols-outlined text-sm text-primary">schedule</span>
+                        <span id="detailTime">Time</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-xl text-xs font-semibold text-on-surface">
+                        <span class="material-symbols-outlined text-sm text-secondary">group</span>
+                        <span id="detailAttendeesCount">0 attending</span>
+                    </span>
+                </div>
+
+                <!-- Host info & RSVP Bar -->
+                <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl border border-outline-variant/40">
+                    <div class="flex items-center gap-3">
+                        <img id="detailHostAvatar" class="w-10 h-10 rounded-full object-cover border border-outline-variant" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
+                        <div>
+                            <p class="text-xs text-on-surface-variant font-medium">Organized by</p>
+                            <p id="detailHostName" class="font-bold text-sm text-on-surface">Host</p>
+                        </div>
+                    </div>
+                    <button id="detailRsvpBtn" class="bg-primary text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm">
+                        RSVP / Join
+                    </button>
+                </div>
+
+                <!-- Q&A Chat Section -->
+                <div class="space-y-3 pt-2">
+                    <h4 class="font-display font-bold text-sm text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-base">forum</span>
+                        Parent Q&A & Messages
+                    </h4>
+                    <div id="detailCommentsList" class="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                        <!-- Comments rendered here -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="commentInput" type="text" placeholder="Type question..." class="flex-1 px-4 py-2 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-xs font-medium">
+                        <button id="sendCommentBtn" class="bg-secondary-container text-on-secondary-container font-bold text-xs px-4 py-2 rounded-xl hover:bg-secondary-container/90 transition-all">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-5 right-5 bg-on-surface text-surface px-5 py-3 rounded-xl shadow-2xl z-50 font-medium text-xs flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-[-10px] pointer-events-none">
+        <span class="material-symbols-outlined text-secondary text-base">check_circle</span>
+        <span id="toastMsg">Action completed!</span>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script type="module" src="/src/app.js"></script>
+
+</body>
+</html>
