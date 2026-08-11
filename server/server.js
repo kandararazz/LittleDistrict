@@ -63,7 +63,7 @@ async function getAuthUser(req) {
         if (user) return user;
     }
 
-    return (await db.getUserById('user_1')) || { id: 'user_1', name: 'Sarah Jenkins', avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' };
+    return null;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -129,6 +129,9 @@ const server = http.createServer(async (req, res) => {
     // GET /api/auth/me
     if (pathname === '/api/auth/me' && method === 'GET') {
         const currentUser = await getAuthUser(req);
+        if (!currentUser) {
+            return sendJSON(res, 200, { success: false, data: null });
+        }
         return sendJSON(res, 200, { success: true, data: currentUser });
     }
 
@@ -163,6 +166,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/community/places' && method === 'POST') {
         try {
             const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to add neighborhood places." });
+            }
             const body = await parseBody(req);
             const validation = validatePlace(body);
 
@@ -189,6 +195,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/community/meetups' && method === 'POST') {
         try {
             const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to host a playdate." });
+            }
             const body = await parseBody(req);
             const validation = validateMeetup(body);
 
@@ -223,6 +232,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/community/rsvp' && method === 'POST') {
         try {
             const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to RSVP." });
+            }
             const body = await parseBody(req);
             const { meetup_id } = body;
             if (!meetup_id) {
@@ -250,6 +262,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/community/meetups/') && pathname.endsWith('/comments') && method === 'POST') {
         try {
             const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to post questions or comments." });
+            }
             const meetupId = pathname.split('/')[4];
             const body = await parseBody(req);
             if (!body.content || !body.content.trim()) {
@@ -271,6 +286,9 @@ const server = http.createServer(async (req, res) => {
     // GET /api/profile
     if (pathname === '/api/profile' && method === 'GET') {
         const currentUser = await getAuthUser(req);
+        if (!currentUser) {
+            return sendJSON(res, 200, { success: false, data: null });
+        }
         return sendJSON(res, 200, { success: true, data: currentUser });
     }
 
@@ -278,6 +296,9 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/profile' && method === 'PUT') {
         try {
             const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to update profile." });
+            }
             const body = await parseBody(req);
             const updated = await db.updateProfile({ ...currentUser, ...body });
             return sendJSON(res, 200, { success: true, data: updated });
@@ -289,6 +310,9 @@ const server = http.createServer(async (req, res) => {
     // GET /api/my-meetups
     if (pathname === '/api/my-meetups' && method === 'GET') {
         const currentUser = await getAuthUser(req);
+        if (!currentUser) {
+            return sendJSON(res, 200, { success: true, count: 0, data: [] });
+        }
         const myMeetups = await db.getRsvpsForUser(currentUser.id);
         return sendJSON(res, 200, { success: true, count: myMeetups.length, data: myMeetups });
     }

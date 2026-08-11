@@ -218,52 +218,6 @@ sqlite.exec(`
     );
 `);
 
-// Seed Initial Data with Full User & Community Details if empty
-const userCountStmt = sqlite.prepare(`SELECT count(*) as count FROM users`);
-if (userCountStmt.get().count === 0) {
-    const defaultPasswordHash = hashPassword('password123');
-    sqlite.exec(`
-        INSERT INTO users (id, name, email, password_hash, district, contact_preference, avatar_url, bio) VALUES
-        ('user_1', 'Sarah Jenkins', 'sarah.jenkins@example.com', '${defaultPasswordHash}', 'Dubai Marina', 'WhatsApp', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'Mother of two energetic boys (Leo, 6 & Noah, 3). Passionate about outdoor activities, beach playdates, and organizing community sports!'),
-        ('user_2', 'Aisha Al Mansoori', 'aisha.m@example.com', '${defaultPasswordHash}', 'Palm Jumeirah', 'In-App Message', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 'Mother of Maya (4) & Tariq (7). Love hosting park playdates and creative STEM activities!'),
-        ('user_3', 'David Miller', 'david.m@example.com', '${defaultPasswordHash}', 'Dubai Hills', 'Email', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'Father of Oliver (5). Outdoor enthusiast and kids soccer coach.');
-
-        INSERT INTO children (id, user_id, nickname, age, hobbies) VALUES
-        ('child_1', 'user_1', 'Leo', 6, '["Football", "Lego building", "Swimming"]'),
-        ('child_2', 'user_1', 'Noah', 3, '["Coloring", "Sandbox", "Cycling"]'),
-        ('child_3', 'user_2', 'Maya', 4, '["Painting", "Dancing", "Storytelling"]'),
-        ('child_4', 'user_2', 'Tariq', 7, '["Robotics", "Chess", "Basketball"]'),
-        ('child_5', 'user_3', 'Oliver', 5, '["Soccer", "Camping", "Dinosaur Toys"]');
-
-        INSERT INTO places (id, name, district, public_spot_type, description, added_by_user_id) VALUES
-        ('place_1', 'Marina Promenade Playground', 'Dubai Marina', 'Playground', 'Fenced playground with soft padding, slides, swings, and ocean views. Shade covers provided.', 'user_1'),
-        ('place_2', 'Al Ittihad Park Play Zone', 'Palm Jumeirah', 'Park', '3.2km padded walking track surrounded by native trees with dedicated kids play zones.', 'user_2'),
-        ('place_3', 'Dubai Hills Park Splash & Play', 'Dubai Hills', 'Recreation Center', 'Spacious green park with splash pad, skate park, outdoor gym, and family picnic lawns.', 'user_3'),
-        ('place_4', 'Arabian Ranches Community Park', 'Arabian Ranches', 'Park', 'Quiet community park with swing sets, climbing frames, shaded benches, and open grassy areas.', 'user_1'),
-        ('place_5', 'JBR Beachside Play Area', 'JBR', 'Playground', 'Beachfront playground right on the sand with soft climbing towers, toddler swings, and ice cream parlors.', 'user_1');
-
-        INSERT INTO meetups (id, title, district, public_location, place_id, date_time, interest_tag, min_age, max_age, host_id, host_name, host_avatar, max_attendees, image_url) VALUES
-        ('meetup_1', 'Weekend Football & Relay Games', 'Dubai Marina', 'Marina Promenade Playground', 'place_1', '2026-08-16T16:00', 'Sports', 4, 8, 'user_1', 'Sarah Jenkins', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 10, '/assets/football.png'),
-        ('meetup_2', 'Toddler Splash & Storytime', 'Palm Jumeirah', 'Al Ittihad Park Play Zone', 'place_2', '2026-08-17T10:00', 'Arts & Crafts', 1, 4, 'user_2', 'Aisha Al Mansoori', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 8, '/assets/football.png'),
-        ('meetup_3', 'Outdoor Lego & Creative Building', 'Dubai Hills', 'Dubai Hills Park Splash & Play', 'place_3', '2026-08-18T17:30', 'STEM', 5, 10, 'user_3', 'David Miller', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 12, '/assets/football.png');
-
-        INSERT INTO rsvps (id, meetup_id, user_id, user_name, user_avatar, status) VALUES
-        ('rsvp_1', 'meetup_1', 'user_1', 'Sarah Jenkins', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'attending'),
-        ('rsvp_2', 'meetup_1', 'user_2', 'Aisha Al Mansoori', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 'attending'),
-        ('rsvp_3', 'meetup_1', 'user_3', 'David Miller', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'attending'),
-        ('rsvp_4', 'meetup_2', 'user_2', 'Aisha Al Mansoori', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 'attending'),
-        ('rsvp_5', 'meetup_2', 'user_1', 'Sarah Jenkins', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'attending'),
-        ('rsvp_6', 'meetup_3', 'user_3', 'David Miller', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'attending'),
-        ('rsvp_7', 'meetup_3', 'user_1', 'Sarah Jenkins', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'attending');
-
-        INSERT INTO comments (id, meetup_id, user_id, user_name, user_avatar, content) VALUES
-        ('comment_1', 'meetup_1', 'user_1', 'Sarah Jenkins', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'Super excited for this! Will bring extra mini footballs and water bottles for the kids.'),
-        ('comment_2', 'meetup_1', 'user_2', 'Aisha Al Mansoori', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 'Sounds great! My 7yo Tariq is looking forward to the relay games.'),
-        ('comment_3', 'meetup_2', 'user_2', 'Aisha Al Mansoori', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150', 'Remember to bring splash towels and hats for the little ones!'),
-        ('comment_4', 'meetup_3', 'user_3', 'David Miller', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'I will bring 3 storage boxes of Lego bricks! See everyone near the grass lawn.');
-    `);
-}
-
 // --- DUAL MODE DB ADAPTER API ---
 export const db = {
     isSupabase: isSupabaseConfigured,
