@@ -30,7 +30,7 @@ function sendJSON(res, status, data) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Id'
     });
     res.end(JSON.stringify(data));
 }
@@ -49,6 +49,23 @@ function parseBody(req) {
     });
 }
 
+async function getAuthUser(req) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const user = await db.getUserByToken(token);
+        if (user) return user;
+    }
+
+    const userIdHeader = req.headers['x-user-id'];
+    if (userIdHeader) {
+        const user = await db.getUserById(userIdHeader);
+        if (user) return user;
+    }
+
+    return (await db.getUserById('user_1')) || { id: 'user_1', name: 'Sarah Jenkins', avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' };
+}
+
 const server = http.createServer(async (req, res) => {
     const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = urlObj.pathname;
@@ -59,7 +76,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(204, {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type'
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Id'
         });
         res.end();
         return;
@@ -67,7 +84,55 @@ const server = http.createServer(async (req, res) => {
 
     console.log(`[${new Date().toLocaleTimeString()}] ${method} ${pathname}`);
 
-    // --- API ROUTES ---
+    // --- AUTHENTICATION ROUTES ---
+
+    // POST /api/auth/register
+    if (pathname === '/api/auth/register' && method === 'POST') {
+        try {
+            const body = await parseBody(req);
+            const authResult = await db.registerUser({
+                name: body.name,
+                email: body.email,
+                password: body.password,
+                district: body.district
+            });
+            return sendJSON(res, 201, {
+                success: true,
+                message: "Account created successfully!",
+                token: authResult.token,
+                data: authResult.user
+            });
+        } catch (err) {
+            return sendJSON(res, 400, { success: false, error: err.message || "Registration failed" });
+        }
+    }
+
+    // POST /api/auth/login
+    if (pathname === '/api/auth/login' && method === 'POST') {
+        try {
+            const body = await parseBody(req);
+            const authResult = await db.loginUser({
+                email: body.email,
+                password: body.password
+            });
+            return sendJSON(res, 200, {
+                success: true,
+                message: "Login successful!",
+                token: authResult.token,
+                data: authResult.user
+            });
+        } catch (err) {
+            return sendJSON(res, 401, { success: false, error: err.message || "Login failed" });
+        }
+    }
+
+    // GET /api/auth/me
+    if (pathname === '/api/auth/me' && method === 'GET') {
+        const currentUser = await getAuthUser(req);
+        return sendJSON(res, 200, { success: true, data: currentUser });
+    }
+
+    // --- COMMUNITY API ROUTES ---
 
     // GET /api/community/feed
     if (pathname === '/api/community/feed' && method === 'GET') {
@@ -77,7 +142,7 @@ const server = http.createServer(async (req, res) => {
         const maxAge = urlObj.searchParams.get('maxAge');
         const search = urlObj.searchParams.get('search');
 
-        const feed = db.getMeetups({
+        const feed = await db.getMeetups({
             district: district || undefined,
             interest: interest || undefined,
             minAge: minAge ? parseInt(minAge, 10) : undefined,
@@ -90,13 +155,14 @@ const server = http.createServer(async (req, res) => {
 
     // GET /api/community/places
     if (pathname === '/api/community/places' && method === 'GET') {
-        const places = db.getPlaces();
+        const places = await db.getPlaces();
         return sendJSON(res, 200, { success: true, count: places.length, data: places });
     }
 
-    // POST /api/community/places - Add dynamic place ("let make us add it")
+    // POST /api/community/places - Add dynamic place
     if (pathname === '/api/community/places' && method === 'POST') {
         try {
+            const currentUser = await getAuthUser(req);
             const body = await parseBody(req);
             const validation = validatePlace(body);
 
@@ -108,7 +174,7 @@ const server = http.createServer(async (req, res) => {
                 });
             }
 
-            const newPlace = db.addPlace(validation.data);
+            const newPlace = await db.addPlace(validation.data, currentUser);
             return sendJSON(res, 201, {
                 success: true,
                 message: `Successfully added ${newPlace.name} in ${newPlace.district}!`,
@@ -122,6 +188,7 @@ const server = http.createServer(async (req, res) => {
     // POST /api/community/meetups - Zod validated meetup creation with public spot enforcement
     if (pathname === '/api/community/meetups' && method === 'POST') {
         try {
+            const currentUser = await getAuthUser(req);
             const body = await parseBody(req);
             const validation = validateMeetup(body);
 
@@ -133,7 +200,6 @@ const server = http.createServer(async (req, res) => {
                 });
             }
 
-            const currentUser = db.getUserById('user_1');
             const meetupData = {
                 ...validation.data,
                 host_id: currentUser.id,
@@ -142,7 +208,7 @@ const server = http.createServer(async (req, res) => {
                 image_url: body.image_url || '/assets/football.png'
             };
 
-            const createdMeetup = db.addMeetup(meetupData);
+            const createdMeetup = await db.addMeetup(meetupData, currentUser);
             return sendJSON(res, 201, {
                 success: true,
                 message: "Community meetup scheduled successfully!",
@@ -156,14 +222,14 @@ const server = http.createServer(async (req, res) => {
     // POST /api/community/rsvp
     if (pathname === '/api/community/rsvp' && method === 'POST') {
         try {
+            const currentUser = await getAuthUser(req);
             const body = await parseBody(req);
             const { meetup_id } = body;
             if (!meetup_id) {
                 return sendJSON(res, 400, { success: false, error: "meetup_id is required" });
             }
 
-            const currentUser = db.getUserById('user_1');
-            const result = db.toggleRsvp(meetup_id, currentUser.id, currentUser.name, currentUser.avatar_url);
+            const result = await db.toggleRsvp(meetup_id, currentUser.id, currentUser.name, currentUser.avatar_url);
 
             if (!result) {
                 return sendJSON(res, 404, { success: false, error: "Meetup not found" });
@@ -183,14 +249,14 @@ const server = http.createServer(async (req, res) => {
     // POST /api/community/meetups/:id/comments
     if (pathname.startsWith('/api/community/meetups/') && pathname.endsWith('/comments') && method === 'POST') {
         try {
+            const currentUser = await getAuthUser(req);
             const meetupId = pathname.split('/')[4];
             const body = await parseBody(req);
             if (!body.content || !body.content.trim()) {
                 return sendJSON(res, 400, { success: false, error: "Comment content is required" });
             }
 
-            const currentUser = db.getUserById('user_1');
-            const comment = db.addComment(meetupId, currentUser.id, currentUser.name, currentUser.avatar_url, body.content.trim());
+            const comment = await db.addComment(meetupId, currentUser.id, currentUser.name, currentUser.avatar_url, body.content.trim());
 
             if (!comment) {
                 return sendJSON(res, 404, { success: false, error: "Meetup not found" });
@@ -204,16 +270,16 @@ const server = http.createServer(async (req, res) => {
 
     // GET /api/profile
     if (pathname === '/api/profile' && method === 'GET') {
-        const currentUser = db.getUserById('user_1');
+        const currentUser = await getAuthUser(req);
         return sendJSON(res, 200, { success: true, data: currentUser });
     }
 
     // PUT /api/profile
     if (pathname === '/api/profile' && method === 'PUT') {
         try {
+            const currentUser = await getAuthUser(req);
             const body = await parseBody(req);
-            const currentUser = db.getUserById('user_1');
-            const updated = db.updateProfile({ ...currentUser, ...body });
+            const updated = await db.updateProfile({ ...currentUser, ...body });
             return sendJSON(res, 200, { success: true, data: updated });
         } catch (err) {
             return sendJSON(res, 400, { success: false, error: "Invalid JSON body" });
@@ -222,9 +288,13 @@ const server = http.createServer(async (req, res) => {
 
     // GET /api/my-meetups
     if (pathname === '/api/my-meetups' && method === 'GET') {
-        const currentUser = db.getUserById('user_1');
-        const myMeetups = db.getRsvpsForUser(currentUser.id);
+        const currentUser = await getAuthUser(req);
+        const myMeetups = await db.getRsvpsForUser(currentUser.id);
         return sendJSON(res, 200, { success: true, count: myMeetups.length, data: myMeetups });
+    }
+
+    if (pathname.startsWith('/api/')) {
+        return sendJSON(res, 404, { success: false, error: 'API endpoint not found' });
     }
 
     // --- STATIC FILE SERVING ---
@@ -265,6 +335,6 @@ server.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`  Dubai Community Kids (LittleDistrict) Server`);
     console.log(`  Running at: http://localhost:${PORT}`);
-    console.log(`  Design system: Arabian Sea Teal & Sun Orange`);
+    console.log(`  Database Mode: ${db.isSupabase ? 'Supabase Cloud' : 'Local SQLite'}`);
     console.log(`====================================================`);
 });

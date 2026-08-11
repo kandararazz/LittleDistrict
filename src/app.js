@@ -2,7 +2,8 @@
 
 const API_BASE = '/api';
 
-// Global state
+// Global Auth & App State
+let authToken = localStorage.getItem('ld_auth_token') || '';
 let currentTab = 'feed';
 let activeDistrict = 'All';
 let activeInterest = 'All';
@@ -13,6 +14,20 @@ let myMeetups = [];
 let profile = null;
 let currentDetailMeetup = null;
 let favorites = new Set();
+
+// Helper for API calls with Authentication Header
+function getAuthHeaders(extraHeaders = {}) {
+    const headers = { 'Content-Type': 'application/json', ...extraHeaders };
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    return headers;
+}
+
+async function apiFetch(url, options = {}) {
+    options.headers = getAuthHeaders(options.headers || {});
+    return fetch(url, options);
+}
 
 // Toast helper
 function showToast(message) {
@@ -26,10 +41,37 @@ function showToast(message) {
     }, 3000);
 }
 
+// Update Auth UI in Headers
+function updateAuthUI() {
+    const navParentName = document.getElementById('navParentName');
+    const navDistrict = document.getElementById('navDistrict');
+    const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const desktopAvatar = document.getElementById('desktopUserAvatar');
+    const mobileAvatar = document.getElementById('mobileUserAvatar');
+
+    if (profile && profile.id) {
+        if (navParentName) navParentName.textContent = profile.name || 'Parent User';
+        if (navDistrict) navDistrict.textContent = profile.district || 'Dubai Marina';
+        if (openAuthModalBtn) openAuthModalBtn.classList.add('hidden');
+        if (signOutBtn) signOutBtn.classList.remove('hidden');
+
+        if (profile.avatar_url) {
+            if (desktopAvatar) desktopAvatar.src = profile.avatar_url;
+            if (mobileAvatar) mobileAvatar.src = profile.avatar_url;
+        }
+    } else {
+        if (navParentName) navParentName.textContent = 'Sign In';
+        if (navDistrict) navDistrict.textContent = 'Connect across devices';
+        if (openAuthModalBtn) openAuthModalBtn.classList.remove('hidden');
+        if (signOutBtn) signOutBtn.classList.add('hidden');
+    }
+}
+
 // API Calls
 async function fetchPlaces() {
     try {
-        const res = await fetch(`${API_BASE}/community/places`);
+        const res = await apiFetch(`${API_BASE}/community/places`);
         const json = await res.json();
         if (json.success) {
             places = json.data;
@@ -47,7 +89,7 @@ async function fetchFeed() {
         if (activeInterest !== 'All') params.append('interest', activeInterest);
         if (searchQuery.trim()) params.append('search', searchQuery.trim());
 
-        const res = await fetch(`${API_BASE}/community/feed?${params.toString()}`);
+        const res = await apiFetch(`${API_BASE}/community/feed?${params.toString()}`);
         const json = await res.json();
         if (json.success) {
             meetups = json.data;
@@ -60,7 +102,7 @@ async function fetchFeed() {
 
 async function fetchMyMeetups() {
     try {
-        const res = await fetch(`${API_BASE}/my-meetups`);
+        const res = await apiFetch(`${API_BASE}/my-meetups`);
         const json = await res.json();
         if (json.success) {
             myMeetups = json.data;
@@ -73,10 +115,11 @@ async function fetchMyMeetups() {
 
 async function fetchProfile() {
     try {
-        const res = await fetch(`${API_BASE}/profile`);
+        const res = await apiFetch(`${API_BASE}/auth/me`);
         const json = await res.json();
-        if (json.success) {
+        if (json.success && json.data) {
             profile = json.data;
+            updateAuthUI();
             renderProfile();
         }
     } catch (err) {
@@ -89,7 +132,6 @@ function renderDistrictChips() {
     const container = document.getElementById('districtFilterContainer');
     if (!container) return;
 
-    // Collect unique districts from added places or defaults
     const customDistricts = Array.from(new Set(places.map(p => p.district)));
     const defaultDistricts = ['Dubai Hills', 'Arabian Ranches', 'JBR', 'Mirdif', 'Silicon Oasis', 'Downtown Dubai', 'Palm Jumeirah'];
     const allDistricts = Array.from(new Set([...defaultDistricts, ...customDistricts]));
@@ -113,7 +155,6 @@ function renderDistrictChips() {
 
     container.innerHTML = html;
 
-    // Attach click events
     container.querySelectorAll('.district-chip').forEach(btn => {
         btn.addEventListener('click', () => {
             activeDistrict = btn.getAttribute('data-district');
@@ -148,255 +189,364 @@ function renderMeetupsGrid() {
         return `
             <div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-shadow card-shadow-hover relative flex flex-col cursor-pointer border border-outline-variant/30" data-id="${m.id}">
                 <div class="h-48 relative overflow-hidden">
-                    <img src="${m.image_url || '/assets/football.png'}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    <button class="fav-btn absolute top-3 right-3 bg-surface-container-lowest/80 backdrop-blur p-2 rounded-full text-on-surface-variant hover:text-red-500 shadow-sm z-10 transition-colors" data-id="${m.id}">
-                        <span class="material-symbols-outlined text-lg ${isFav ? 'text-red-500 fill-current' : ''}">favorite</span>
+                    <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="${m.image_url || '/assets/football.png'}" alt="${m.title}">
+                    <button class="fav-btn absolute top-3 right-3 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur transition-all" data-fav-id="${m.id}">
+                        <span class="material-symbols-outlined text-lg ${isFav ? 'text-secondary' : 'text-white'}" style="${isFav ? "font-variation-settings: 'FILL' 1;" : ''}">favorite</span>
                     </button>
-                    <div class="absolute bottom-3 left-3 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg text-xs font-bold shadow-sm">
+                    <div class="absolute bottom-3 left-3 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                         ${m.interest_tag}
                     </div>
                 </div>
-                <div class="p-5 flex flex-col flex-1 space-y-3">
-                    <div>
-                        <h4 class="font-display font-bold text-lg text-on-surface leading-snug hover:text-primary transition-colors">${m.title}</h4>
-                        <div class="flex items-center gap-1 text-on-surface-variant text-xs mt-1">
-                            <span class="material-symbols-outlined text-base text-primary">location_on</span>
-                            <span class="truncate font-medium">${m.public_location}</span>
+
+                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span>${m.district} • ${m.public_location}</span>
                         </div>
+                        <h3 class="font-display font-bold text-lg text-on-surface line-clamp-1">${m.title}</h3>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap text-xs">
-                        <span class="inline-flex items-center gap-1 bg-surface-container-high px-2.5 py-1 rounded-lg text-on-surface font-semibold">
-                            <span class="material-symbols-outlined text-sm text-primary">child_care</span> ${m.min_age}-${m.max_age} yrs
-                        </span>
-                        <span class="inline-flex items-center gap-1 bg-surface-container-high px-2.5 py-1 rounded-lg text-on-surface font-semibold">
-                            <span class="material-symbols-outlined text-sm text-primary">schedule</span> ${m.date_time}
-                        </span>
-                    </div>
-                    <div class="mt-auto flex items-center justify-between border-t border-outline-variant/30 pt-3.5">
-                        <div class="flex items-center gap-2">
-                            <img src="${m.host_avatar || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23eef5f7\'/><circle cx=\'50\' cy=\'38\' r=\'20\' fill=\'%23006565\'/><path d=\'M20 90 c0-25 15-35 30-35 s30 10 30 35 Z\' fill=\'%23006565\'/></svg>'}" class="w-6 h-6 rounded-full object-cover" alt="Host">
-                            <span class="text-xs font-semibold text-on-surface-variant">${m.host_name.split(' ')[0]} (Host)</span>
+
+                    <div class="space-y-3 pt-2 border-t border-outline-variant/30 text-xs">
+                        <div class="flex items-center justify-between text-on-surface-variant font-medium">
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm text-primary">child_care</span>
+                                Ages ${m.min_age}-${m.max_age} yrs
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm text-primary">schedule</span>
+                                ${new Date(m.date_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
                         </div>
-                        <span class="text-xs font-bold ${isFull ? 'text-secondary' : 'text-primary'} bg-primary/10 px-2.5 py-1 rounded-full">
-                            ${isAttending ? '✓ Attending' : isFull ? 'Full' : `${m.attendees_count}/${m.max_attendees} attending`}
-                        </span>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center gap-2">
+                                <img class="w-7 h-7 rounded-full object-cover border border-outline-variant" src="${m.host_avatar || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23eef5f7\'/><circle cx=\'50\' cy=\'38\' r=\'20\' fill=\'%23006565\'/><path d=\'M20 90 c0-25 15-35 30-35 s30 10 30 35 Z\' fill=\'%23006565\'/></svg>'}" alt="${m.host_name}">
+                                <span class="text-xs font-medium text-on-surface line-clamp-1">Host: ${m.host_name}</span>
+                            </div>
+
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isAttending ? 'bg-primary-container text-on-primary-container' : isFull ? 'bg-surface-container-high text-on-surface-variant' : 'bg-surface-container-high text-on-surface'}">
+                                ${isAttending ? '✓ Joined' : isFull ? 'Full' : `${m.attendees_count}/${m.max_attendees} Joined`}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
 
-    // Attach card click handlers
+    // Attach click events
     grid.querySelectorAll('[data-id]').forEach(card => {
         card.addEventListener('click', (e) => {
-            if (e.target.closest('.fav-btn')) {
-                e.stopPropagation();
-                const meetupId = card.getAttribute('data-id');
-                if (favorites.has(meetupId)) {
-                    favorites.delete(meetupId);
-                    showToast("Removed from favorites");
-                } else {
-                    favorites.add(meetupId);
-                    showToast("Added to saved favorites!");
-                }
-                renderMeetupsGrid();
-                return;
+            if (e.target.closest('.fav-btn')) return;
+            const id = card.getAttribute('data-id');
+            const m = meetups.find(item => item.id === id);
+            if (m) openDetailModal(m);
+        });
+    });
+
+    grid.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-fav-id');
+            if (favorites.has(id)) {
+                favorites.delete(id);
+                showToast("Removed from favorites.");
+            } else {
+                favorites.add(id);
+                showToast("Added to saved meetups!");
             }
-            const meetupId = card.getAttribute('data-id');
-            const meetup = meetups.find(m => m.id === meetupId);
-            if (meetup) openDetailModal(meetup);
+            renderMeetupsGrid();
         });
     });
 }
 
 function renderMyMeetupsGrid() {
     const grid = document.getElementById('myMeetupsGrid');
+    const emptyState = document.getElementById('emptyMyMeetupsState');
     if (!grid) return;
 
     if (myMeetups.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full text-center py-12 bg-surface-container-lowest border border-dashed border-outline-variant rounded-2xl p-8">
-                <p class="text-sm text-on-surface-variant font-medium">You haven't joined or hosted any meetups yet.</p>
-            </div>
-        `;
+        grid.classList.add('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
         return;
     }
 
+    grid.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+
     grid.innerHTML = myMeetups.map(m => `
-        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-shadow p-5 border border-outline-variant/40 space-y-3">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="text-xs font-bold text-secondary bg-secondary/10 px-2.5 py-1 rounded-full">${m.interest_tag}</span>
-                    <h4 class="font-display font-bold text-lg text-on-surface mt-2">${m.title}</h4>
+        <div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-shadow p-5 border border-outline-variant/30 flex justify-between items-center cursor-pointer" data-id="${m.id}">
+            <div class="flex items-center gap-4">
+                <img class="w-16 h-16 rounded-xl object-cover" src="${m.image_url || '/assets/football.png'}">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold text-secondary uppercase tracking-wider">${m.interest_tag}</span>
+                    <h4 class="font-display font-bold text-base text-on-surface">${m.title}</h4>
+                    <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+                        ${m.public_location} (${m.district})
+                    </p>
                 </div>
-                <span class="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">✓ Joined</span>
             </div>
-            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm text-primary">location_on</span> ${m.public_location} (${m.district})
-            </p>
-            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm text-primary">schedule</span> ${m.date_time}
-            </p>
+            <button class="bg-surface-container hover:bg-surface-container-high text-on-surface px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                View Details
+            </button>
         </div>
     `).join('');
+
+    grid.querySelectorAll('[data-id]').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-id');
+            const m = myMeetups.find(item => item.id === id);
+            if (m) openDetailModal(m);
+        });
+    });
 }
 
 function renderProfile() {
     if (!profile) return;
-    document.getElementById('navParentName').textContent = profile.name || 'Your Name';
-    document.getElementById('navDistrict').textContent = profile.district || 'District';
-    document.getElementById('profileParentName').textContent = profile.name || 'Your Name';
-    document.getElementById('profileDistrictBadge').textContent = profile.district ? `${profile.district} Resident` : 'Neighborhood Resident';
-    document.getElementById('editParentName').value = profile.name || '';
-    document.getElementById('editDistrict').value = profile.district || '';
-    document.getElementById('editContactPref').value = profile.contact_preference || 'In-App Message';
-    document.getElementById('editBio').value = profile.bio || '';
-
+    document.getElementById('profileParentName').textContent = profile.name || 'Parent User';
+    document.getElementById('profileDistrict').textContent = profile.district || 'Dubai Marina';
+    document.getElementById('profileBio').textContent = profile.bio || 'Active community parent';
+    document.getElementById('profileContactPref').textContent = profile.contact_preference || 'In-App Message';
+    
     if (profile.avatar_url) {
         document.getElementById('profileAvatar').src = profile.avatar_url;
         document.getElementById('desktopUserAvatar').src = profile.avatar_url;
         document.getElementById('mobileUserAvatar').src = profile.avatar_url;
     }
 
+    document.getElementById('editParentName').value = profile.name || '';
+    document.getElementById('editDistrict').value = profile.district || 'Dubai Marina';
+    document.getElementById('editContactPref').value = profile.contact_preference || 'In-App Message';
+    document.getElementById('editBio').value = profile.bio || '';
+
     renderChildrenList();
 }
 
 function renderChildrenList() {
-    const container = document.getElementById('childrenContainer');
-    if (!container) return;
-    const children = (profile && profile.children) || [];
+    const listContainer = document.getElementById('childrenList');
+    if (!listContainer || !profile) return;
 
+    const children = profile.children || [];
     if (children.length === 0) {
-        container.innerHTML = `<p class="text-xs text-on-surface-variant italic">No children added yet. Click '+ Add Child' to add your kids' profiles!</p>`;
+        listContainer.innerHTML = `<p class="text-xs text-on-surface-variant italic">No children registered yet.</p>`;
         return;
     }
 
-    container.innerHTML = children.map((c, i) => `
-        <div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/40 flex justify-between items-center text-xs">
-            <div>
-                <span class="font-bold text-sm text-on-surface">${c.nickname}</span>
-                <span class="text-on-surface-variant font-medium ml-2">Age ${c.age}</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="flex gap-1.5">
-                    ${(c.hobbies || []).map(h => `<span class="bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant text-[11px] font-medium">${h}</span>`).join('')}
+    listContainer.innerHTML = children.map(c => `
+        <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/40 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/10 text-primary font-display font-bold flex items-center justify-center text-sm">
+                    ${c.nickname ? c.nickname.charAt(0).toUpperCase() : 'K'}
                 </div>
-                <button type="button" data-remove-child="${i}" class="text-red-500 hover:text-red-700 p-1">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                </button>
+                <div>
+                    <h5 class="font-bold text-sm text-on-surface">${c.nickname} <span class="text-xs font-normal text-on-surface-variant">(${c.age} yrs)</span></h5>
+                    <p class="text-xs text-on-surface-variant flex flex-wrap gap-1 mt-0.5">
+                        ${(c.hobbies || []).map(h => `<span class="bg-surface-container px-2 py-0.5 rounded-md text-[10px] font-semibold text-primary">${h}</span>`).join('')}
+                    </p>
+                </div>
             </div>
         </div>
     `).join('');
-
-    container.querySelectorAll('[data-remove-child]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const idx = parseInt(btn.getAttribute('data-remove-child'), 10);
-            if (profile && profile.children) {
-                profile.children.splice(idx, 1);
-                renderChildrenList();
-            }
-        });
-    });
 }
 
-// Modal logic
 function openDetailModal(meetup) {
     currentDetailMeetup = meetup;
-    document.getElementById('detailTitle').textContent = meetup.title;
-    document.getElementById('detailLocation').textContent = meetup.public_location;
-    document.getElementById('detailTag').textContent = meetup.interest_tag;
-    document.getElementById('detailAge').textContent = `${meetup.min_age}-${meetup.max_age} years`;
-    document.getElementById('detailTime').textContent = meetup.date_time;
-    document.getElementById('detailAttendeesCount').textContent = `${meetup.attendees_count}/${meetup.max_attendees} attending`;
-    document.getElementById('detailHostName').textContent = `${meetup.host_name} (Host)`;
-    document.getElementById('detailImage').src = meetup.image_url || '/assets/football.png';
+    const modal = document.getElementById('meetupDetailModal');
+    if (!modal) return;
 
-    const rsvpBtn = document.getElementById('detailRsvpBtn');
+    document.getElementById('detailTitle').textContent = meetup.title;
+    document.getElementById('detailLocation').textContent = `${meetup.public_location} (${meetup.district})`;
+    document.getElementById('detailTag').textContent = meetup.interest_tag;
+    document.getElementById('detailImage').src = meetup.image_url || '/assets/football.png';
+    document.getElementById('detailAge').textContent = `Ages ${meetup.min_age}-${meetup.max_age}`;
+    document.getElementById('detailTime').textContent = new Date(meetup.date_time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    document.getElementById('detailAttendeesCount').textContent = `${meetup.attendees_count || 0} attending`;
+    document.getElementById('detailHostName').textContent = meetup.host_name || 'Parent';
+    if (meetup.host_avatar) {
+        document.getElementById('detailHostAvatar').src = meetup.host_avatar;
+    }
+
     const isAttending = profile && meetup.attendees && meetup.attendees.includes(profile.id);
-    if (isAttending) {
-        rsvpBtn.textContent = '✓ Cancel RSVP';
-        rsvpBtn.className = 'bg-surface-container text-on-surface border border-outline font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all';
-    } else {
-        rsvpBtn.textContent = 'RSVP / Join Playdate';
-        rsvpBtn.className = 'bg-primary text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm';
+    const rsvpBtn = document.getElementById('detailRsvpBtn');
+    if (rsvpBtn) {
+        rsvpBtn.textContent = isAttending ? '✓ Cancel RSVP' : 'RSVP / Join';
+        rsvpBtn.className = isAttending 
+            ? 'bg-outline-variant text-on-surface font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-outline-variant/80 transition-all shadow-sm'
+            : 'bg-primary text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm';
     }
 
     renderComments(meetup.comments || []);
-
-    document.getElementById('meetupDetailModal').classList.remove('hidden');
+    modal.classList.remove('hidden');
 }
 
 function renderComments(comments) {
     const list = document.getElementById('detailCommentsList');
     if (!list) return;
-    if (comments.length === 0) {
-        list.innerHTML = `<p class="text-xs text-on-surface-variant italic">No questions yet. Be the first to ask!</p>`;
+
+    if (!comments || comments.length === 0) {
+        list.innerHTML = `<p class="text-xs text-on-surface-variant italic py-2">No questions yet. Be the first parent to ask!</p>`;
         return;
     }
+
     list.innerHTML = comments.map(c => `
-        <div class="p-3 bg-surface-container-low rounded-xl text-xs space-y-1">
-            <div class="flex items-center justify-between">
-                <span class="font-bold text-on-surface">${c.user_name}</span>
-                <span class="text-[10px] text-on-surface-variant">${new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <div class="bg-surface p-3 rounded-xl border border-outline-variant/30 flex gap-3">
+            <img class="w-7 h-7 rounded-full object-cover border border-outline-variant" src="${c.user_avatar || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23eef5f7\'/><circle cx=\'50\' cy=\'38\' r=\'20\' fill=\'%23006565\'/><path d=\'M20 90 c0-25 15-35 30-35 s30 10 30 35 Z\' fill=\'%23006565\'/></svg>'}">
+            <div class="flex-1 space-y-0.5">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-xs text-on-surface">${c.user_name}</span>
+                    <span class="text-[10px] text-outline">${new Date(c.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <p class="text-xs text-on-surface-variant">${c.content}</p>
             </div>
-            <p class="text-on-surface-variant">${c.content}</p>
         </div>
     `).join('');
 }
 
-// Tab Switching
-function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-tab').forEach(el => {
-        if (el.getAttribute('data-tab') === tab) {
-            el.className = 'nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-semibold text-sm transition-all shadow-sm';
-        } else {
-            el.className = 'nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors';
-        }
-    });
-
-    const pageTitle = document.getElementById('pageTitle');
-    const target = document.getElementById(`tab-${tab}`);
-    if (target) target.classList.remove('hidden');
-
-    if (tab === 'feed') {
-        if (pageTitle) pageTitle.textContent = 'Explore Community';
-        fetchFeed();
-    } else if (tab === 'my-meetups') {
-        if (pageTitle) pageTitle.textContent = 'My Meetups & Activity';
-        fetchMyMeetups();
-    } else if (tab === 'profile') {
-        if (pageTitle) pageTitle.textContent = 'Family Profile';
-        fetchProfile();
-    } else if (tab === 'places') {
-        document.getElementById('addPlaceModal').classList.remove('hidden');
-    } else if (tab === 'create-meetup') {
-        document.getElementById('hostMeetupModal').classList.remove('hidden');
-    }
-}
-
-// Event Listeners Initialization
+// App Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // Fetch Initial Data
     fetchPlaces();
     fetchFeed();
     fetchProfile();
 
-    // Nav Tab Buttons
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+    // Tab Navigation
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-tab');
+            currentTab = targetTab;
+
+            document.querySelectorAll('.nav-tab').forEach(b => {
+                const isTarget = b.getAttribute('data-tab') === targetTab;
+                if (isTarget) {
+                    b.className = 'nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-semibold text-sm transition-all shadow-sm';
+                } else {
+                    b.className = 'nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors';
+                }
+            });
+
+            document.querySelectorAll('.tab-content').forEach(sec => {
+                sec.classList.add('hidden');
+            });
+            const activeSec = document.getElementById(`tab-${targetTab}`);
+            if (activeSec) activeSec.classList.remove('hidden');
+
+            if (targetTab === 'feed') fetchFeed();
+            if (targetTab === 'my-meetups') fetchMyMeetups();
+            if (targetTab === 'profile') fetchProfile();
+        });
     });
 
-    // Sidebar & Header Buttons
-    document.getElementById('sidebarAddPlaceBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.remove('hidden'));
-    document.getElementById('mobileAddPlaceBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.remove('hidden'));
-    document.getElementById('mobileAddPlaceNavBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.remove('hidden'));
-    document.getElementById('addPlaceChipBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.remove('hidden'));
-    document.getElementById('emptyAddPlaceBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.remove('hidden'));
+    // Auth Modal Handlers
+    const authModal = document.getElementById('authModal');
+    const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
 
-    document.getElementById('sidebarHostBtn')?.addEventListener('click', () => document.getElementById('hostMeetupModal').classList.remove('hidden'));
-    document.getElementById('mobileHostFab')?.addEventListener('click', () => document.getElementById('hostMeetupModal').classList.remove('hidden'));
-    document.getElementById('emptyHostBtn')?.addEventListener('click', () => document.getElementById('hostMeetupModal').classList.remove('hidden'));
+    openAuthModalBtn?.addEventListener('click', () => authModal?.classList.remove('hidden'));
+    document.getElementById('desktopUserAvatar')?.addEventListener('click', () => {
+        if (!authToken) authModal?.classList.remove('hidden');
+    });
+    document.getElementById('mobileUserAvatar')?.addEventListener('click', () => {
+        if (!authToken) authModal?.classList.remove('hidden');
+    });
+    closeAuthModalBtn?.addEventListener('click', () => authModal?.classList.add('hidden'));
+
+    signOutBtn?.addEventListener('click', () => {
+        authToken = '';
+        localStorage.removeItem('ld_auth_token');
+        profile = null;
+        updateAuthUI();
+        showToast("Signed out successfully.");
+        fetchFeed();
+    });
+
+    // Auth Tab Switchers
+    const authTabLogin = document.getElementById('authTabLogin');
+    const authTabRegister = document.getElementById('authTabRegister');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    authTabLogin?.addEventListener('click', () => {
+        authTabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-surface-container-lowest text-primary shadow-sm transition-all';
+        authTabRegister.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-on-surface-variant hover:text-on-surface transition-all';
+        loginForm?.classList.remove('hidden');
+        registerForm?.classList.add('hidden');
+    });
+
+    authTabRegister?.addEventListener('click', () => {
+        authTabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-surface-container-lowest text-primary shadow-sm transition-all';
+        authTabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-on-surface-variant hover:text-on-surface transition-all';
+        registerForm?.classList.remove('hidden');
+        loginForm?.classList.add('hidden');
+    });
+
+    // Login Submission
+    loginForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const json = await res.json();
+            if (!json.success) {
+                alert(json.error || "Login failed.");
+                return;
+            }
+
+            authToken = json.token;
+            localStorage.setItem('ld_auth_token', authToken);
+            profile = json.data;
+            updateAuthUI();
+            authModal?.classList.add('hidden');
+            showToast(`Welcome back, ${profile.name}!`);
+            fetchFeed();
+            fetchProfile();
+        } catch (err) {
+            alert("Login request error.");
+        }
+    });
+
+    // Register Submission
+    registerForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const district = document.getElementById('regDistrict').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, district })
+            });
+
+            const json = await res.json();
+            if (!json.success) {
+                alert(json.error || "Registration failed.");
+                return;
+            }
+
+            authToken = json.token;
+            localStorage.setItem('ld_auth_token', authToken);
+            profile = json.data;
+            updateAuthUI();
+            authModal?.classList.add('hidden');
+            showToast(`Welcome to LittleDistrict, ${profile.name}!`);
+            fetchFeed();
+            fetchProfile();
+        } catch (err) {
+            alert("Registration request error.");
+        }
+    });
 
     // Modal Close Buttons
     document.getElementById('closeAddPlaceModalBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.add('hidden'));
@@ -429,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Submit Add Place Form ("dont add any places let make us add it")
+    // Submit Add Place Form
     document.getElementById('addPlaceForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const errEl = document.getElementById('addPlaceError');
@@ -441,9 +591,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const description = document.getElementById('placeDescInput').value;
 
         try {
-            const res = await fetch(`${API_BASE}/community/places`, {
+            const res = await apiFetch(`${API_BASE}/community/places`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, district, public_spot_type, description })
             });
 
@@ -457,8 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(json.message);
             document.getElementById('addPlaceModal').classList.add('hidden');
             document.getElementById('addPlaceForm').reset();
-
-            // Refresh places & filter chips
             fetchPlaces();
         } catch (err) {
             errEl.textContent = "Server connection error.";
@@ -466,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Submit Host Meetup Form (with Zod Public Location Validation)
+    // Submit Host Meetup Form
     document.getElementById('hostMeetupForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const errEl = document.getElementById('hostMeetupError');
@@ -481,15 +628,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const max_age = parseInt(document.getElementById('meetupMaxAgeInput').value, 10);
         const max_attendees = parseInt(document.getElementById('meetupMaxAttendeesInput').value, 10);
 
-        // Map interest to image asset
         let image_url = '/assets/football.png';
         if (interest_tag === 'Board Games') image_url = '/assets/board_games.png';
         if (interest_tag === 'Swimming') image_url = '/assets/swimming.png';
 
         try {
-            const res = await fetch(`${API_BASE}/community/meetups`, {
+            const res = await apiFetch(`${API_BASE}/community/meetups`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title, district, interest_tag, public_location, date_time, min_age, max_age, max_attendees, image_url
                 })
@@ -516,9 +661,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('detailRsvpBtn')?.addEventListener('click', async () => {
         if (!currentDetailMeetup) return;
         try {
-            const res = await fetch(`${API_BASE}/community/rsvp`, {
+            const res = await apiFetch(`${API_BASE}/community/rsvp`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ meetup_id: currentDetailMeetup.id })
             });
 
@@ -542,9 +686,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!content) return;
 
         try {
-            const res = await fetch(`${API_BASE}/community/meetups/${currentDetailMeetup.id}/comments`, {
+            const res = await apiFetch(`${API_BASE}/community/meetups/${currentDetailMeetup.id}/comments`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content })
             });
 
@@ -570,16 +713,13 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = async (event) => {
             const dataUrl = event.target.result;
             
-            // Update UI preview immediately
             document.getElementById('profileAvatar').src = dataUrl;
             document.getElementById('desktopUserAvatar').src = dataUrl;
             document.getElementById('mobileUserAvatar').src = dataUrl;
 
-            // Save to backend
             try {
-                const res = await fetch(`${API_BASE}/profile`, {
+                const res = await apiFetch(`${API_BASE}/profile`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar_url: dataUrl })
                 });
                 const json = await res.json();
@@ -617,9 +757,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const bio = document.getElementById('editBio').value;
 
         try {
-            const res = await fetch(`${API_BASE}/profile`, {
+            const res = await apiFetch(`${API_BASE}/profile`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, district, contact_preference, bio })
             });
 

@@ -1,0 +1,15 @@
+{
+  "name": "little-district",
+  "version": "1.0.0",
+  "description": "Dubai Community Kids Meetups & Places Web Application",
+  "main": "server/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
+    "dotenv": "^16.4.7"
+  }
+}

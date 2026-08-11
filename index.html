@@ -172,11 +172,17 @@
                     <span class="material-symbols-outlined text-xl">notifications</span>
                 </button>
                 <div class="flex items-center gap-3 pl-3 border-l border-outline-variant/40">
-                    <img id="desktopUserAvatar" alt="User profile" class="w-9 h-9 rounded-full object-cover border border-outline-variant" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
+                    <img id="desktopUserAvatar" alt="User profile" class="w-9 h-9 rounded-full object-cover border border-outline-variant cursor-pointer" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eef5f7'/><circle cx='50' cy='38' r='20' fill='%23006565'/><path d='M20 90 c0-25 15-35 30-35 s30 10 30 35 Z' fill='%23006565'/></svg>">
                     <div class="text-xs">
-                        <p id="navParentName" class="font-bold text-on-background">Your Name</p>
-                        <p id="navDistrict" class="text-on-surface-variant">District</p>
+                        <p id="navParentName" class="font-bold text-on-background">Sign In</p>
+                        <p id="navDistrict" class="text-on-surface-variant">Click to connect</p>
                     </div>
+                    <button id="openAuthModalBtn" class="bg-primary text-white font-bold text-xs px-3.5 py-1.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm">
+                        Sign In
+                    </button>
+                    <button id="signOutBtn" class="hidden text-xs text-secondary font-semibold hover:underline px-2 py-1">
+                        Sign Out
+                    </button>
                 </div>
             </div>
         </div>
@@ -562,6 +568,76 @@
                     </div>
                 </div>
             </div>
+        </div>
+    <!-- AUTH MODAL (LOGIN & SIGN UP) -->
+    <div id="authModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant relative space-y-5">
+            <button id="closeAuthModalBtn" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface p-1 rounded-full">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <div class="text-center space-y-1">
+                <h3 class="font-display font-bold text-2xl text-primary">LittleDistrict Account</h3>
+                <p class="text-xs text-on-surface-variant">Sign in or create an account to post meetups & sync across devices</p>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex bg-surface-container rounded-xl p-1 gap-1">
+                <button id="authTabLogin" class="flex-1 py-2 text-xs font-bold rounded-lg bg-surface-container-lowest text-primary shadow-sm transition-all">Sign In</button>
+                <button id="authTabRegister" class="flex-1 py-2 text-xs font-semibold rounded-lg text-on-surface-variant hover:text-on-surface transition-all">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Email Address</label>
+                    <input id="loginEmail" type="email" required placeholder="sarah.jenkins@example.com" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Password</label>
+                    <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <button type="submit" class="w-full bg-primary text-white font-bold text-xs py-3 rounded-xl hover:bg-primary/90 transition-all shadow-sm">
+                    Sign In
+                </button>
+                <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/40 space-y-1 text-[11px] text-on-surface-variant">
+                    <p class="font-bold text-primary">Demo Accounts (Password: <code class="bg-surface-container px-1 py-0.5 rounded">password123</code>):</p>
+                    <p>• Sarah (Dubai Marina): <code class="bg-surface-container px-1 py-0.5 rounded">sarah.jenkins@example.com</code></p>
+                    <p>• Aisha (Palm Jumeirah): <code class="bg-surface-container px-1 py-0.5 rounded">aisha.m@example.com</code></p>
+                    <p>• David (Dubai Hills): <code class="bg-surface-container px-1 py-0.5 rounded">david.m@example.com</code></p>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Full Name</label>
+                    <input id="regName" type="text" required placeholder="e.g. Sarah Jenkins" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Email Address</label>
+                    <input id="regEmail" type="email" required placeholder="name@example.com" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Password</label>
+                    <input id="regPassword" type="password" required minlength="6" placeholder="At least 6 characters" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Dubai Neighborhood District</label>
+                    <select id="regDistrict" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                        <option value="Dubai Marina">Dubai Marina</option>
+                        <option value="Palm Jumeirah">Palm Jumeirah</option>
+                        <option value="Dubai Hills">Dubai Hills</option>
+                        <option value="Arabian Ranches">Arabian Ranches</option>
+                        <option value="JBR">JBR</option>
+                        <option value="Mirdif">Mirdif</option>
+                        <option value="Silicon Oasis">Silicon Oasis</option>
+                        <option value="Downtown Dubai">Downtown Dubai</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-secondary-container text-on-secondary-container font-bold text-xs py-3 rounded-xl hover:bg-secondary-container/90 transition-all shadow-sm">
+                    Create Free Account
+                </button>
+            </form>
         </div>
     </div>
 
