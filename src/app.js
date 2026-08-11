@@ -29,6 +29,29 @@ async function apiFetch(url, options = {}) {
     return fetch(url, options);
 }
 
+// Auth Check Helper
+function requireAuthOr(actionCallback) {
+    if (!authToken) {
+        window.location.href = '/login.html';
+        return;
+    }
+    actionCallback();
+}
+
+function openHostMeetupModal() {
+    requireAuthOr(() => {
+        const modal = document.getElementById('hostMeetupModal');
+        if (modal) modal.classList.remove('hidden');
+    });
+}
+
+function openAddPlaceModal() {
+    requireAuthOr(() => {
+        const modal = document.getElementById('addPlaceModal');
+        if (modal) modal.classList.remove('hidden');
+    });
+}
+
 // Toast helper
 function showToast(message) {
     const toast = document.getElementById('toast');
@@ -41,7 +64,7 @@ function showToast(message) {
     }, 3000);
 }
 
-// Update Auth UI in Headers
+// Update Auth UI in Headers & Sidebar
 function updateAuthUI() {
     const navParentName = document.getElementById('navParentName');
     const navDistrict = document.getElementById('navDistrict');
@@ -49,12 +72,16 @@ function updateAuthUI() {
     const signOutBtn = document.getElementById('signOutBtn');
     const desktopAvatar = document.getElementById('desktopUserAvatar');
     const mobileAvatar = document.getElementById('mobileUserAvatar');
+    const sidebarSignInText = document.getElementById('sidebarSignInText');
+    const sidebarSignInBtn = document.getElementById('sidebarSignInBtn');
 
     if (profile && profile.id) {
         if (navParentName) navParentName.textContent = profile.name || 'Parent User';
         if (navDistrict) navDistrict.textContent = profile.district || 'Dubai Marina';
         if (openAuthModalBtn) openAuthModalBtn.classList.add('hidden');
         if (signOutBtn) signOutBtn.classList.remove('hidden');
+        if (sidebarSignInText) sidebarSignInText.textContent = profile.name || 'My Family Account';
+        if (sidebarSignInBtn) sidebarSignInBtn.href = '#profile';
 
         if (profile.avatar_url) {
             if (desktopAvatar) desktopAvatar.src = profile.avatar_url;
@@ -65,6 +92,8 @@ function updateAuthUI() {
         if (navDistrict) navDistrict.textContent = 'Connect across devices';
         if (openAuthModalBtn) openAuthModalBtn.classList.remove('hidden');
         if (signOutBtn) signOutBtn.classList.add('hidden');
+        if (sidebarSignInText) sidebarSignInText.textContent = 'Sign In to Account';
+        if (sidebarSignInBtn) sidebarSignInBtn.href = '/login.html';
     }
 }
 
@@ -114,6 +143,7 @@ async function fetchMyMeetups() {
 }
 
 async function fetchProfile() {
+    if (!authToken) return;
     try {
         const res = await apiFetch(`${API_BASE}/auth/me`);
         const json = await res.json();
@@ -235,7 +265,6 @@ function renderMeetupsGrid() {
         `;
     }).join('');
 
-    // Attach click events
     grid.querySelectorAll('[data-id]').forEach(card => {
         card.addEventListener('click', (e) => {
             if (e.target.closest('.fav-btn')) return;
@@ -406,15 +435,34 @@ function renderComments(comments) {
 
 // App Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Fetch Initial Data
     fetchPlaces();
     fetchFeed();
-    fetchProfile();
+    if (authToken) fetchProfile();
+    updateAuthUI();
+
+    // Host & Place Action Triggers
+    document.getElementById('sidebarHostBtn')?.addEventListener('click', openHostMeetupModal);
+    document.getElementById('sidebarAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('mobileAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
 
     // Tab Navigation
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
+
+            if (targetTab === 'places') {
+                openAddPlaceModal();
+                return;
+            }
+            if (targetTab === 'create-meetup') {
+                openHostMeetupModal();
+                return;
+            }
+            if ((targetTab === 'my-meetups' || targetTab === 'profile') && !authToken) {
+                window.location.href = '/login.html';
+                return;
+            }
+
             currentTab = targetTab;
 
             document.querySelectorAll('.nav-tab').forEach(b => {
@@ -438,18 +486,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Auth Modal Handlers
+    // Auth Handlers
     const authModal = document.getElementById('authModal');
     const openAuthModalBtn = document.getElementById('openAuthModalBtn');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
     const signOutBtn = document.getElementById('signOutBtn');
 
-    openAuthModalBtn?.addEventListener('click', () => authModal?.classList.remove('hidden'));
+    openAuthModalBtn?.addEventListener('click', (e) => {
+        if (!authToken) {
+            e.preventDefault();
+            window.location.href = '/login.html';
+        }
+    });
+
     document.getElementById('desktopUserAvatar')?.addEventListener('click', () => {
-        if (!authToken) authModal?.classList.remove('hidden');
+        if (!authToken) window.location.href = '/login.html';
     });
     document.getElementById('mobileUserAvatar')?.addEventListener('click', () => {
-        if (!authToken) authModal?.classList.remove('hidden');
+        if (!authToken) window.location.href = '/login.html';
     });
     closeAuthModalBtn?.addEventListener('click', () => authModal?.classList.add('hidden'));
 
@@ -460,92 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAuthUI();
         showToast("Signed out successfully.");
         fetchFeed();
-    });
-
-    // Auth Tab Switchers
-    const authTabLogin = document.getElementById('authTabLogin');
-    const authTabRegister = document.getElementById('authTabRegister');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-
-    authTabLogin?.addEventListener('click', () => {
-        authTabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-surface-container-lowest text-primary shadow-sm transition-all';
-        authTabRegister.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-on-surface-variant hover:text-on-surface transition-all';
-        loginForm?.classList.remove('hidden');
-        registerForm?.classList.add('hidden');
-    });
-
-    authTabRegister?.addEventListener('click', () => {
-        authTabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-surface-container-lowest text-primary shadow-sm transition-all';
-        authTabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-on-surface-variant hover:text-on-surface transition-all';
-        registerForm?.classList.remove('hidden');
-        loginForm?.classList.add('hidden');
-    });
-
-    // Login Submission
-    loginForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        try {
-            const res = await fetch(`${API_BASE}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const json = await res.json();
-            if (!json.success) {
-                alert(json.error || "Login failed.");
-                return;
-            }
-
-            authToken = json.token;
-            localStorage.setItem('ld_auth_token', authToken);
-            profile = json.data;
-            updateAuthUI();
-            authModal?.classList.add('hidden');
-            showToast(`Welcome back, ${profile.name}!`);
-            fetchFeed();
-            fetchProfile();
-        } catch (err) {
-            alert("Login request error.");
-        }
-    });
-
-    // Register Submission
-    registerForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('regName').value;
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPassword').value;
-        const district = document.getElementById('regDistrict').value;
-
-        try {
-            const res = await fetch(`${API_BASE}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, district })
-            });
-
-            const json = await res.json();
-            if (!json.success) {
-                alert(json.error || "Registration failed.");
-                return;
-            }
-
-            authToken = json.token;
-            localStorage.setItem('ld_auth_token', authToken);
-            profile = json.data;
-            updateAuthUI();
-            authModal?.classList.add('hidden');
-            showToast(`Welcome to LittleDistrict, ${profile.name}!`);
-            fetchFeed();
-            fetchProfile();
-        } catch (err) {
-            alert("Registration request error.");
-        }
     });
 
     // Modal Close Buttons
@@ -582,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit Add Place Form
     document.getElementById('addPlaceForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
+
         const errEl = document.getElementById('addPlaceError');
         errEl.classList.add('hidden');
 
@@ -616,6 +589,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit Host Meetup Form
     document.getElementById('hostMeetupForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
+
         const errEl = document.getElementById('hostMeetupError');
         errEl.classList.add('hidden');
 
@@ -659,6 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // RSVP Button in Detail Modal
     document.getElementById('detailRsvpBtn')?.addEventListener('click', async () => {
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
         if (!currentDetailMeetup) return;
         try {
             const res = await apiFetch(`${API_BASE}/community/rsvp`, {
@@ -680,6 +662,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Send Comment in Detail Modal
     document.getElementById('sendCommentBtn')?.addEventListener('click', async () => {
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
         if (!currentDetailMeetup) return;
         const input = document.getElementById('commentInput');
         const content = input.value.trim();

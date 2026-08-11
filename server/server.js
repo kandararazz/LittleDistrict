@@ -322,7 +322,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     // --- STATIC FILE SERVING ---
-    let filePath = path.join(ROOT_DIR, pathname === '/' ? 'index.html' : pathname);
+    let targetFile = pathname === '/' ? 'index.html' : pathname;
+    if (pathname === '/login' || pathname === '/login.html') targetFile = 'login.html';
+    let filePath = path.join(ROOT_DIR, targetFile);
 
     // Prevent directory traversal
     if (!filePath.startsWith(ROOT_DIR)) {

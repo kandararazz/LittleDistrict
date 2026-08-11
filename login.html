@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In & Register - LittleDistrict Dubai</title>
+
+    <!-- Tailwind CDN with Custom Config -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006565",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#008080",
+                        "on-primary-container": "#e3fffe",
+                        "secondary": "#8d4f11",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#feac67",
+                        "on-secondary-container": "#773e00",
+                        "background": "#f4fafd",
+                        "on-background": "#161d1f",
+                        "surface": "#f4fafd",
+                        "on-surface": "#161d1f",
+                        "on-surface-variant": "#3e4949",
+                        "surface-container": "#e8eff1",
+                        "surface-container-low": "#eef5f7",
+                        "surface-container-high": "#e2e9ec",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#6e7979",
+                        "outline-variant": "#bdc9c8"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #f4fafd 0%, #e3fffe 50%, #f4fafd 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            box-shadow: 0px 15px 35px rgba(0, 101, 101, 0.08), 0px 5px 15px rgba(22, 29, 31, 0.05);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-on-background">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full px-6 lg:px-12 py-5 flex items-center justify-between border-b border-outline-variant/30 bg-surface/70 backdrop-blur-md">
+        <a href="/" class="flex items-center gap-3 group">
+            <img src="/assets/logo.png" alt="LittleDistrict Logo" class="w-9 h-9 object-contain group-hover:scale-105 transition-transform">
+            <div>
+                <h1 class="font-display font-bold text-xl text-primary leading-tight">LittleDistrict</h1>
+                <p class="text-[11px] text-on-surface-variant font-medium">Dubai Community Kids</p>
+            </div>
+        </a>
+        <a href="/" class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-container bg-surface-container px-4 py-2 rounded-full transition-all">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            Back to Feed
+        </a>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 flex items-center justify-center p-4 lg:p-8">
+        <div class="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+            <!-- Left Hero Section (Desktop) -->
+            <div class="lg:col-span-5 space-y-6 hidden lg:block pr-4">
+                <div class="inline-flex items-center gap-2 bg-secondary-container/80 text-on-secondary-container px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                    <span class="material-symbols-outlined text-base">diversity_3</span>
+                    Dubai Parent Network
+                </div>
+                <h2 class="font-display font-extrabold text-3xl lg:text-4xl text-on-background leading-tight">
+                    Connect with Parents in Your Neighborhood
+                </h2>
+                <p class="text-xs lg:text-sm text-on-surface-variant leading-relaxed">
+                    Host outdoor playdates, explore Dubai parks & playgrounds, and share community events with verified local families.
+                </p>
+
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center gap-3 p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/40 shadow-sm">
+                        <span class="material-symbols-outlined text-primary text-xl">park</span>
+                        <div>
+                            <p class="font-bold text-xs text-on-surface">Verified Public Spots</p>
+                            <p class="text-[11px] text-on-surface-variant">Dubai Marina, Palm Jumeirah, Dubai Hills & more</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-surface-container-lowest/80 rounded-xl border border-outline-variant/40 shadow-sm">
+                        <span class="material-symbols-outlined text-secondary text-xl">devices</span>
+                        <div>
+                            <p class="font-bold text-xs text-on-surface">Supabase Cloud Sync</p>
+                            <p class="text-[11px] text-on-surface-variant">Access your account seamlessly from any device</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Glassmorphism Form Card -->
+            <div class="lg:col-span-7">
+                <div class="glass-card p-6 lg:p-8 rounded-3xl border border-outline-variant/50 space-y-6">
+                    
+                    <!-- Form Header & Tab Switcher -->
+                    <div class="space-y-4">
+                        <div class="text-center lg:text-left space-y-1">
+                            <h3 id="formTitle" class="font-display font-extrabold text-2xl text-primary">Sign In to LittleDistrict</h3>
+                            <p id="formSubtitle" class="text-xs text-on-surface-variant">Enter your email and password to access your community account</p>
+                        </div>
+
+                        <div class="flex bg-surface-container p-1 rounded-2xl gap-1">
+                            <button id="tabSignIn" class="flex-1 py-2.5 text-xs font-bold rounded-xl bg-surface-container-lowest text-primary shadow-sm transition-all">
+                                Sign In
+                            </button>
+                            <button id="tabRegister" class="flex-1 py-2.5 text-xs font-semibold rounded-xl text-on-surface-variant hover:text-on-surface transition-all">
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error Alert Box -->
+                    <div id="errorAlert" class="hidden p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">error</span>
+                        <span id="errorMessage">Error details here</span>
+                    </div>
+
+                    <!-- SIGN IN FORM -->
+                    <form id="signInForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Email Address</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+                                <input id="signInEmail" type="email" required placeholder="your.email@example.com" class="w-full pl-10 pr-4 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Password</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+                                <input id="signInPassword" type="password" required placeholder="••••••••" class="w-full pl-10 pr-10 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                                <button type="button" id="toggleSignInPass" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="signInBtn" class="w-full bg-primary text-white font-bold text-xs py-3.5 rounded-xl hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2">
+                            <span>Sign In</span>
+                            <span class="material-symbols-outlined text-base">arrow_forward</span>
+                        </button>
+                    </form>
+
+                    <!-- CREATE ACCOUNT FORM -->
+                    <form id="createAccountForm" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Full Name</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">person</span>
+                                <input id="regName" type="text" required placeholder="e.g. Sarah Jenkins" class="w-full pl-10 pr-4 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Email Address</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">mail</span>
+                                <input id="regEmail" type="email" required placeholder="name@example.com" class="w-full pl-10 pr-4 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Password</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
+                                <input id="regPassword" type="password" required minlength="6" placeholder="At least 6 characters" class="w-full pl-10 pr-10 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                                <button type="button" id="toggleRegPass" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface mb-1.5">Neighborhood District</label>
+                                <select id="regDistrict" class="w-full px-3 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary text-xs font-medium">
+                                    <option value="Dubai Marina">Dubai Marina</option>
+                                    <option value="Palm Jumeirah">Palm Jumeirah</option>
+                                    <option value="Dubai Hills">Dubai Hills</option>
+                                    <option value="Arabian Ranches">Arabian Ranches</option>
+                                    <option value="JBR">JBR</option>
+                                    <option value="Mirdif">Mirdif</option>
+                                    <option value="Silicon Oasis">Silicon Oasis</option>
+                                    <option value="Downtown Dubai">Downtown Dubai</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface mb-1.5">Contact Preference</label>
+                                <select id="regContactPref" class="w-full px-3 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary text-xs font-medium">
+                                    <option value="WhatsApp">WhatsApp</option>
+                                    <option value="In-App Message">In-App Message</option>
+                                    <option value="Email">Email</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="registerBtn" class="w-full bg-secondary-container text-on-secondary-container font-bold text-xs py-3.5 rounded-xl hover:bg-secondary-container/90 transition-all shadow-md flex items-center justify-center gap-2">
+                            <span>Create Free Account</span>
+                            <span class="material-symbols-outlined text-base">check_circle</span>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Page Logic -->
+    <script>
+        const API_BASE = '/api';
+
+        const tabSignIn = document.getElementById('tabSignIn');
+        const tabRegister = document.getElementById('tabRegister');
+        const signInForm = document.getElementById('signInForm');
+        const createAccountForm = document.getElementById('createAccountForm');
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorAlert.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorAlert.classList.add('hidden');
+        }
+
+        // Tab Switching
+        tabSignIn.addEventListener('click', () => {
+            hideError();
+            tabSignIn.className = 'flex-1 py-2.5 text-xs font-bold rounded-xl bg-surface-container-lowest text-primary shadow-sm transition-all';
+            tabRegister.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl text-on-surface-variant hover:text-on-surface transition-all';
+            signInForm.classList.remove('hidden');
+            createAccountForm.classList.add('hidden');
+            formTitle.textContent = 'Sign In to LittleDistrict';
+            formSubtitle.textContent = 'Enter your email and password to access your community account';
+        });
+
+        tabRegister.addEventListener('click', () => {
+            hideError();
+            tabRegister.className = 'flex-1 py-2.5 text-xs font-bold rounded-xl bg-surface-container-lowest text-primary shadow-sm transition-all';
+            tabSignIn.className = 'flex-1 py-2.5 text-xs font-semibold rounded-xl text-on-surface-variant hover:text-on-surface transition-all';
+            createAccountForm.classList.remove('hidden');
+            signInForm.classList.add('hidden');
+            formTitle.textContent = 'Create Family Account';
+            formSubtitle.textContent = 'Join neighborhood parents across Dubai parks & public spots';
+        });
+
+        // Password Toggles
+        document.getElementById('toggleSignInPass').addEventListener('click', () => {
+            const input = document.getElementById('signInPassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        });
+
+        document.getElementById('toggleRegPass').addEventListener('click', () => {
+            const input = document.getElementById('regPassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        });
+
+        // Submit Sign In Form
+        signInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const email = document.getElementById('signInEmail').value;
+            const password = document.getElementById('signInPassword').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const json = await res.json();
+                if (!json.success) {
+                    showError(json.error || 'Invalid credentials');
+                    return;
+                }
+
+                localStorage.setItem('ld_auth_token', json.token);
+                window.location.href = '/';
+            } catch (err) {
+                showError('Network error. Could not connect to server.');
+            }
+        });
+
+        // Submit Register Form
+        createAccountForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const district = document.getElementById('regDistrict').value;
+            const contact_preference = document.getElementById('regContactPref').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, district, contact_preference })
+                });
+
+                const json = await res.json();
+                if (!json.success) {
+                    showError(json.error || 'Registration failed');
+                    return;
+                }
+
+                localStorage.setItem('ld_auth_token', json.token);
+                window.location.href = '/';
+            } catch (err) {
+                showError('Network error. Could not connect to server.');
+            }
+        });
+    </script>
+</body>
+</html>
