@@ -1,8 +1,9 @@
 // Dubai Community Kids - LittleDistrict App Frontend Logic
 
-const API_BASE = (window.location.protocol === 'file:')
-    ? 'http://localhost:3000/api'
-    : '/api';
+if (window.location.protocol === 'file:') {
+    window.location.href = 'http://localhost:3000/';
+}
+const API_BASE = '/api';
 
 // Global Auth & App State
 let authToken = localStorage.getItem('ld_auth_token') || '';

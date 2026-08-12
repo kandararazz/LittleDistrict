@@ -242,9 +242,10 @@
 
     <!-- Page Logic -->
     <script>
-        const API_BASE = (window.location.protocol === 'file:')
-            ? 'http://localhost:3000/api'
-            : '/api';
+        if (window.location.protocol === 'file:') {
+            window.location.href = 'http://localhost:3000/login.html';
+        }
+        const API_BASE = '/api';
 
         const tabSignIn = document.getElementById('tabSignIn');
         const tabRegister = document.getElementById('tabRegister');
