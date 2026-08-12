@@ -1,32 +1,18 @@
-// Zod-style validation module for Dubai Community Kids backend
-
-const PUBLIC_LOCATION_KEYWORDS = [
-    'park', 'playground', 'clubhouse', 'recreation', 'rec center',
-    'pool', 'sports court', 'court', 'beach', 'garden', 'walkway',
-    'plaza', 'central park', 'community center', 'field', 'pitch', 'skatepark'
-];
+// Validation module for LittleDistrict Dubai
 
 export function validateMeetup(data) {
     const errors = [];
 
-    if (!data.title || typeof data.title !== 'string' || data.title.trim().length < 3) {
-        errors.push("Title is required and must be at least 3 characters long.");
+    if (!data.title || typeof data.title !== 'string' || data.title.trim().length < 2) {
+        errors.push("Title is required and must be at least 2 characters long.");
     }
 
     if (!data.district || typeof data.district !== 'string' || data.district.trim().length === 0) {
         errors.push("District / Community Area is required.");
     }
 
-    if (!data.public_location || typeof data.public_location !== 'string' || data.public_location.trim().length < 3) {
+    if (!data.public_location || typeof data.public_location !== 'string' || data.public_location.trim().length < 2) {
         errors.push("Public location is required.");
-    } else {
-        const lowerLoc = data.public_location.toLowerCase();
-        const isPublicSpot = PUBLIC_LOCATION_KEYWORDS.some(kw => lowerLoc.includes(kw));
-        if (!isPublicSpot) {
-            errors.push(
-                `Public spot restriction failed: "${data.public_location}" must be a recognized public space (e.g., Park, Playground, Clubhouse, Recreation Center, Pool, Sports Court, Beach, Community Garden). Private homes are not allowed.`
-            );
-        }
     }
 
     if (!data.date_time || typeof data.date_time !== 'string') {
@@ -39,16 +25,19 @@ export function validateMeetup(data) {
 
     const minAge = Number(data.min_age ?? 0);
     const maxAge = Number(data.max_age ?? 18);
-    if (isNaN(minAge) || minAge < 0) errors.push("Minimum age must be 0 or greater.");
-    if (isNaN(maxAge) || maxAge > 18 || maxAge < minAge) errors.push("Maximum age must be valid and >= minimum age.");
 
     return {
         success: errors.length === 0,
         errors,
         data: errors.length === 0 ? {
             ...data,
-            min_age: minAge,
-            max_age: maxAge,
+            title: data.title.trim(),
+            district: data.district.trim(),
+            public_location: data.public_location.trim(),
+            date_time: data.date_time.trim(),
+            interest_tag: data.interest_tag.trim(),
+            min_age: isNaN(minAge) ? 0 : minAge,
+            max_age: isNaN(maxAge) ? 18 : maxAge,
             max_attendees: Number(data.max_attendees || 10)
         } : null
     };
@@ -65,11 +54,6 @@ export function validatePlace(data) {
         errors.push("District / Community area is required.");
     }
 
-    const validTypes = ['Park', 'Playground', 'Clubhouse', 'Recreation Center', 'Pool', 'Sports Court', 'Beach', 'Plaza'];
-    if (!data.public_spot_type || !validTypes.includes(data.public_spot_type)) {
-        errors.push(`Public spot type must be one of: ${validTypes.join(', ')}.`);
-    }
-
     return {
         success: errors.length === 0,
         errors,
@@ -77,7 +61,7 @@ export function validatePlace(data) {
             ...data,
             name: data.name.trim(),
             district: data.district.trim(),
-            public_spot_type: data.public_spot_type,
+            public_spot_type: data.public_spot_type || 'Park',
             description: data.description ? data.description.trim() : ''
         } : null
     };

@@ -444,11 +444,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sidebarHostBtn')?.addEventListener('click', openHostMeetupModal);
     document.getElementById('sidebarAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
     document.getElementById('mobileAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('mobileAddPlaceNavBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('mobileHostFab')?.addEventListener('click', openHostMeetupModal);
+    document.getElementById('addPlaceChipBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('emptyAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('emptyHostBtn')?.addEventListener('click', openHostMeetupModal);
 
     // Tab Navigation
-    document.querySelectorAll('.nav-tab').forEach(btn => {
+    const navButtons = document.querySelectorAll('.nav-tab, .mobile-nav-btn[data-tab]');
+    navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
+            if (!targetTab) return;
 
             if (targetTab === 'places') {
                 openAddPlaceModal();
@@ -471,6 +478,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     b.className = 'nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-semibold text-sm transition-all shadow-sm';
                 } else {
                     b.className = 'nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-3 font-medium text-sm transition-colors';
+                }
+            });
+
+            document.querySelectorAll('.mobile-nav-btn[data-tab]').forEach(b => {
+                const isTarget = b.getAttribute('data-tab') === targetTab;
+                if (isTarget) {
+                    b.className = 'mobile-nav-btn flex flex-col items-center justify-center text-primary font-bold';
+                } else {
+                    b.className = 'mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary';
                 }
             });
 
