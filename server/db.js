@@ -316,15 +316,15 @@ export const db = {
             try {
                 const users = await supabase.select('users', { eq: { id } });
                 const user = users && users[0] ? users[0] : null;
-                if (!user) return null;
+                if (user) {
+                    const childrenRows = await supabase.select('children', { eq: { user_id: id } });
+                    const children = (childrenRows || []).map(c => ({
+                        ...c,
+                        hobbies: typeof c.hobbies === 'string' ? JSON.parse(c.hobbies || '[]') : (c.hobbies || [])
+                    }));
 
-                const childrenRows = await supabase.select('children', { eq: { user_id: id } });
-                const children = (childrenRows || []).map(c => ({
-                    ...c,
-                    hobbies: typeof c.hobbies === 'string' ? JSON.parse(c.hobbies || '[]') : (c.hobbies || [])
-                }));
-
-                return { ...user, children };
+                    return { ...user, children };
+                }
             } catch (err) {
                 console.error('[Supabase Error] getUserById fallback to SQLite:', err.message);
             }
@@ -563,17 +563,17 @@ export const db = {
             try {
                 const meetups = await supabase.select('meetups', { eq: { id } });
                 const m = meetups && meetups[0] ? meetups[0] : null;
-                if (!m) return null;
+                if (m) {
+                    const rsvps = await supabase.select('rsvps', { eq: { meetup_id: id, status: 'attending' } });
+                    const comments = await supabase.select('comments', { eq: { meetup_id: id }, order: 'created_at.asc' });
 
-                const rsvps = await supabase.select('rsvps', { eq: { meetup_id: id, status: 'attending' } });
-                const comments = await supabase.select('comments', { eq: { meetup_id: id }, order: 'created_at.asc' });
-
-                return {
-                    ...m,
-                    attendees_count: (rsvps || []).length,
-                    attendees: (rsvps || []).map(r => r.user_id),
-                    comments: comments || []
-                };
+                    return {
+                        ...m,
+                        attendees_count: (rsvps || []).length,
+                        attendees: (rsvps || []).map(r => r.user_id),
+                        comments: comments || []
+                    };
+                }
             } catch (err) {
                 console.error('[Supabase Error] getMeetupById fallback to SQLite:', err.message);
             }

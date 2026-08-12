@@ -242,7 +242,9 @@
 
     <!-- Page Logic -->
     <script>
-        const API_BASE = '/api';
+        const API_BASE = (window.location.protocol === 'file:')
+            ? 'http://localhost:3000/api'
+            : '/api';
 
         const tabSignIn = document.getElementById('tabSignIn');
         const tabRegister = document.getElementById('tabRegister');
@@ -318,7 +320,8 @@
                 localStorage.setItem('ld_auth_token', json.token);
                 window.location.href = '/';
             } catch (err) {
-                showError('Network error. Could not connect to server.');
+                console.error('Auth error:', err);
+                showError(err.message ? `Network error: ${err.message}` : 'Network error. Could not connect to server.');
             }
         });
 
@@ -349,7 +352,8 @@
                 localStorage.setItem('ld_auth_token', json.token);
                 window.location.href = '/';
             } catch (err) {
-                showError('Network error. Could not connect to server.');
+                console.error('Auth error:', err);
+                showError(err.message ? `Network error: ${err.message}` : 'Network error. Could not connect to server.');
             }
         });
     </script>
