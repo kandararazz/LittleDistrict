@@ -66,7 +66,7 @@ async function getAuthUser(req) {
     return null;
 }
 
-const server = http.createServer(async (req, res) => {
+export async function handleRequest(req, res) {
     const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = urlObj.pathname;
     const method = req.method;
@@ -355,12 +355,18 @@ const server = http.createServer(async (req, res) => {
             }
         });
     });
-});
+}
 
-server.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`  Dubai Community Kids (LittleDistrict) Server`);
-    console.log(`  Running at: http://localhost:${PORT}`);
-    console.log(`  Database Mode: ${db.isSupabase ? 'Supabase Cloud' : 'Local SQLite'}`);
-    console.log(`====================================================`);
-});
+const server = http.createServer(handleRequest);
+
+if (!process.env.VERCEL) {
+    server.listen(PORT, () => {
+        console.log(`====================================================`);
+        console.log(`  Dubai Community Kids (LittleDistrict) Server`);
+        console.log(`  Running at: http://localhost:${PORT}`);
+        console.log(`  Database Mode: ${db.isSupabase ? 'Supabase Cloud' : 'Local SQLite'}`);
+        console.log(`====================================================`);
+    });
+}
+
+export default handleRequest;

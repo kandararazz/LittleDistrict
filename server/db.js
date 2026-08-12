@@ -141,82 +141,87 @@ class SupabaseRestClient {
 const supabase = isSupabaseConfigured ? new SupabaseRestClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // --- SQLITE BACKUP IMPLEMENTATION ---
-const DB_PATH = path.join(__dirname, 'database.sqlite');
-const sqlite = new DatabaseSync(DB_PATH);
-sqlite.exec(`PRAGMA journal_mode = WAL;`);
+let sqlite = null;
+try {
+    const DB_PATH = process.env.VERCEL ? '/tmp/database.sqlite' : path.join(__dirname, 'database.sqlite');
+    sqlite = new DatabaseSync(DB_PATH);
+    sqlite.exec(`PRAGMA journal_mode = WAL;`);
 
-sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL DEFAULT '',
-        email TEXT DEFAULT '',
-        password_hash TEXT DEFAULT '',
-        district TEXT DEFAULT '',
-        contact_preference TEXT DEFAULT 'In-App Message',
-        avatar_url TEXT DEFAULT '',
-        bio TEXT DEFAULT '',
-        created_at TEXT DEFAULT (datetime('now'))
-    );
+    sqlite.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL DEFAULT '',
+            email TEXT DEFAULT '',
+            password_hash TEXT DEFAULT '',
+            district TEXT DEFAULT '',
+            contact_preference TEXT DEFAULT 'In-App Message',
+            avatar_url TEXT DEFAULT '',
+            bio TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS children (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        nickname TEXT NOT NULL,
-        age INTEGER NOT NULL,
-        hobbies TEXT NOT NULL DEFAULT '[]',
-        created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+        CREATE TABLE IF NOT EXISTS children (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            nickname TEXT NOT NULL,
+            age INTEGER NOT NULL,
+            hobbies TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
 
-    CREATE TABLE IF NOT EXISTS places (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        district TEXT NOT NULL,
-        public_spot_type TEXT NOT NULL,
-        description TEXT DEFAULT '',
-        added_by_user_id TEXT DEFAULT '',
-        created_at TEXT DEFAULT (datetime('now'))
-    );
+        CREATE TABLE IF NOT EXISTS places (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            district TEXT NOT NULL,
+            public_spot_type TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            added_by_user_id TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS meetups (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        district TEXT NOT NULL,
-        public_location TEXT NOT NULL,
-        place_id TEXT DEFAULT '',
-        date_time TEXT NOT NULL,
-        interest_tag TEXT NOT NULL,
-        min_age INTEGER NOT NULL DEFAULT 0,
-        max_age INTEGER NOT NULL DEFAULT 18,
-        host_id TEXT NOT NULL,
-        host_name TEXT NOT NULL,
-        host_avatar TEXT DEFAULT '',
-        max_attendees INTEGER DEFAULT 10,
-        image_url TEXT DEFAULT '/assets/football.png',
-        created_at TEXT DEFAULT (datetime('now'))
-    );
+        CREATE TABLE IF NOT EXISTS meetups (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            district TEXT NOT NULL,
+            public_location TEXT NOT NULL,
+            place_id TEXT DEFAULT '',
+            date_time TEXT NOT NULL,
+            interest_tag TEXT NOT NULL,
+            min_age INTEGER NOT NULL DEFAULT 0,
+            max_age INTEGER NOT NULL DEFAULT 18,
+            host_id TEXT NOT NULL,
+            host_name TEXT NOT NULL,
+            host_avatar TEXT DEFAULT '',
+            max_attendees INTEGER DEFAULT 10,
+            image_url TEXT DEFAULT '/assets/football.png',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS rsvps (
-        id TEXT PRIMARY KEY,
-        meetup_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        user_name TEXT NOT NULL,
-        user_avatar TEXT DEFAULT '',
-        status TEXT NOT NULL DEFAULT 'attending',
-        created_at TEXT DEFAULT (datetime('now')),
-        UNIQUE(meetup_id, user_id)
-    );
+        CREATE TABLE IF NOT EXISTS rsvps (
+            id TEXT PRIMARY KEY,
+            meetup_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            user_name TEXT NOT NULL,
+            user_avatar TEXT DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'attending',
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(meetup_id, user_id)
+        );
 
-    CREATE TABLE IF NOT EXISTS comments (
-        id TEXT PRIMARY KEY,
-        meetup_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        user_name TEXT NOT NULL,
-        user_avatar TEXT DEFAULT '',
-        content TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
-    );
-`);
+        CREATE TABLE IF NOT EXISTS comments (
+            id TEXT PRIMARY KEY,
+            meetup_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            user_name TEXT NOT NULL,
+            user_avatar TEXT DEFAULT '',
+            content TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+    `);
+} catch (sqliteErr) {
+    console.warn('[DB Warning] SQLite fallback disabled in serverless:', sqliteErr.message);
+}
 
 // --- DUAL MODE DB ADAPTER API ---
 export const db = {
@@ -255,10 +260,14 @@ export const db = {
             }
         }
 
-        sqlite.prepare(`
-            INSERT INTO users (id, name, email, password_hash, district, contact_preference, avatar_url, bio)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(userId, userObj.name, userObj.email, userObj.password_hash, userObj.district, userObj.contact_preference, userObj.avatar_url, userObj.bio);
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO users (id, name, email, password_hash, district, contact_preference, avatar_url, bio)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(userId, userObj.name, userObj.email, userObj.password_hash, userObj.district, userObj.contact_preference, userObj.avatar_url, userObj.bio);
+            } catch (e) {}
+        }
 
         const token = generateToken(userId);
         return { token, user: { ...userObj, children: [] } };
@@ -289,7 +298,7 @@ export const db = {
                 console.error('[Supabase Error] getUserByEmail fallback to SQLite:', err.message);
             }
         }
-        return sqlite.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).get(cleanEmail) || null;
+        return sqlite ? sqlite.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).get(cleanEmail) || null : null;
     },
 
     getUserByToken: async (token) => {
@@ -308,7 +317,7 @@ export const db = {
                 console.error('[Supabase Error] getUsers fallback to SQLite:', err.message);
             }
         }
-        return sqlite.prepare(`SELECT * FROM users`).all();
+        return sqlite ? sqlite.prepare(`SELECT * FROM users`).all() : [];
     },
 
     getUserById: async (id) => {
@@ -330,6 +339,7 @@ export const db = {
             }
         }
 
+        if (!sqlite) return null;
         const user = sqlite.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
         if (!user) return null;
         const childrenRows = sqlite.prepare(`SELECT * FROM children WHERE user_id = ?`).all(id);
@@ -425,7 +435,7 @@ export const db = {
                 console.error('[Supabase Error] getPlaces fallback to SQLite:', err.message);
             }
         }
-        return sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all();
+        return sqlite ? sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all() : [];
     },
 
     addPlace: async (place, userObj = {}) => {
@@ -448,19 +458,24 @@ export const db = {
             }
         }
 
-        sqlite.prepare(`
-            INSERT INTO places (id, name, district, public_spot_type, description, added_by_user_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).run(
-            id,
-            place.name,
-            place.district,
-            place.public_spot_type,
-            place.description || '',
-            placeObj.added_by_user_id
-        );
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO places (id, name, district, public_spot_type, description, added_by_user_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `).run(
+                    id,
+                    place.name,
+                    place.district,
+                    place.public_spot_type,
+                    place.description || '',
+                    placeObj.added_by_user_id
+                );
+                return sqlite.prepare(`SELECT * FROM places WHERE id = ?`).get(id) || placeObj;
+            } catch (e) {}
+        }
 
-        return sqlite.prepare(`SELECT * FROM places WHERE id = ?`).get(id);
+        return placeObj;
     },
 
     // Meetups
@@ -511,6 +526,7 @@ export const db = {
             }
         }
 
+        if (!sqlite) return [];
         let sql = `SELECT * FROM meetups WHERE 1=1`;
         const params = [];
 
