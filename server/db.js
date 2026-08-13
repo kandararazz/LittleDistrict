@@ -218,6 +218,83 @@ try {
             content TEXT NOT NULL,
             created_at TEXT DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS direct_messages (
+            id TEXT PRIMARY KEY,
+            meetup_id TEXT NOT NULL,
+            sender_id TEXT NOT NULL,
+            sender_name TEXT NOT NULL,
+            sender_avatar TEXT DEFAULT '',
+            recipient_id TEXT NOT NULL,
+            recipient_name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS squads (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            district TEXT NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            created_by_user_id TEXT NOT NULL,
+            members_count INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS squad_members (
+            squad_id TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            joined_at TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY (squad_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS events (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            district TEXT NOT NULL,
+            event_date TEXT NOT NULL,
+            location TEXT NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS toy_items (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            category TEXT NOT NULL, -- 'Toy', 'Book', 'Bike', 'Gear'
+            district TEXT NOT NULL,
+            condition TEXT NOT NULL, -- 'Like New', 'Gently Used', 'Free Donation'
+            user_id TEXT NOT NULL,
+            user_name TEXT NOT NULL,
+            user_contact TEXT NOT NULL,
+            image_url TEXT DEFAULT '/assets/toys.png',
+            status TEXT DEFAULT 'available',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS venue_discounts (
+            id TEXT PRIMARY KEY,
+            venue_name TEXT NOT NULL,
+            district TEXT NOT NULL,
+            discount_title TEXT NOT NULL,
+            promo_code TEXT NOT NULL,
+            valid_until TEXT NOT NULL,
+            category TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS carpool_rides (
+            id TEXT PRIMARY KEY,
+            parent_id TEXT NOT NULL,
+            parent_name TEXT NOT NULL,
+            district TEXT NOT NULL,
+            destination TEXT NOT NULL,
+            ride_date TEXT NOT NULL,
+            available_seats INTEGER DEFAULT 2,
+            notes TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
     `);
 } catch (sqliteErr) {
     console.warn('[DB Warning] SQLite fallback disabled in serverless:', sqliteErr.message);
@@ -788,5 +865,223 @@ export const db = {
         `).all(userId, userId);
 
         return rows.map(m => db.getMeetupById(m.id));
+    },
+
+    // Double-Opt-In Direct Messaging Safety Check
+    checkDoubleOptIn: async (userId1, userId2, meetupId) => {
+        const meetup = await db.getMeetupById(meetupId);
+        if (!meetup) return false;
+        
+        const participants = new Set([meetup.host_id, ...(meetup.attendees || [])]);
+        return participants.has(userId1) && participants.has(userId2);
+    },
+
+    getDirectMessages: async (meetupId, userId1, userId2) => {
+        const isOptedIn = await db.checkDoubleOptIn(userId1, userId2, meetupId);
+        if (!isOptedIn) {
+            return {
+                allowed: false,
+                reason: "Double-Opt-In Locked: Direct messaging unlocks only after both parents agree to join the meetup.",
+                messages: []
+            };
+        }
+
+        if (isSupabaseConfigured) {
+            try {
+                const msgs = await supabase.select('direct_messages', { eq: { meetup_id: meetupId } });
+                const filtered = (msgs || []).filter(m => 
+                    (m.sender_id === userId1 && m.recipient_id === userId2) ||
+                    (m.sender_id === userId2 && m.recipient_id === userId1)
+                );
+                return { allowed: true, messages: filtered };
+            } catch (err) {
+                console.error('[Supabase Error] getDirectMessages fallback to SQLite:', err.message);
+            }
+        }
+
+        if (!sqlite) return { allowed: true, messages: [] };
+        const messages = sqlite.prepare(`
+            SELECT * FROM direct_messages 
+            WHERE meetup_id = ? AND ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
+            ORDER BY created_at ASC
+        `).all(meetupId, userId1, userId2, userId2, userId1);
+
+        return { allowed: true, messages };
+    },
+
+    sendDirectMessage: async ({ meetupId, sender, recipientId, recipientName, content }) => {
+        const isOptedIn = await db.checkDoubleOptIn(sender.id, recipientId, meetupId);
+        if (!isOptedIn) {
+            throw new Error("Double-Opt-In Protection: Both parents must RSVP to the same meetup before sending direct messages.");
+        }
+
+        const msgObj = {
+            id: 'dm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            meetup_id: meetupId,
+            sender_id: sender.id,
+            sender_name: sender.name || 'Parent',
+            sender_avatar: sender.avatar_url || '',
+            recipient_id: recipientId,
+            recipient_name: recipientName || 'Parent',
+            content,
+            created_at: new Date().toISOString()
+        };
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.insert('direct_messages', [msgObj]);
+                return msgObj;
+            } catch (err) {
+                console.error('[Supabase Error] sendDirectMessage fallback to SQLite:', err.message);
+            }
+        }
+
+        if (sqlite) {
+            sqlite.prepare(`
+                INSERT INTO direct_messages (id, meetup_id, sender_id, sender_name, sender_avatar, recipient_id, recipient_name, content, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(msgObj.id, msgObj.meetup_id, msgObj.sender_id, msgObj.sender_name, msgObj.sender_avatar, msgObj.recipient_id, msgObj.recipient_name, msgObj.content, msgObj.created_at);
+        }
+
+        return msgObj;
+    },
+
+    // Activity Squads Methods
+    getSquads: async (district) => {
+        const defaultSquads = [
+            { id: 'sq_1', name: 'Springs 3 Weekend Cycling Club', district: 'Arabian Ranches', category: 'Cycling', description: 'Weekly Saturday morning bike rides for kids ages 6-12 around community park tracks.', members_count: 14, created_by_user_id: 'user_1' },
+            { id: 'sq_2', name: 'Dubai Hills Roblox Gaming Squad', district: 'Dubai Hills', category: 'Roblox / Gaming', description: 'Supervised weekend online building sessions & local strategy meetups for tweens.', members_count: 22, created_by_user_id: 'user_2' },
+            { id: 'sq_3', name: 'Palm Jumeirah Toddler Swim Stars', district: 'Palm Jumeirah', category: 'Swimming', description: 'Fun splash dates & beginner swim confidence games for toddlers and parents.', members_count: 9, created_by_user_id: 'user_3' },
+            { id: 'sq_4', name: 'Mirdif Park Football Juniors', district: 'Mirdif', category: 'Football', description: 'Casual 5-v-5 football matches for kids 5-10 at Mushrif Park pitch.', members_count: 18, created_by_user_id: 'user_4' }
+        ];
+
+        let result = defaultSquads;
+        if (sqlite) {
+            try {
+                const dbSquads = sqlite.prepare(`SELECT * FROM squads`).all();
+                if (dbSquads && dbSquads.length > 0) {
+                    result = [...dbSquads, ...defaultSquads.filter(ds => !dbSquads.some(bs => bs.id === ds.id))];
+                }
+            } catch (e) {}
+        }
+
+        if (district && district !== 'All') {
+            result = result.filter(s => s.district.toLowerCase() === district.toLowerCase());
+        }
+
+        return result;
+    },
+
+    createSquad: async (squadData, user) => {
+        const id = 'sq_' + Date.now();
+        const squadObj = {
+            id,
+            name: squadData.name,
+            district: squadData.district || user.district || 'Dubai Hills',
+            category: squadData.category || 'Park Play',
+            description: squadData.description || '',
+            created_by_user_id: user.id,
+            members_count: 1
+        };
+
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO squads (id, name, district, category, description, created_by_user_id, members_count)
+                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                `).run(squadObj.id, squadObj.name, squadObj.district, squadObj.category, squadObj.description, squadObj.created_by_user_id);
+
+                sqlite.prepare(`
+                    INSERT INTO squad_members (squad_id, user_id) VALUES (?, ?)
+                `).run(id, user.id);
+            } catch (e) {}
+        }
+
+        return squadObj;
+    },
+
+    // Community Events Methods
+    getEvents: async (district) => {
+        const defaultEvents = [
+            { id: 'ev_1', title: 'Dubai Hills Community Sports & Family Fun Day', district: 'Dubai Hills', event_date: '2026-08-20 17:00', location: 'Dubai Hills Central Park', category: 'Sports Day', description: 'Relay races, obstacle courses, and healthy snacks for neighborhood families.' },
+            { id: 'ev_2', title: 'Springs 3 Summer Splash & Ice Cream Party', district: 'Arabian Ranches', event_date: '2026-08-22 16:30', location: 'Arabian Ranches Clubhouse Pool', category: 'Holiday Party', description: 'Cool off with pool games and artisan gelato station!' },
+            { id: 'ev_3', title: 'JBR Beach Clean-up & Junior Eco Explorers', district: 'JBR', event_date: '2026-08-28 08:30', location: 'JBR Public Beach', category: 'Eco Community', description: 'Teach kids marine conservation while gathering seashells and beach treasures.' }
+        ];
+
+        let result = defaultEvents;
+        if (district && district !== 'All') {
+            result = result.filter(e => e.district.toLowerCase() === district.toLowerCase());
+        }
+        return result;
+    },
+
+    // V2 Feature: Toy Marketplace
+    getToyItems: async (district) => {
+        const defaultToys = [
+            { id: 'toy_1', title: 'Micro Scooter (Blue - Ages 4-7)', category: 'Bike', district: 'Dubai Hills', condition: 'Gently Used', user_id: 'user_1', user_name: 'Sarah J.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400' },
+            { id: 'toy_2', title: 'LEGO City Ocean Exploration Vessel Complete Set', category: 'Toy', district: 'Arabian Ranches', condition: 'Like New', user_id: 'user_2', user_name: 'Michael T.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400' },
+            { id: 'toy_3', title: 'Julia Donaldson Picture Book Bundle (5 Books)', category: 'Book', district: 'Dubai Marina', condition: 'Free Donation', user_id: 'user_3', user_name: 'Elena K.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400' }
+        ];
+
+        let result = defaultToys;
+        if (district && district !== 'All') {
+            result = result.filter(t => t.district.toLowerCase() === district.toLowerCase());
+        }
+        return result;
+    },
+
+    addToyItem: async (toyData, user) => {
+        const toyObj = {
+            id: 'toy_' + Date.now(),
+            title: toyData.title,
+            category: toyData.category || 'Toy',
+            district: toyData.district || user.district || 'Dubai Hills',
+            condition: toyData.condition || 'Gently Used',
+            user_id: user.id,
+            user_name: user.name || 'Parent',
+            user_contact: 'In-App Message',
+            image_url: toyData.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+            status: 'available',
+            created_at: new Date().toISOString()
+        };
+        return toyObj;
+    },
+
+    // V2 Feature: Venue Discounts
+    getVenueDiscounts: async () => {
+        return [
+            { id: 'disc_1', venue_name: 'OliOli Children’s Play Museum', district: 'Al Quoz / Dubai Hills', discount_title: '20% OFF Family Pass', promo_code: 'LITTLE20', valid_until: '2026-12-31', category: 'Indoor Play' },
+            { id: 'disc_2', venue_name: 'BOUNCE Trampoline Park Dubai', district: 'Multiple Locations', discount_title: 'Buy 1 Jump Hour Get 1 Free', promo_code: 'BOUNCELITTLE', valid_until: '2026-11-30', category: 'Trampoline & Action' },
+            { id: 'disc_3', venue_name: 'Cheeky Monkeys Playhouse', district: 'Palm Jumeirah & Marina', discount_title: '15% Group Discount on Playdates', promo_code: 'CHEEKYDISTRICT', valid_until: '2026-10-15', category: 'Soft Play' }
+        ];
+    },
+
+    // V2 Feature: Carpool Rides
+    getCarpoolRides: async (district) => {
+        const defaultRides = [
+            { id: 'carpool_1', parent_id: 'user_1', parent_name: 'Aisha M.', district: 'Dubai Hills', destination: 'Dubai Football Academy (Sports City)', ride_date: 'Mon & Wed @ 16:30', available_seats: 2, notes: 'Fits 2 boosters safely.' },
+            { id: 'carpool_2', parent_id: 'user_2', parent_name: 'David P.', district: 'Arabian Ranches', destination: 'Hamilton Aquatics Pool (Motor City)', ride_date: 'Saturday @ 09:00', available_seats: 3, notes: 'Spacious SUV with child locks.' }
+        ];
+
+        let result = defaultRides;
+        if (district && district !== 'All') {
+            result = result.filter(r => r.district.toLowerCase() === district.toLowerCase());
+        }
+        return result;
+    },
+
+    addCarpoolRide: async (rideData, user) => {
+        return {
+            id: 'carpool_' + Date.now(),
+            parent_id: user.id,
+            parent_name: user.name || 'Parent',
+            district: rideData.district || user.district || 'Dubai Hills',
+            destination: rideData.destination,
+            ride_date: rideData.ride_date,
+            available_seats: Number(rideData.available_seats || 2),
+            notes: rideData.notes || '',
+            created_at: new Date().toISOString()
+        };
     }
 };
+

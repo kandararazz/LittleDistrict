@@ -59,45 +59,4 @@ CREATE TABLE IF NOT EXISTS public.meetups (
     max_attendees INTEGER DEFAULT 10,
     image_url TEXT DEFAULT '/assets/football.png',
     created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 5. RSVPS TABLE
-CREATE TABLE IF NOT EXISTS public.rsvps (
-    id TEXT PRIMARY KEY,
-    meetup_id TEXT NOT NULL REFERENCES public.meetups(id) ON DELETE CASCADE,
-    user_id TEXT NOT NULL,
-    user_name TEXT NOT NULL,
-    user_avatar TEXT DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'attending',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT unique_meetup_user UNIQUE (meetup_id, user_id)
-);
-
--- 6. COMMENTS TABLE
-CREATE TABLE IF NOT EXISTS public.comments (
-    id TEXT PRIMARY KEY,
-    meetup_id TEXT NOT NULL REFERENCES public.meetups(id) ON DELETE CASCADE,
-    user_id TEXT NOT NULL,
-    user_name TEXT NOT NULL,
-    user_avatar TEXT DEFAULT '',
-    content TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Row Level Security (RLS) and allow public read/write
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.children ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.places ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.meetups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public full access on users" ON public.users FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public full access on children" ON public.children FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public full access on places" ON public.places FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public full access on meetups" ON public.meetups FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public full access on rsvps" ON public.rsvps FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public full access on comments" ON public.comments FOR ALL USING (true) WITH CHECK (true);
-
--- WIPE ALL MOCK SAMPLE DATA (CLEAN SLATE)
-TRUNCATE TABLE public.comments, public.rsvps, public.meetups, public.places, public.children, public.users CASCADE;
+c
