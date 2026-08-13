@@ -1146,81 +1146,6 @@ export const db = {
                 user_contact: 'In-App Message',
                 status: 'available',
                 image_url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'
-            },
-            {
-                id: 'item_2',
-                title: 'Dubai College Formal Blazer & School Tie (Size 36 / Year 7-8)',
-                category: 'School Uniform',
-                school_name: 'Dubai College',
-                grade_level: 'Year 7 - Year 9',
-                district: 'Arabian Ranches',
-                condition: 'Like New',
-                swap_type: 'Swap',
-                user_id: 'user_2',
-                user_name: 'Mark W. (DC Parent)',
-                user_contact: 'In-App Message',
-                status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400'
-            },
-            {
-                id: 'item_3',
-                title: 'Horizon International School Uniform - Polos & Cardigan (FS2/Yr 1)',
-                category: 'School Uniform',
-                school_name: 'Horizon International',
-                grade_level: 'FS1 - Year 2',
-                district: 'JBR',
-                condition: 'Gently Used',
-                swap_type: 'Free Donation',
-                user_id: 'user_3',
-                user_name: 'Amina K. (Horizon Parent)',
-                user_contact: 'In-App Message',
-                status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400'
-            },
-            {
-                id: 'item_4',
-                title: 'Oxford Reading Tree Stage 6-9 Reader Set (12 Books Bundle)',
-                category: 'Grade-Level Book',
-                school_name: 'GEMS Wellington',
-                grade_level: 'Year 2 - Year 4',
-                district: 'Silicon Oasis',
-                condition: 'Like New',
-                swap_type: 'Free Donation',
-                user_id: 'user_4',
-                user_name: 'Priya M. (GEMS Parent)',
-                user_contact: 'In-App Message',
-                status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400'
-            },
-            {
-                id: 'item_5',
-                title: 'GCSE Edexcel Maths & Science Higher Level Revision Guides',
-                category: 'Grade-Level Book',
-                school_name: 'JESS Arabian Ranches',
-                grade_level: 'Year 10 - Year 11',
-                district: 'Arabian Ranches',
-                condition: 'Gently Used',
-                swap_type: 'Swap',
-                user_id: 'user_5',
-                user_name: 'David L. (JESS Parent)',
-                user_contact: 'In-App Message',
-                status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400'
-            },
-            {
-                id: 'item_6',
-                title: 'Micro Scooter (Blue - Ages 4-7)',
-                category: 'Toy & Gear',
-                school_name: 'General',
-                grade_level: 'Ages 4-7',
-                district: 'Dubai Hills',
-                condition: 'Gently Used',
-                swap_type: 'Swap',
-                user_id: 'user_1',
-                user_name: 'Sarah J.',
-                user_contact: 'In-App Message',
-                status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400'
             }
         ];
 
@@ -1254,17 +1179,14 @@ export const db = {
     // V2 Feature: Venue Discounts
     getVenueDiscounts: async () => {
         return [
-            { id: 'disc_1', venue_name: 'OliOli Children’s Play Museum', district: 'Al Quoz / Dubai Hills', discount_title: '20% OFF Family Pass', promo_code: 'LITTLE20', valid_until: '2026-12-31', category: 'Indoor Play' },
-            { id: 'disc_2', venue_name: 'BOUNCE Trampoline Park Dubai', district: 'Multiple Locations', discount_title: 'Buy 1 Jump Hour Get 1 Free', promo_code: 'BOUNCELITTLE', valid_until: '2026-11-30', category: 'Trampoline & Action' },
-            { id: 'disc_3', venue_name: 'Cheeky Monkeys Playhouse', district: 'Palm Jumeirah & Marina', discount_title: '15% Group Discount on Playdates', promo_code: 'CHEEKYDISTRICT', valid_until: '2026-10-15', category: 'Soft Play' }
+            { id: 'disc_1', venue_name: 'OliOli Children’s Play Museum', district: 'Al Quoz / Dubai Hills', discount_title: '20% OFF Family Pass', promo_code: 'LITTLE20', valid_until: '2026-12-31', category: 'Indoor Play' }
         ];
     },
 
     // V2 Feature: Carpool Rides
     getCarpoolRides: async (district) => {
         const defaultRides = [
-            { id: 'carpool_1', parent_id: 'user_1', parent_name: 'Aisha M.', district: 'Dubai Hills', destination: 'Dubai Football Academy (Sports City)', ride_date: 'Mon & Wed @ 16:30', available_seats: 2, notes: 'Fits 2 boosters safely.' },
-            { id: 'carpool_2', parent_id: 'user_2', parent_name: 'David P.', district: 'Arabian Ranches', destination: 'Hamilton Aquatics Pool (Motor City)', ride_date: 'Saturday @ 09:00', available_seats: 3, notes: 'Spacious SUV with child locks.' }
+            { id: 'carpool_1', parent_id: 'user_1', parent_name: 'Aisha M.', district: 'Dubai Hills', destination: 'Dubai Football Academy (Sports City)', ride_date: 'Mon & Wed @ 16:30', available_seats: 2, notes: 'Fits 2 boosters safely.' }
         ];
 
         let result = defaultRides;
@@ -1302,28 +1224,6 @@ export const db = {
                     reported_by: 'Sarah J. (050-XXXXXXX)',
                     image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
                     created_at: '2026-08-13T10:00:00.000Z'
-                },
-                {
-                    id: 'lost_2',
-                    title: 'Jellycat Beige Bunny Plush Toy',
-                    category: 'Plush Toy',
-                    status: 'Lost',
-                    district: 'Arabian Ranches',
-                    location_detail: 'Left near Springs 3 Pool sun loungers',
-                    reported_by: 'Michael T.',
-                    image_url: 'https://images.unsplash.com/photo-1558679908-541bcf1249ff?w=400',
-                    created_at: '2026-08-12T16:30:00.000Z'
-                },
-                {
-                    id: 'found_1',
-                    title: 'Ginger Tabby Cat with Blue Collar & Bell',
-                    category: 'Pet',
-                    status: 'Found',
-                    district: 'JBR',
-                    location_detail: 'Found near Bahar 4 courtyard - currently safe with security guard',
-                    reported_by: 'Elena K.',
-                    image_url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400',
-                    created_at: '2026-08-13T14:15:00.000Z'
                 }
             ];
         }

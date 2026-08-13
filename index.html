@@ -123,12 +123,6 @@
                 </button>
             </li>
             <li>
-                <button data-tab="squads" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
-                    <span class="material-symbols-outlined">groups</span>
-                    Activity Squads
-                </button>
-            </li>
-            <li>
                 <button data-tab="calendar" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
                     <span class="material-symbols-outlined">event</span>
                     Events Calendar
@@ -136,8 +130,8 @@
             </li>
             <li>
                 <button data-tab="v2-hub" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
-                    <span class="material-symbols-outlined">rocket_launch</span>
-                    Version 2.0 Hub
+                    <span class="material-symbols-outlined">hub</span>
+                    Parent Hub
                 </button>
             </li>
             <li>
@@ -341,28 +335,6 @@
                 </div>
             </section>
 
-            <!-- TAB: ACTIVITY SQUADS VIEW -->
-            <section id="tab-squads" class="tab-content hidden space-y-6">
-                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h3 class="font-display font-bold text-xl text-on-surface mb-1 flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-2xl">groups</span>
-                            Neighborhood Activity Squads
-                        </h3>
-                        <p class="text-xs text-on-surface-variant">Dedicated sub-groups inside your community for kids with shared hobbies & sports</p>
-                    </div>
-                    <button id="createSquadBtn" class="bg-primary text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm flex items-center gap-1.5 shrink-0">
-                        <span class="material-symbols-outlined text-base">group_add</span>
-                        + Create Activity Squad
-                    </button>
-                </div>
-
-                <!-- Squads Grid -->
-                <div id="squadsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Squad cards rendered here -->
-                </div>
-            </section>
-
             <!-- TAB: EVENTS CALENDAR VIEW -->
             <section id="tab-calendar" class="tab-content hidden space-y-6">
                 <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -385,15 +357,15 @@
                 </div>
             </section>
 
-            <!-- TAB: VERSION 2.0 EXPANSION HUB VIEW -->
+            <!-- TAB: PARENT HUB & COMPOUND TOOLS VIEW -->
             <section id="tab-v2-hub" class="tab-content hidden space-y-6">
                 <div class="bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary-container/20 p-6 rounded-2xl border border-primary/20 shadow-sm space-y-4">
                     <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary text-3xl">rocket_launch</span>
+                        <span class="material-symbols-outlined text-primary text-3xl">hub</span>
                         <div>
                             <div class="flex items-center gap-2">
-                                <h3 class="font-display font-bold text-xl text-on-surface">Version 2.0 Expansion Features</h3>
-                                <span class="bg-secondary-container text-on-secondary-container text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">COMMUNITY BETA</span>
+                                <h3 class="font-display font-bold text-xl text-on-surface">Parent Hub & Compound Tools</h3>
+                                <span class="bg-secondary-container text-on-secondary-container text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">PARENT TOOLS</span>
                             </div>
                             <p class="text-xs text-on-surface-variant">School uniform & reader swap, lost pet/item board, venue discounts, resident verification, and carpools.</p>
                         </div>
@@ -518,16 +490,12 @@
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">grid_view</span>
             <span class="text-[10px] tracking-tight">Feed</span>
         </button>
-        <button data-tab="squads" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
-            <span class="material-symbols-outlined text-xl">groups</span>
-            <span class="text-[10px] tracking-tight">Squads</span>
-        </button>
         <button id="mobileHostFab" class="flex flex-col items-center justify-center text-white bg-primary p-2.5 rounded-full -mt-5 shadow-lg active:scale-95 transition-transform" title="Host Playdate">
             <span class="material-symbols-outlined text-2xl">add</span>
         </button>
         <button data-tab="v2-hub" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
-            <span class="material-symbols-outlined text-xl">rocket_launch</span>
-            <span class="text-[10px] tracking-tight">V2 Hub</span>
+            <span class="material-symbols-outlined text-xl">hub</span>
+            <span class="text-[10px] tracking-tight">Parent Hub</span>
         </button>
         <button data-tab="profile" class="mobile-nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary">
             <span class="material-symbols-outlined text-xl">person</span>
@@ -918,47 +886,6 @@
                     <span>Send</span>
                     <span class="material-symbols-outlined text-sm">send</span>
                 </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 5: CREATE ACTIVITY SQUAD -->
-    <div id="createSquadModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-outline-variant">
-            <div class="flex justify-between items-center border-b border-outline-variant/40 pb-3">
-                <h3 class="font-display font-bold text-lg text-on-surface">Create Activity Squad</h3>
-                <button id="closeCreateSquadModalBtn" class="p-1 hover:bg-surface-container rounded-full">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <form id="createSquadForm" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold mb-1">Squad Name *</label>
-                    <input id="squadNameInput" type="text" placeholder="e.g. Arabian Ranches Swim Stars" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface text-xs font-medium" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold mb-1">Neighborhood District *</label>
-                    <input id="squadDistrictInput" type="text" placeholder="e.g. Arabian Ranches" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface text-xs font-medium" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold mb-1">Activity Category</label>
-                    <select id="squadCategoryInput" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface text-xs font-medium">
-                        <option value="Cycling">Cycling</option>
-                        <option value="Swimming">Swimming</option>
-                        <option value="Football">Football</option>
-                        <option value="Roblox / Gaming">Roblox / Gaming</option>
-                        <option value="Park Play">Park Play</option>
-                        <option value="Board Games">Board Games</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold mb-1">Description</label>
-                    <textarea id="squadDescInput" rows="2" placeholder="Squad goals & meetup frequency..." class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface text-xs font-medium"></textarea>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" id="cancelSquadModalBtn" class="px-4 py-2 rounded-xl border border-outline-variant text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-sm">Launch Squad</button>
-                </div>
             </form>
         </div>
     </div>

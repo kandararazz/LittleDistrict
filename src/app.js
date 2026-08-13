@@ -62,12 +62,7 @@ function openAddPlaceModal() {
     });
 }
 
-function openCreateSquadModal() {
-    requireAuthOr(() => {
-        const modal = document.getElementById('createSquadModal');
-        if (modal) modal.classList.remove('hidden');
-    });
-}
+
 
 // Toast helper
 function showToast(message) {
@@ -159,20 +154,7 @@ async function fetchMyMeetups() {
     }
 }
 
-async function fetchSquads() {
-    try {
-        const params = new URLSearchParams();
-        if (activeDistrict !== 'All') params.append('district', activeDistrict);
-        const res = await apiFetch(`${API_BASE}/community/squads?${params.toString()}`);
-        const json = await res.json();
-        if (json.success) {
-            squads = json.data;
-            renderSquadsGrid();
-        }
-    } catch (err) {
-        console.error("Failed to fetch squads", err);
-    }
-}
+
 
 async function fetchEvents() {
     try {
@@ -407,46 +389,7 @@ function renderMeetupsGrid() {
     });
 }
 
-function renderSquadsGrid() {
-    const grid = document.getElementById('squadsGrid');
-    if (!grid) return;
 
-    if (squads.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-on-surface-variant italic">No activity squads in this district yet. Be the first parent to start one!</div>`;
-        return;
-    }
-
-    grid.innerHTML = squads.map(sq => `
-        <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col justify-between space-y-4">
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">${sq.category}</span>
-                    <span class="text-xs font-semibold text-on-surface-variant flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">group</span>
-                        ${sq.members_count || 1} members
-                    </span>
-                </div>
-                <h4 class="font-display font-bold text-lg text-on-surface">${sq.name}</h4>
-                <p class="text-xs text-on-surface-variant leading-relaxed">${sq.description}</p>
-            </div>
-            <div class="flex items-center justify-between pt-3 border-t border-outline-variant/30 text-xs">
-                <span class="text-outline font-medium flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">location_on</span>
-                    ${sq.district}
-                </span>
-                <button class="join-squad-btn bg-secondary-container text-on-secondary-container font-bold px-4 py-2 rounded-xl hover:bg-secondary-container/90 transition-all shadow-sm">
-                    Join Squad
-                </button>
-            </div>
-        </div>
-    `).join('');
-
-    grid.querySelectorAll('.join-squad-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            requireAuthOr(() => showToast("Joined Activity Squad! You'll receive squad notifications."));
-        });
-    });
-}
 
 function renderEventsGrid() {
     const grid = document.getElementById('eventsGrid');
