@@ -59,4 +59,43 @@ CREATE TABLE IF NOT EXISTS public.meetups (
     max_attendees INTEGER DEFAULT 10,
     image_url TEXT DEFAULT '/assets/football.png',
     created_at TIMESTAMPTZ DEFAULT NOW()
-c
+);
+
+-- Ensure is_developer column exists on public.users
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS is_developer BOOLEAN DEFAULT FALSE;
+
+-- ==========================================
+-- 5. DEVELOPER BADGE CLAIM RPC PROCEDURE
+-- ==========================================
+CREATE OR REPLACE FUNCTION public.claim_dev_badge(input_passkey TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    user_email TEXT;
+    current_uid UUID;
+BEGIN
+    current_uid := auth.uid();
+    
+    IF current_uid IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    -- Retrieve logged-in user email from auth.users
+    SELECT email INTO user_email
+    FROM auth.users
+    WHERE id = current_uid;
+
+    -- Strict email and passkey validation
+    IF LOWER(user_email) = 'your_email@example.com' AND input_passkey = 'your_secret_passkey' THEN
+        UPDATE public.users
+        SET is_developer = TRUE
+        WHERE id = current_uid::text OR email = user_email;
+
+        RETURN TRUE;
+    ELSE
+        RAISE EXCEPTION 'Invalid email or developer passkey.';
+    END IF;
+END;
+$$;
