@@ -117,18 +117,6 @@
                 </button>
             </li>
             <li>
-                <button data-tab="places" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
-                    <span class="material-symbols-outlined">location_city</span>
-                    Neighborhood Places
-                </button>
-            </li>
-            <li>
-                <button data-tab="calendar" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
-                    <span class="material-symbols-outlined">event</span>
-                    Events Calendar
-                </button>
-            </li>
-            <li>
                 <button data-tab="v2-hub" class="nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors">
                     <span class="material-symbols-outlined">hub</span>
                     Parent Hub
@@ -285,76 +273,14 @@
                         <span class="material-symbols-outlined text-4xl">park</span>
                     </div>
                     <h4 class="font-display font-bold text-xl text-on-surface">No meetups posted yet</h4>
-                    <p class="text-sm text-on-surface-variant max-w-md mx-auto">Register your neighborhood park or host a community meetup to get started!</p>
+                    <p class="text-sm text-on-surface-variant max-w-md mx-auto">Host a community playdate or park meetup to get started!</p>
                     <div class="flex justify-center gap-3 pt-2">
-                        <button id="emptyAddPlaceBtn" class="bg-surface-container border border-outline text-on-surface font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-surface-container-high transition-all">
-                            + Add Neighborhood Place
-                        </button>
                         <button id="emptyHostBtn" class="bg-primary text-white font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-primary/90 shadow-sm transition-all">
                             + Host First Meetup
                         </button>
                     </div>
                 </div>
 
-            </section>
-
-            <!-- TAB: NEIGHBORHOOD PLACES EXPLORER VIEW -->
-            <section id="tab-places" class="tab-content hidden space-y-6">
-                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-display font-bold text-xl text-on-surface flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary text-2xl">location_city</span>
-                                Neighborhood Places Explorer
-                            </h3>
-                            <span id="placesCountBadge" class="bg-primary/10 text-primary text-xs font-bold px-3 py-0.5 rounded-full">0 spots</span>
-                        </div>
-                        <p class="text-xs text-on-surface-variant mt-1">Discover public parks, playgrounds, clubhouses, sports courts & beaches across Dubai communities</p>
-                    </div>
-                    <button id="placesAddBtn" class="bg-primary text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm flex items-center gap-1.5 shrink-0">
-                        <span class="material-symbols-outlined text-base">add_location_alt</span>
-                        + Add Neighborhood Place
-                    </button>
-                </div>
-
-                <!-- Places Cards Grid -->
-                <div id="placesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <!-- Dynamic place cards injected here -->
-                </div>
-
-                <!-- Empty Places Fallback -->
-                <div id="emptyPlacesState" class="hidden text-center py-16 bg-surface-container-lowest border border-dashed border-outline-variant rounded-2xl p-8 space-y-4">
-                    <div class="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto text-3xl">
-                        <span class="material-symbols-outlined text-4xl">storefront</span>
-                    </div>
-                    <h4 class="font-display font-bold text-xl text-on-surface">No spots registered in this district</h4>
-                    <p class="text-sm text-on-surface-variant max-w-md mx-auto">Be the first resident to register a neighborhood park or playground for playdates!</p>
-                    <button id="emptyPlacesAddBtn" class="bg-primary text-white font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-primary/90 shadow-sm transition-all">
-                        + Register First Place
-                    </button>
-                </div>
-            </section>
-
-            <!-- TAB: EVENTS CALENDAR VIEW -->
-            <section id="tab-calendar" class="tab-content hidden space-y-6">
-                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h3 class="font-display font-bold text-xl text-on-surface mb-1 flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-2xl">event</span>
-                            Community Events Calendar
-                        </h3>
-                        <p class="text-xs text-on-surface-variant">Neighborhood sports days, holiday parties, eco-drives & local gatherings</p>
-                    </div>
-                    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold">
-                        <span class="material-symbols-outlined text-base">today</span>
-                        <span>Dubai Community Calendar 2026</span>
-                    </div>
-                </div>
-
-                <!-- Calendar Events List -->
-                <div id="eventsGrid" class="space-y-4">
-                    <!-- Event cards rendered here -->
-                </div>
             </section>
 
             <!-- TAB: PARENT HUB & COMPOUND TOOLS VIEW -->
@@ -504,61 +430,7 @@
     </nav>
 
 
-    <!-- MODAL 1: ADD NEIGHBORHOOD PLACE ("dont add any places let make us add it") -->
-    <div id="addPlaceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-outline-variant">
-            <div class="flex justify-between items-center border-b border-outline-variant/40 pb-4">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-secondary text-2xl">add_location_alt</span>
-                    <div>
-                        <h3 class="font-display font-bold text-lg text-on-surface">Add Neighborhood Place</h3>
-                        <p class="text-xs text-on-surface-variant">Register a public park or spot for playdates</p>
-                    </div>
-                </div>
-                <button id="closeAddPlaceModalBtn" class="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
 
-            <form id="addPlaceForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Place Name *</label>
-                    <input id="placeNameInput" type="text" placeholder="Place name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">District / Neighborhood *</label>
-                        <input id="placeDistrictInput" type="text" placeholder="District name" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-on-surface-variant mb-1">Public Spot Type *</label>
-                        <select id="placeTypeInput" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium" required>
-                            <option value="Park">Park</option>
-                            <option value="Playground">Playground</option>
-                            <option value="Clubhouse">Clubhouse</option>
-                            <option value="Recreation Center">Recreation Center</option>
-                            <option value="Pool">Pool</option>
-                            <option value="Sports Court">Sports Court</option>
-                            <option value="Beach">Beach</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">Description</label>
-                    <textarea id="placeDescInput" rows="2" placeholder="Place description" class="w-full px-4 py-2.5 rounded-xl border border-outline/40 bg-surface focus:border-primary outline-none text-sm font-medium"></textarea>
-                </div>
-
-                <div id="addPlaceError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl"></div>
-
-                <div class="flex justify-end gap-3 pt-3 border-t border-outline-variant/40">
-                    <button type="button" id="cancelAddPlaceBtn" class="px-4 py-2.5 rounded-xl border border-outline-variant text-xs font-semibold hover:bg-surface-container">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-secondary-container text-on-secondary-container font-bold text-xs hover:bg-secondary-container/90 shadow-sm transition-all">Register Place</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- MODAL: REPORT LOST PET / ITEM -->
     <div id="reportLostModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -931,6 +803,10 @@
                 <div>
                     <label class="block text-xs font-bold text-on-surface mb-1">Email Address</label>
                     <input id="regEmail" type="email" required placeholder="name@example.com" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface mb-1">Mobile Phone Number (WhatsApp) *</label>
+                    <input id="regPhone" type="tel" required placeholder="e.g. +971 50 123 4567" class="w-full px-4 py-2 rounded-xl border border-outline/40 text-xs bg-surface outline-none focus:border-primary">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-on-surface mb-1">Password</label>

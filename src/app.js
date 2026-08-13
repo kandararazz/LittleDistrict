@@ -544,10 +544,10 @@ function renderUniformBookSwap(items) {
                     <span class="text-outline">${item.district}</span>
                 </div>
             </div>
-            <button class="w-full bg-primary text-white font-bold text-xs py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-sm">chat</span>
-                Message Parent for Swap
-            </button>
+            <a href="tel:${item.user_phone || '+971501234567'}" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-sm">call</span>
+                <span>Call / WhatsApp Parent (${item.user_phone || item.user_contact || '+971 50 123 4567'})</span>
+            </a>
         </div>
     `).join('');
 
@@ -809,11 +809,13 @@ function renderProfile() {
 
     const editName = document.getElementById('editParentName');
     const editDistrict = document.getElementById('editDistrict');
+    const editPhone = document.getElementById('editPhone');
     const editContact = document.getElementById('editContactPref');
     const editBio = document.getElementById('editBio');
 
     if (editName) editName.value = profile.name || '';
     if (editDistrict) editDistrict.value = profile.district || 'Dubai Hills';
+    if (editPhone) editPhone.value = profile.phone || '';
     if (editContact) editContact.value = profile.contact_preference || 'In-App Message';
     if (editBio) editBio.value = profile.bio || '';
 
@@ -996,13 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Action Triggers
     document.getElementById('sidebarHostBtn')?.addEventListener('click', openHostMeetupModal);
-    document.getElementById('sidebarAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
-    document.getElementById('mobileAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
     document.getElementById('mobileHostFab')?.addEventListener('click', openHostMeetupModal);
-    document.getElementById('addPlaceChipBtn')?.addEventListener('click', openAddPlaceModal);
-    document.getElementById('emptyAddPlaceBtn')?.addEventListener('click', openAddPlaceModal);
     document.getElementById('emptyHostBtn')?.addEventListener('click', openHostMeetupModal);
-    document.getElementById('createSquadBtn')?.addEventListener('click', openCreateSquadModal);
 
     // Direct Chat Trigger
     document.getElementById('openDirectChatBtn')?.addEventListener('click', openDirectChatModal);
@@ -1014,21 +1011,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetTab = btn.getAttribute('data-tab');
             if (!targetTab) return;
 
-            if (targetTab === 'places') {
-                currentTab = 'places';
-                document.querySelectorAll('.nav-tab').forEach(b => {
-                    const isTarget = b.getAttribute('data-tab') === 'places';
-                    b.className = isTarget 
-                        ? 'nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-2.5 font-semibold text-sm transition-all shadow-sm'
-                        : 'nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors';
-                });
-                document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
-                const activeSec = document.getElementById('tab-places');
-                if (activeSec) activeSec.classList.remove('hidden');
-                document.getElementById('pageTitle').textContent = 'Neighborhood Places Explorer';
-                fetchPlaces();
-                return;
-            }
             if (targetTab === 'create-meetup') {
                 openHostMeetupModal();
                 return;
@@ -1058,10 +1040,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeSec = document.getElementById(`tab-${targetTab}`);
             if (activeSec) activeSec.classList.remove('hidden');
 
+            const pageTitleEl = document.getElementById('pageTitle');
+            if (pageTitleEl) {
+                if (targetTab === 'feed') pageTitleEl.textContent = 'Community Playdates Feed';
+                if (targetTab === 'v2-hub') pageTitleEl.textContent = 'Parent Hub & Compound Tools';
+                if (targetTab === 'my-meetups') pageTitleEl.textContent = 'My Meetups & Direct Messages';
+                if (targetTab === 'profile') pageTitleEl.textContent = 'Family Profile & Privacy Settings';
+            }
+
             if (targetTab === 'feed') fetchFeed();
-            if (targetTab === 'places') fetchPlaces();
-            if (targetTab === 'squads') fetchSquads();
-            if (targetTab === 'calendar') fetchEvents();
             if (targetTab === 'v2-hub') fetchV2Hub();
             if (targetTab === 'my-meetups') fetchMyMeetups();
             if (targetTab === 'profile') fetchProfile();
@@ -1110,9 +1097,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Modal Close Buttons
-    document.getElementById('closeAddPlaceModalBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.add('hidden'));
-    document.getElementById('cancelAddPlaceBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.add('hidden'));
-
     document.getElementById('closeReportLostModalBtn')?.addEventListener('click', () => document.getElementById('reportLostModal').classList.add('hidden'));
     document.getElementById('cancelReportLostBtn')?.addEventListener('click', () => document.getElementById('reportLostModal').classList.add('hidden'));
 
@@ -1124,9 +1108,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('closeDetailModalBtn')?.addEventListener('click', () => document.getElementById('meetupDetailModal').classList.add('hidden'));
     document.getElementById('closeDirectChatBtn')?.addEventListener('click', () => document.getElementById('directChatModal').classList.add('hidden'));
-
-    document.getElementById('closeCreateSquadModalBtn')?.addEventListener('click', () => document.getElementById('createSquadModal').classList.add('hidden'));
-    document.getElementById('cancelSquadModalBtn')?.addEventListener('click', () => document.getElementById('createSquadModal').classList.add('hidden'));
 
     // Submit Report Lost Form
     document.getElementById('reportLostForm')?.addEventListener('submit', async (e) => {
@@ -1218,44 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Submit Add Place Form
-    document.getElementById('addPlaceForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!authToken) {
-            window.location.href = '/login.html';
-            return;
-        }
 
-        const errEl = document.getElementById('addPlaceError');
-        errEl.classList.add('hidden');
-
-        const name = document.getElementById('placeNameInput').value;
-        const district = document.getElementById('placeDistrictInput').value;
-        const public_spot_type = document.getElementById('placeTypeInput').value;
-        const description = document.getElementById('placeDescInput').value;
-
-        try {
-            const res = await apiFetch(`${API_BASE}/community/places`, {
-                method: 'POST',
-                body: JSON.stringify({ name, district, public_spot_type, description })
-            });
-
-            const json = await res.json();
-            if (!res.ok || !json.success) {
-                errEl.textContent = json.details ? json.details.join(', ') : json.error;
-                errEl.classList.remove('hidden');
-                return;
-            }
-
-            showToast(json.message);
-            document.getElementById('addPlaceModal').classList.add('hidden');
-            document.getElementById('addPlaceForm').reset();
-            fetchPlaces();
-        } catch (err) {
-            errEl.textContent = "Server connection error.";
-            errEl.classList.remove('hidden');
-        }
-    });
 
     // Submit Host Meetup Form with Public Location Guard
     document.getElementById('hostMeetupForm')?.addEventListener('submit', async (e) => {
@@ -1306,31 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Create Squad Form Handler
-    document.getElementById('createSquadForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('squadNameInput').value;
-        const district = document.getElementById('squadDistrictInput').value;
-        const category = document.getElementById('squadCategoryInput').value;
-        const description = document.getElementById('squadDescInput').value;
 
-        try {
-            const res = await apiFetch(`${API_BASE}/community/squads`, {
-                method: 'POST',
-                body: JSON.stringify({ name, district, category, description })
-            });
-
-            const json = await res.json();
-            if (json.success) {
-                showToast("Activity Squad launched!");
-                document.getElementById('createSquadModal').classList.add('hidden');
-                document.getElementById('createSquadForm').reset();
-                fetchSquads();
-            }
-        } catch (err) {
-            console.error("Create squad error", err);
-        }
-    });
 
     // Direct Chat Message Form Submit
     document.getElementById('directChatForm')?.addEventListener('submit', async (e) => {
@@ -1473,13 +1393,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const name = document.getElementById('editParentName').value;
         const district = document.getElementById('editDistrict').value;
+        const phone = document.getElementById('editPhone')?.value || '';
         const contact_preference = document.getElementById('editContactPref').value;
         const bio = document.getElementById('editBio').value;
 
         try {
             const res = await apiFetch(`${API_BASE}/profile`, {
                 method: 'PUT',
-                body: JSON.stringify({ name, district, contact_preference, bio, children: profile?.children || [] })
+                body: JSON.stringify({ name, district, phone, contact_preference, bio, children: profile?.children || [] })
             });
 
             const json = await res.json();

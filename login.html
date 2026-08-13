@@ -195,6 +195,14 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold text-on-surface mb-1.5">Mobile Phone Number (WhatsApp) *</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">call</span>
+                                <input id="regPhone" type="tel" required placeholder="e.g. +971 50 123 4567" class="w-full pl-10 pr-4 py-3 rounded-xl border border-outline/40 bg-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all">
+                            </div>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold text-on-surface mb-1.5">Password</label>
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg">lock</span>
@@ -335,6 +343,7 @@
 
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
             const password = document.getElementById('regPassword').value;
             const district = document.getElementById('regDistrict').value;
             const contact_preference = document.getElementById('regContactPref').value;
@@ -343,7 +352,7 @@
                 const res = await fetch(`${API_BASE}/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, district, contact_preference })
+                    body: JSON.stringify({ name, email, phone, password, district, contact_preference })
                 });
 
                 const json = await res.json();

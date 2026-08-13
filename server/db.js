@@ -305,7 +305,7 @@ export const db = {
     isSupabase: isSupabaseConfigured,
 
     // Authentication Methods
-    registerUser: async ({ name, email, password, district }) => {
+    registerUser: async ({ name, email, password, district, phone }) => {
         const cleanEmail = (email || '').trim().toLowerCase();
         if (!cleanEmail || !password) throw new Error('Email and password are required.');
 
@@ -322,7 +322,8 @@ export const db = {
             email: cleanEmail,
             password_hash: passwordHash,
             district: district || 'Dubai Marina',
-            contact_preference: 'In-App Message',
+            phone: phone || '+971 50 123 4567',
+            contact_preference: 'WhatsApp',
             avatar_url: avatarUrl,
             bio: 'Active community parent'
         };
@@ -1143,7 +1144,8 @@ export const db = {
                 swap_type: 'Swap or Free Donation',
                 user_id: 'user_1',
                 user_name: 'Rachel S. (DESS Parent)',
-                user_contact: 'In-App Message',
+                user_contact: '+971 50 492 8172',
+                user_phone: '+971 50 492 8172',
                 status: 'available',
                 image_url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'
             }
@@ -1168,7 +1170,8 @@ export const db = {
             swap_type: toyData.swap_type || 'Free Donation',
             user_id: user.id || 'user_1',
             user_name: user.name || 'Parent',
-            user_contact: 'In-App Message',
+            user_contact: user.phone || '+971 50 123 4567',
+            user_phone: user.phone || '+971 50 123 4567',
             image_url: toyData.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400',
             status: 'available',
             created_at: new Date().toISOString()
