@@ -10,7 +10,7 @@ let authToken = localStorage.getItem('ld_auth_token') || '';
 let currentTab = 'feed';
 let activeDistrict = 'All';
 let activeInterest = 'All';
-let activeV2Sub = 'toys';
+let activeV2Sub = 'uniforms';
 let searchQuery = '';
 let isSummerMode = true; // Dubai Summer Weather toggle state
 
@@ -197,10 +197,14 @@ async function fetchV2Hub() {
         const params = new URLSearchParams();
         if (activeDistrict !== 'All') params.append('district', activeDistrict);
 
-        if (activeV2Sub === 'toys') {
+        if (activeV2Sub === 'uniforms' || activeV2Sub === 'toys') {
             const res = await apiFetch(`${API_BASE}/v2/toys?${params.toString()}`);
             const json = await res.json();
-            if (json.success) renderToyExchange(json.data);
+            if (json.success) renderUniformBookSwap(json.data);
+        } else if (activeV2Sub === 'lost-found') {
+            const res = await apiFetch(`${API_BASE}/v2/lost-found?${params.toString()}`);
+            const json = await res.json();
+            if (json.success) renderLostFoundBoard(json.data);
         } else if (activeV2Sub === 'discounts') {
             const res = await apiFetch(`${API_BASE}/v2/discounts`);
             const json = await res.json();
@@ -341,6 +345,13 @@ function renderMeetupsGrid() {
                     </div>
 
                     <div class="space-y-3 pt-2 border-t border-outline-variant/30 text-xs">
+                        ${m.allergy_summary && m.allergy_summary.length > 0 ? `
+                            <div class="bg-amber-50 border border-amber-200/80 text-amber-900 rounded-xl p-2 text-[11px] font-semibold flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm text-amber-700">warning</span>
+                                <span>Snack Safety: ${m.allergy_summary.join(' • ')}</span>
+                            </div>
+                        ` : ''}
+
                         <div class="flex items-center justify-between text-on-surface-variant font-medium">
                             <span class="flex items-center gap-1">
                                 <span class="material-symbols-outlined text-sm text-primary">child_care</span>
@@ -355,7 +366,10 @@ function renderMeetupsGrid() {
                         <div class="flex items-center justify-between pt-1">
                             <div class="flex items-center gap-2">
                                 <img class="w-7 h-7 rounded-full object-cover border border-outline-variant" src="${m.host_avatar || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%23eef5f7\'/><circle cx=\'50\' cy=\'38\' r=\'20\' fill=\'%23006565\'/><path d=\'M20 90 c0-25 15-35 30-35 s30 10 30 35 Z\' fill=\'%23006565\'/></svg>'}" alt="${m.host_name}">
-                                <span class="text-xs font-medium text-on-surface line-clamp-1">Host: ${m.host_name}</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs font-medium text-on-surface line-clamp-1">Host: ${m.host_name}</span>
+                                    <span class="material-symbols-outlined text-xs text-emerald-600" title="Verified Resident">verified_user</span>
+                                </div>
                             </div>
 
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold ${isAttending ? 'bg-primary-container text-on-primary-container' : isFull ? 'bg-surface-container-high text-on-surface-variant' : 'bg-surface-container-high text-on-surface'}">
@@ -470,32 +484,144 @@ function renderEventsGrid() {
     `).join('');
 }
 
-function renderToyExchange(toys) {
+function renderPlacesGrid() {
+    const grid = document.getElementById('placesGrid');
+    const emptyState = document.getElementById('emptyPlacesState');
+    const badge = document.getElementById('placesCountBadge');
+    if (!grid) return;
+
+    let filtered = places;
+    if (activeDistrict && activeDistrict !== 'All') {
+        filtered = places.filter(p => p.district.toLowerCase() === activeDistrict.toLowerCase());
+    }
+
+    if (badge) badge.textContent = `${filtered.length} spot${filtered.length === 1 ? '' : 's'}`;
+
+    if (filtered.length === 0) {
+        grid.classList.add('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+
+    grid.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+
+    grid.innerHTML = filtered.map(p => {
+        const amenitiesList = (p.amenities || 'Playground, Shaded Seating, Restrooms')
+            .split(',')
+            .map(a => a.trim())
+            .filter(Boolean);
+
+        const typeColorMap = {
+            'Park': 'bg-emerald-600 text-white',
+            'Playground': 'bg-teal-600 text-white',
+            'Clubhouse': 'bg-purple-600 text-white',
+            'Beach': 'bg-cyan-600 text-white',
+            'Pool': 'bg-blue-600 text-white',
+            'Sports Court': 'bg-amber-600 text-white'
+        };
+        const badgeStyle = typeColorMap[p.public_spot_type] || 'bg-primary text-white';
+
+        return `
+            <div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-shadow card-shadow-hover relative flex flex-col border border-outline-variant/30">
+                <div class="h-44 relative overflow-hidden">
+                    <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="${p.image_url || 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600'}" alt="${p.name}">
+                    <div class="absolute top-3 left-3 ${badgeStyle} px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">park</span>
+                        <span>${p.public_spot_type}</span>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur">
+                        ${p.district}
+                    </div>
+                </div>
+
+                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div class="space-y-2">
+                        <h3 class="font-display font-bold text-lg text-on-surface line-clamp-1">${p.name}</h3>
+                        <p class="text-xs text-on-surface-variant line-clamp-2">${p.description || 'Public neighborhood community spot for family playdates.'}</p>
+                    </div>
+
+                    <div class="space-y-3 pt-2 border-t border-outline-variant/30">
+                        <div class="flex flex-wrap gap-1">
+                            ${amenitiesList.map(am => `
+                                <span class="bg-surface-container text-on-surface-variant text-[10px] font-medium px-2 py-0.5 rounded-md border border-outline-variant/20">✓ ${am}</span>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <button class="host-here-btn flex-1 bg-primary text-white font-bold text-xs py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-1 shadow-sm" data-place-name="${p.name}" data-place-district="${p.district}">
+                                <span class="material-symbols-outlined text-sm">add_circle</span>
+                                Host Meetup Here
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    grid.querySelectorAll('.host-here-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const placeName = btn.getAttribute('data-place-name');
+            const placeDistrict = btn.getAttribute('data-place-district');
+            openHostMeetupModal();
+            const locationInput = document.getElementById('meetupLocationInput');
+            const districtInput = document.getElementById('meetupDistrictInput');
+            if (locationInput) locationInput.value = placeName;
+            if (districtInput) districtInput.value = placeDistrict;
+        });
+    });
+
+    document.getElementById('placesAddBtn')?.addEventListener('click', openAddPlaceModal);
+    document.getElementById('emptyPlacesAddBtn')?.addEventListener('click', openAddPlaceModal);
+}
+
+function renderUniformBookSwap(items) {
     const container = document.getElementById('v2HubContainer');
     if (!container) return;
 
-    let itemsHtml = toys.map(item => `
+    let itemsHtml = items.map(item => `
         <div class="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col justify-between space-y-3">
-            <img src="${item.image_url}" class="w-full h-36 object-cover rounded-xl">
-            <div class="space-y-1">
-                <div class="flex justify-between items-center">
-                    <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">${item.condition}</span>
-                    <span class="text-xs text-outline">${item.district}</span>
-                </div>
-                <h4 class="font-display font-bold text-sm text-on-surface">${item.title}</h4>
-                <p class="text-xs text-on-surface-variant">Listed by: ${item.user_name}</p>
+            <div class="relative h-40 overflow-hidden rounded-xl">
+                <img src="${item.image_url}" class="w-full h-full object-cover">
+                <span class="absolute top-2 left-2 bg-primary text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">${item.school_name || 'General'}</span>
+                <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur">${item.swap_type}</span>
             </div>
-            <button class="w-full bg-primary text-white font-bold text-xs py-2 rounded-xl hover:bg-primary/90 transition-all">
-                Request Trade / Pickup
+            <div class="space-y-1.5">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="font-bold text-secondary bg-secondary-container/40 px-2 py-0.5 rounded-md">${item.category}</span>
+                    <span class="text-on-surface-variant font-medium">${item.grade_level || 'All Ages'}</span>
+                </div>
+                <h4 class="font-display font-bold text-sm text-on-surface line-clamp-2">${item.title}</h4>
+                <div class="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/30">
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
+                        ${item.user_name}
+                    </span>
+                    <span class="text-outline">${item.district}</span>
+                </div>
+            </div>
+            <button class="w-full bg-primary text-white font-bold text-xs py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">chat</span>
+                Message Parent for Swap
             </button>
         </div>
     `).join('');
 
     container.innerHTML = `
         <div class="space-y-4">
-            <div class="flex justify-between items-center">
-                <h4 class="font-display font-bold text-base text-on-surface">Neighborhood Toy, Book & Bike Marketplace</h4>
-                <button id="listToyBtn" class="bg-secondary-container text-on-secondary-container text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-secondary-container/90">+ List Toy or Book</button>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface-container-low/70 p-4 rounded-2xl border border-outline-variant/30">
+                <div>
+                    <h4 class="font-display font-bold text-base text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-xl">checkroom</span>
+                        School Uniform & Grade-Level Book Swap
+                    </h4>
+                    <p class="text-xs text-on-surface-variant">Donate or swap uniforms (DESC, DC, Horizon, GEMS) & readers within your compound</p>
+                </div>
+                <button id="listUniformBtn" class="bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 shadow-sm flex items-center gap-1 shrink-0">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    + List Uniform / Book
+                </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 ${itemsHtml}
@@ -503,12 +629,88 @@ function renderToyExchange(toys) {
         </div>
     `;
 
-    document.getElementById('listToyBtn')?.addEventListener('click', () => {
+    document.getElementById('listUniformBtn')?.addEventListener('click', () => {
         requireAuthOr(() => {
-            const title = prompt("Enter Toy / Book Title:");
-            if (!title) return;
-            showToast("Item listed on Toy Exchange!");
-            fetchV2Hub();
+            const modal = document.getElementById('listUniformBookModal');
+            if (modal) modal.classList.remove('hidden');
+        });
+    });
+}
+
+function renderLostFoundBoard(items) {
+    const container = document.getElementById('v2HubContainer');
+    if (!container) return;
+
+    let itemsHtml = items.map(item => {
+        const isLost = item.status === 'Lost';
+        return `
+            <div class="bg-surface-container-lowest p-4 rounded-2xl border ${isLost ? 'border-amber-300' : 'border-emerald-300'} shadow-sm flex flex-col justify-between space-y-3">
+                <div class="relative h-36 overflow-hidden rounded-xl">
+                    <img src="${item.image_url}" class="w-full h-full object-cover">
+                    <span class="absolute top-2 left-2 ${isLost ? 'bg-amber-600' : 'bg-emerald-600'} text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">${item.status.toUpperCase()}</span>
+                    <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur">${item.category}</span>
+                </div>
+                <div class="space-y-1.5">
+                    <h4 class="font-display font-bold text-sm text-on-surface line-clamp-1">${item.title}</h4>
+                    <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm text-amber-700">near_me</span>
+                        <span>${item.location_detail}</span>
+                    </p>
+                    <div class="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/30">
+                        <span class="font-medium text-on-surface">Reported by: ${item.reported_by}</span>
+                        <span class="text-outline">${item.district}</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button class="contact-lost-btn flex-1 bg-surface-container border border-outline text-on-surface font-bold text-xs py-2 rounded-xl hover:bg-surface-container-high transition-all">
+                        Contact Resident
+                    </button>
+                    ${isLost ? `
+                        <button class="mark-found-btn bg-emerald-600 text-white font-bold text-xs px-3 py-2 rounded-xl hover:bg-emerald-700 transition-all" data-id="${item.id}">
+                            Mark Found
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 p-4 rounded-2xl">
+                <div>
+                    <h4 class="font-display font-bold text-base text-amber-950 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-700 text-xl">search_hands_free</span>
+                        Lost & Found Pet / Item Board
+                    </h4>
+                    <p class="text-xs text-amber-900/90">Instant alert board for lost scooters, bikes, plush toys, or pets dropped along walking paths</p>
+                </div>
+                <button id="reportLostBtn" class="bg-amber-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-amber-700 shadow-sm flex items-center gap-1 shrink-0">
+                    <span class="material-symbols-outlined text-base">add_alert</span>
+                    + Report Lost Item / Pet
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                ${itemsHtml}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('reportLostBtn')?.addEventListener('click', () => {
+        requireAuthOr(() => {
+            const modal = document.getElementById('reportLostModal');
+            if (modal) modal.classList.remove('hidden');
+        });
+    });
+
+    container.querySelectorAll('.mark-found-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            try {
+                await apiFetch(`${API_BASE}/v2/lost-found/${id}/found`, { method: 'POST' });
+                showToast("Item marked as Found!");
+                fetchV2Hub();
+            } catch (e) {}
         });
     });
 }
@@ -870,7 +1072,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!targetTab) return;
 
             if (targetTab === 'places') {
-                openAddPlaceModal();
+                currentTab = 'places';
+                document.querySelectorAll('.nav-tab').forEach(b => {
+                    const isTarget = b.getAttribute('data-tab') === 'places';
+                    b.className = isTarget 
+                        ? 'nav-tab w-full flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-2.5 font-semibold text-sm transition-all shadow-sm'
+                        : 'nav-tab w-full flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-xl px-4 py-2.5 font-medium text-sm transition-colors';
+                });
+                document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
+                const activeSec = document.getElementById('tab-places');
+                if (activeSec) activeSec.classList.remove('hidden');
+                document.getElementById('pageTitle').textContent = 'Neighborhood Places Explorer';
+                fetchPlaces();
                 return;
             }
             if (targetTab === 'create-meetup') {
@@ -903,6 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeSec) activeSec.classList.remove('hidden');
 
             if (targetTab === 'feed') fetchFeed();
+            if (targetTab === 'places') fetchPlaces();
             if (targetTab === 'squads') fetchSquads();
             if (targetTab === 'calendar') fetchEvents();
             if (targetTab === 'v2-hub') fetchV2Hub();
@@ -956,6 +1170,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('closeAddPlaceModalBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.add('hidden'));
     document.getElementById('cancelAddPlaceBtn')?.addEventListener('click', () => document.getElementById('addPlaceModal').classList.add('hidden'));
 
+    document.getElementById('closeReportLostModalBtn')?.addEventListener('click', () => document.getElementById('reportLostModal').classList.add('hidden'));
+    document.getElementById('cancelReportLostBtn')?.addEventListener('click', () => document.getElementById('reportLostModal').classList.add('hidden'));
+
+    document.getElementById('closeListUniformModalBtn')?.addEventListener('click', () => document.getElementById('listUniformBookModal').classList.add('hidden'));
+    document.getElementById('cancelListUniformBtn')?.addEventListener('click', () => document.getElementById('listUniformBookModal').classList.add('hidden'));
+
     document.getElementById('closeHostModalBtn')?.addEventListener('click', () => document.getElementById('hostMeetupModal').classList.add('hidden'));
     document.getElementById('cancelHostModalBtn')?.addEventListener('click', () => document.getElementById('hostMeetupModal').classList.add('hidden'));
 
@@ -964,6 +1184,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('closeCreateSquadModalBtn')?.addEventListener('click', () => document.getElementById('createSquadModal').classList.add('hidden'));
     document.getElementById('cancelSquadModalBtn')?.addEventListener('click', () => document.getElementById('createSquadModal').classList.add('hidden'));
+
+    // Submit Report Lost Form
+    document.getElementById('reportLostForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const title = document.getElementById('lostTitleInput').value;
+        const category = document.getElementById('lostCategoryInput').value;
+        const status = document.getElementById('lostStatusInput').value;
+        const location_detail = document.getElementById('lostLocationInput').value;
+        const district = document.getElementById('lostDistrictInput').value;
+
+        try {
+            const res = await apiFetch(`${API_BASE}/v2/lost-found`, {
+                method: 'POST',
+                body: JSON.stringify({ title, category, status, location_detail, district })
+            });
+
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+                showToast(json.error || "Failed to publish alert");
+                return;
+            }
+
+            showToast("Lost & Found alert published!");
+            document.getElementById('reportLostModal').classList.add('hidden');
+            document.getElementById('reportLostForm').reset();
+            fetchV2Hub();
+        } catch (err) {
+            showToast("Server connection error.");
+        }
+    });
+
+    // Submit List Uniform or Book Form
+    document.getElementById('listUniformBookForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!authToken) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const title = document.getElementById('ubTitleInput').value;
+        const category = document.getElementById('ubCategoryInput').value;
+        const school_name = document.getElementById('ubSchoolInput').value;
+        const grade_level = document.getElementById('ubGradeInput').value;
+        const swap_type = document.getElementById('ubSwapTypeInput').value;
+
+        try {
+            const res = await apiFetch(`${API_BASE}/v2/toys`, {
+                method: 'POST',
+                body: JSON.stringify({ title, category, school_name, grade_level, swap_type })
+            });
+
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+                showToast(json.error || "Failed to list item");
+                return;
+            }
+
+            showToast("Item listed on Swap Marketplace!");
+            document.getElementById('listUniformBookModal').classList.add('hidden');
+            document.getElementById('listUniformBookForm').reset();
+            fetchV2Hub();
+        } catch (err) {
+            showToast("Server connection error.");
+        }
+    });
 
     // Search Input
     document.getElementById('searchInput')?.addEventListener('input', (e) => {

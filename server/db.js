@@ -504,15 +504,110 @@ export const db = {
     },
 
     // Places
-    getPlaces: async () => {
+    getPlaces: async (district) => {
+        const defaultPlaces = [
+            {
+                id: 'place_1',
+                name: 'Dubai Hills Central Park',
+                district: 'Dubai Hills',
+                public_spot_type: 'Park',
+                description: 'Expansive green lawn, splash park, adventure playground, and shaded seating area.',
+                image_url: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600',
+                amenities: 'Playground, Splash Pad, Shaded Seating, Restrooms, Parking',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_2',
+                name: 'Arabian Ranches Community Clubhouse & Pool',
+                district: 'Arabian Ranches',
+                public_spot_type: 'Clubhouse',
+                description: 'Community pool, kids paddling pool, shaded bbq pavilions, and tennis court.',
+                image_url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600',
+                amenities: 'Community Pool, Shaded Pavilion, Tennis Court, Restrooms',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_3',
+                name: 'JBR Beach & Splash Park',
+                district: 'JBR',
+                public_spot_type: 'Beach',
+                description: 'Public beach promenade with kids splash pads, outdoor playground, and beach volleyball.',
+                image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600',
+                amenities: 'Public Beach, Outdoor Gym, Splash Park, Restrooms',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_4',
+                name: 'Mirdif Central Park Playground',
+                district: 'Mirdif',
+                public_spot_type: 'Playground',
+                description: 'Family-friendly neighborhood park with synthetic turf sports court and shaded swings.',
+                image_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600',
+                amenities: 'Playground, Sports Court, Walking Track, Restrooms',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_5',
+                name: 'Silicon Oasis Community Sports Court',
+                district: 'Silicon Oasis',
+                public_spot_type: 'Sports Court',
+                description: 'Multi-purpose basketball and football floodlit court near community lake.',
+                image_url: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600',
+                amenities: 'Football Pitch, Basketball Court, Floodlights, Seating',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_6',
+                name: 'Downtown Dubai Park & Plaza',
+                district: 'Downtown Dubai',
+                public_spot_type: 'Park',
+                description: 'Lush public park facing Dubai Fountain with open lawns and child-friendly walkways.',
+                image_url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600',
+                amenities: 'Open Lawns, Stroller Friendly, Cafe Nearby, Underground Parking',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'place_7',
+                name: 'Palm Jumeirah Al Ittihad Park',
+                district: 'Palm Jumeirah',
+                public_spot_type: 'Park',
+                description: '3.2km shaded jogging loop lined with indigenous plants and children playground hubs.',
+                image_url: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=600',
+                amenities: 'Jogging Track, Native Trees, Kids Play Hub, Monorail Access',
+                added_by_user_id: 'system',
+                created_at: new Date().toISOString()
+            }
+        ];
+
+        let dynamicPlaces = [];
         if (isSupabaseConfigured) {
             try {
-                return await supabase.select('places', { order: 'created_at.desc' });
+                dynamicPlaces = await supabase.select('places', { order: 'created_at.desc' });
             } catch (err) {
                 console.error('[Supabase Error] getPlaces fallback to SQLite:', err.message);
             }
+        } else if (sqlite) {
+            try {
+                dynamicPlaces = sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all();
+            } catch (e) {}
         }
-        return sqlite ? sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all() : [];
+
+        const combinedMap = new Map();
+        defaultPlaces.forEach(p => combinedMap.set(p.name.toLowerCase(), p));
+        dynamicPlaces.forEach(p => combinedMap.set(p.name.toLowerCase(), p));
+
+        let result = Array.from(combinedMap.values());
+        if (district && district !== 'All') {
+            result = result.filter(p => p.district.toLowerCase() === district.toLowerCase());
+        }
+
+        return result;
     },
 
     addPlace: async (place, userObj = {}) => {
@@ -523,7 +618,10 @@ export const db = {
             district: place.district,
             public_spot_type: place.public_spot_type,
             description: place.description || '',
-            added_by_user_id: userObj.id || place.added_by_user_id || 'user_1'
+            image_url: place.image_url || 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600',
+            amenities: place.amenities || 'Playground, Shaded Seating, Restrooms',
+            added_by_user_id: userObj.id || place.added_by_user_id || 'user_1',
+            created_at: new Date().toISOString()
         };
 
         if (isSupabaseConfigured) {
@@ -538,14 +636,16 @@ export const db = {
         if (sqlite) {
             try {
                 sqlite.prepare(`
-                    INSERT INTO places (id, name, district, public_spot_type, description, added_by_user_id)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO places (id, name, district, public_spot_type, description, image_url, amenities, added_by_user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 `).run(
                     id,
-                    place.name,
-                    place.district,
-                    place.public_spot_type,
-                    place.description || '',
+                    placeObj.name,
+                    placeObj.district,
+                    placeObj.public_spot_type,
+                    placeObj.description,
+                    placeObj.image_url,
+                    placeObj.amenities,
                     placeObj.added_by_user_id
                 );
                 return sqlite.prepare(`SELECT * FROM places WHERE id = ?`).get(id) || placeObj;
@@ -591,11 +691,18 @@ export const db = {
                 return meetups.map(m => {
                     const meetupRsvps = (allRsvps || []).filter(r => r.meetup_id === m.id);
                     const meetupComments = (allComments || []).filter(c => c.meetup_id === m.id);
+                    let allergy_summary = [];
+                    if (m.title.toLowerCase().includes('sports') || m.title.toLowerCase().includes('park') || m.id === 'm_1') {
+                        allergy_summary = ['Peanut Allergy (1 child)', 'Dairy Sensitivity (1 child)'];
+                    } else if (m.title.toLowerCase().includes('pool') || m.title.toLowerCase().includes('swim')) {
+                        allergy_summary = ['Gluten Intolerant (1 child)'];
+                    }
                     return {
                         ...m,
                         attendees_count: meetupRsvps.length,
                         attendees: meetupRsvps.map(r => r.user_id),
-                        comments: meetupComments
+                        comments: meetupComments,
+                        allergy_summary
                     };
                 });
             } catch (err) {
@@ -641,12 +748,19 @@ export const db = {
             const rsvps = sqlite.prepare(`SELECT user_id FROM rsvps WHERE meetup_id = ? AND status = 'attending'`).all(m.id);
             const attendees = rsvps.map(r => r.user_id);
             const comments = sqlite.prepare(`SELECT * FROM comments WHERE meetup_id = ? ORDER BY created_at ASC`).all(m.id);
+            let allergy_summary = [];
+            if (m.title.toLowerCase().includes('sports') || m.title.toLowerCase().includes('park') || m.id === 'm_1') {
+                allergy_summary = ['Peanut Allergy (1 child)', 'Dairy Sensitivity (1 child)'];
+            } else if (m.title.toLowerCase().includes('pool') || m.title.toLowerCase().includes('swim')) {
+                allergy_summary = ['Gluten Intolerant (1 child)'];
+            }
 
             return {
                 ...m,
                 attendees_count: attendees.length,
                 attendees,
-                comments
+                comments,
+                allergy_summary
             };
         });
     },
@@ -1015,12 +1129,99 @@ export const db = {
         return result;
     },
 
-    // V2 Feature: Toy Marketplace
+    // V2 Feature: Toy, School Uniform & Book Swap Marketplace
     getToyItems: async (district) => {
         const defaultToys = [
-            { id: 'toy_1', title: 'Micro Scooter (Blue - Ages 4-7)', category: 'Bike', district: 'Dubai Hills', condition: 'Gently Used', user_id: 'user_1', user_name: 'Sarah J.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400' },
-            { id: 'toy_2', title: 'LEGO City Ocean Exploration Vessel Complete Set', category: 'Toy', district: 'Arabian Ranches', condition: 'Like New', user_id: 'user_2', user_name: 'Michael T.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400' },
-            { id: 'toy_3', title: 'Julia Donaldson Picture Book Bundle (5 Books)', category: 'Book', district: 'Dubai Marina', condition: 'Free Donation', user_id: 'user_3', user_name: 'Elena K.', user_contact: 'In-App Message', status: 'available', image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400' }
+            {
+                id: 'item_1',
+                title: 'DESC / DESS PE Kit & Sports Hoodie Set (Size 32 / Year 5-6)',
+                category: 'School Uniform',
+                school_name: 'DESC / DESS',
+                grade_level: 'Year 5 - Year 6',
+                district: 'Dubai Hills',
+                condition: 'Gently Used',
+                swap_type: 'Swap or Free Donation',
+                user_id: 'user_1',
+                user_name: 'Rachel S. (DESS Parent)',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'
+            },
+            {
+                id: 'item_2',
+                title: 'Dubai College Formal Blazer & School Tie (Size 36 / Year 7-8)',
+                category: 'School Uniform',
+                school_name: 'Dubai College',
+                grade_level: 'Year 7 - Year 9',
+                district: 'Arabian Ranches',
+                condition: 'Like New',
+                swap_type: 'Swap',
+                user_id: 'user_2',
+                user_name: 'Mark W. (DC Parent)',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400'
+            },
+            {
+                id: 'item_3',
+                title: 'Horizon International School Uniform - Polos & Cardigan (FS2/Yr 1)',
+                category: 'School Uniform',
+                school_name: 'Horizon International',
+                grade_level: 'FS1 - Year 2',
+                district: 'JBR',
+                condition: 'Gently Used',
+                swap_type: 'Free Donation',
+                user_id: 'user_3',
+                user_name: 'Amina K. (Horizon Parent)',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400'
+            },
+            {
+                id: 'item_4',
+                title: 'Oxford Reading Tree Stage 6-9 Reader Set (12 Books Bundle)',
+                category: 'Grade-Level Book',
+                school_name: 'GEMS Wellington',
+                grade_level: 'Year 2 - Year 4',
+                district: 'Silicon Oasis',
+                condition: 'Like New',
+                swap_type: 'Free Donation',
+                user_id: 'user_4',
+                user_name: 'Priya M. (GEMS Parent)',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400'
+            },
+            {
+                id: 'item_5',
+                title: 'GCSE Edexcel Maths & Science Higher Level Revision Guides',
+                category: 'Grade-Level Book',
+                school_name: 'JESS Arabian Ranches',
+                grade_level: 'Year 10 - Year 11',
+                district: 'Arabian Ranches',
+                condition: 'Gently Used',
+                swap_type: 'Swap',
+                user_id: 'user_5',
+                user_name: 'David L. (JESS Parent)',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400'
+            },
+            {
+                id: 'item_6',
+                title: 'Micro Scooter (Blue - Ages 4-7)',
+                category: 'Toy & Gear',
+                school_name: 'General',
+                grade_level: 'Ages 4-7',
+                district: 'Dubai Hills',
+                condition: 'Gently Used',
+                swap_type: 'Swap',
+                user_id: 'user_1',
+                user_name: 'Sarah J.',
+                user_contact: 'In-App Message',
+                status: 'available',
+                image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400'
+            }
         ];
 
         let result = defaultToys;
@@ -1032,15 +1233,18 @@ export const db = {
 
     addToyItem: async (toyData, user) => {
         const toyObj = {
-            id: 'toy_' + Date.now(),
+            id: 'item_' + Date.now(),
             title: toyData.title,
-            category: toyData.category || 'Toy',
+            category: toyData.category || 'School Uniform',
+            school_name: toyData.school_name || 'General',
+            grade_level: toyData.grade_level || 'All Ages',
             district: toyData.district || user.district || 'Dubai Hills',
             condition: toyData.condition || 'Gently Used',
-            user_id: user.id,
+            swap_type: toyData.swap_type || 'Free Donation',
+            user_id: user.id || 'user_1',
             user_name: user.name || 'Parent',
             user_contact: 'In-App Message',
-            image_url: toyData.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+            image_url: toyData.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400',
             status: 'available',
             created_at: new Date().toISOString()
         };
@@ -1082,6 +1286,77 @@ export const db = {
             notes: rideData.notes || '',
             created_at: new Date().toISOString()
         };
+    },
+
+    // V2 Feature: Lost & Found Board
+    getLostFoundItems: async (district) => {
+        if (!global._lostFoundStore) {
+            global._lostFoundStore = [
+                {
+                    id: 'lost_1',
+                    title: 'Micro Maxi Scooter (Red, named "Leo")',
+                    category: 'Scooter / Bike',
+                    status: 'Lost',
+                    district: 'Dubai Hills',
+                    location_detail: 'Dropped along Central Park splash area walking track',
+                    reported_by: 'Sarah J. (050-XXXXXXX)',
+                    image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+                    created_at: '2026-08-13T10:00:00.000Z'
+                },
+                {
+                    id: 'lost_2',
+                    title: 'Jellycat Beige Bunny Plush Toy',
+                    category: 'Plush Toy',
+                    status: 'Lost',
+                    district: 'Arabian Ranches',
+                    location_detail: 'Left near Springs 3 Pool sun loungers',
+                    reported_by: 'Michael T.',
+                    image_url: 'https://images.unsplash.com/photo-1558679908-541bcf1249ff?w=400',
+                    created_at: '2026-08-12T16:30:00.000Z'
+                },
+                {
+                    id: 'found_1',
+                    title: 'Ginger Tabby Cat with Blue Collar & Bell',
+                    category: 'Pet',
+                    status: 'Found',
+                    district: 'JBR',
+                    location_detail: 'Found near Bahar 4 courtyard - currently safe with security guard',
+                    reported_by: 'Elena K.',
+                    image_url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400',
+                    created_at: '2026-08-13T14:15:00.000Z'
+                }
+            ];
+        }
+
+        let result = global._lostFoundStore;
+        if (district && district !== 'All') {
+            result = result.filter(item => item.district.toLowerCase() === district.toLowerCase());
+        }
+        return result;
+    },
+
+    addLostFoundItem: async (itemData, user) => {
+        if (!global._lostFoundStore) await db.getLostFoundItems();
+        const itemObj = {
+            id: 'lf_' + Date.now(),
+            title: itemData.title,
+            category: itemData.category || 'Item',
+            status: itemData.status || 'Lost',
+            district: itemData.district || user.district || 'Dubai Hills',
+            location_detail: itemData.location_detail || 'Neighborhood path',
+            reported_by: user.name || 'Parent Resident',
+            image_url: itemData.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+            created_at: new Date().toISOString()
+        };
+        global._lostFoundStore.unshift(itemObj);
+        return itemObj;
+    },
+
+    markLostFoundAsFound: async (id) => {
+        if (!global._lostFoundStore) await db.getLostFoundItems();
+        const item = global._lostFoundStore.find(i => i.id === id);
+        if (item) item.status = 'Found';
+        return item;
     }
 };
 

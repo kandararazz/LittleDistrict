@@ -526,6 +526,44 @@ export async function handleRequest(req, res) {
         }
     }
 
+    // GET & POST /api/v2/lost-found (Lost & Found Pet / Item Board)
+    if (pathname === '/api/v2/lost-found' && method === 'GET') {
+        const district = urlObj.searchParams.get('district');
+        const items = await db.getLostFoundItems(district);
+        return sendJSON(res, 200, { success: true, count: items.length, data: items });
+    }
+
+    if (pathname === '/api/v2/lost-found' && method === 'POST') {
+        try {
+            const currentUser = await getAuthUser(req);
+            if (!currentUser) {
+                return sendJSON(res, 401, { success: false, error: "Please sign in to report lost/found items." });
+            }
+            const body = await parseBody(req);
+            if (!body.title) return sendJSON(res, 400, { success: false, error: "Title is required." });
+            const item = await db.addLostFoundItem(body, currentUser);
+            return sendJSON(res, 201, { success: true, message: "Lost item alert published!", data: item });
+        } catch (err) {
+            return sendJSON(res, 400, { success: false, error: "Invalid JSON body" });
+        }
+    }
+
+    if (pathname.startsWith('/api/v2/lost-found/') && pathname.endsWith('/found') && method === 'POST') {
+        const id = pathname.split('/')[4];
+        const item = await db.markLostFoundAsFound(id);
+        return sendJSON(res, 200, { success: true, message: "Item marked as found!", data: item });
+    }
+
+    // POST /api/user/verify-resident (Verified Resident Badging)
+    if (pathname === '/api/user/verify-resident' && method === 'POST') {
+        const currentUser = await getAuthUser(req);
+        if (!currentUser) {
+            return sendJSON(res, 401, { success: false, error: "Please sign in to verify residency." });
+        }
+        currentUser.is_verified_resident = true;
+        return sendJSON(res, 200, { success: true, message: "Residency verified! Verified Resident badge unlocked.", user: currentUser });
+    }
+
 
     if (pathname.startsWith('/api/')) {
         return sendJSON(res, 404, { success: false, error: 'API endpoint not found' });
