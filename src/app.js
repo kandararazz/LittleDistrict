@@ -110,18 +110,7 @@ function updateAuthUI() {
 }
 
 // --- API FETCHES ---
-async function fetchPlaces() {
-    try {
-        const res = await apiFetch(`${API_BASE}/community/places`);
-        const json = await res.json();
-        if (json.success) {
-            places = json.data;
-            renderDistrictChips();
-        }
-    } catch (err) {
-        console.error("Failed to fetch places", err);
-    }
-}
+
 
 async function fetchFeed() {
     try {
@@ -156,20 +145,7 @@ async function fetchMyMeetups() {
 
 
 
-async function fetchEvents() {
-    try {
-        const params = new URLSearchParams();
-        if (activeDistrict !== 'All') params.append('district', activeDistrict);
-        const res = await apiFetch(`${API_BASE}/community/events?${params.toString()}`);
-        const json = await res.json();
-        if (json.success) {
-            events = json.data;
-            renderEventsGrid();
-        }
-    } catch (err) {
-        console.error("Failed to fetch events", err);
-    }
-}
+
 
 async function fetchV2Hub() {
     const container = document.getElementById('v2HubContainer');
@@ -247,23 +223,19 @@ function renderDistrictChips() {
     const container = document.getElementById('districtFilterContainer');
     if (!container) return;
 
-    const customDistricts = Array.from(new Set(places.map(p => p.district)));
-    const defaultDistricts = ['Dubai Hills', 'Arabian Ranches', 'JBR', 'Mirdif', 'Silicon Oasis', 'Downtown Dubai', 'Palm Jumeirah'];
-    const allDistricts = Array.from(new Set([...defaultDistricts, ...customDistricts]));
+    const allDistricts = ['Dubai Hills', 'Arabian Ranches', 'JBR', 'Mirdif', 'Silicon Oasis', 'Downtown Dubai', 'Palm Jumeirah', 'Dubai Marina'];
 
     let html = `
         <button data-district="All" class="district-chip shrink-0 ${activeDistrict === 'All' ? 'bg-secondary-container text-on-secondary-container shadow-sm border border-transparent font-semibold' : 'bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container'} px-4 py-1.5 rounded-full text-xs transition-colors">
-            All (${allDistricts.length} Neighborhoods)
+            All Neighborhoods
         </button>
     `;
 
     allDistricts.forEach(dist => {
-        const placeCount = places.filter(p => p.district === dist).length;
-        const countBadge = placeCount > 0 ? ` (${placeCount} spots)` : '';
         const isActive = activeDistrict === dist;
         html += `
             <button data-district="${dist}" class="district-chip shrink-0 ${isActive ? 'bg-secondary-container text-on-secondary-container shadow-sm border border-transparent font-semibold' : 'bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container'} px-4 py-1.5 rounded-full text-xs transition-colors">
-                ${dist}${countBadge}
+                ${dist}
             </button>
         `;
     });
@@ -275,8 +247,6 @@ function renderDistrictChips() {
             activeDistrict = btn.getAttribute('data-district');
             renderDistrictChips();
             fetchFeed();
-            fetchSquads();
-            fetchEvents();
             fetchV2Hub();
         });
     });
@@ -397,127 +367,7 @@ function renderEventsGrid() {
 
     if (events.length === 0) {
         grid.innerHTML = `<div class="py-12 text-center text-xs text-on-surface-variant italic">No upcoming calendar events for this district.</div>`;
-        return;
-    }
 
-    grid.innerHTML = events.map(ev => `
-        <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-start gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-secondary-container text-on-secondary-container flex flex-col items-center justify-center shrink-0">
-                    <span class="text-xs font-bold uppercase">${new Date(ev.event_date || Date.now()).toLocaleDateString('en-US', { month: 'short' })}</span>
-                    <span class="text-lg font-extrabold">${new Date(ev.event_date || Date.now()).getDate()}</span>
-                </div>
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">${ev.category}</span>
-                        <span class="text-xs text-on-surface-variant font-medium">${ev.district}</span>
-                    </div>
-                    <h4 class="font-display font-bold text-base text-on-surface">${ev.title}</h4>
-                    <p class="text-xs text-on-surface-variant">${ev.description}</p>
-                    <p class="text-xs font-semibold text-primary flex items-center gap-1 pt-1">
-                        <span class="material-symbols-outlined text-sm">location_on</span>
-                        ${ev.location}
-                    </p>
-                </div>
-            </div>
-            <button class="bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all shadow-sm shrink-0">
-                Add to Calendar
-            </button>
-        </div>
-    `).join('');
-}
-
-function renderPlacesGrid() {
-    const grid = document.getElementById('placesGrid');
-    const emptyState = document.getElementById('emptyPlacesState');
-    const badge = document.getElementById('placesCountBadge');
-    if (!grid) return;
-
-    let filtered = places;
-    if (activeDistrict && activeDistrict !== 'All') {
-        filtered = places.filter(p => p.district.toLowerCase() === activeDistrict.toLowerCase());
-    }
-
-    if (badge) badge.textContent = `${filtered.length} spot${filtered.length === 1 ? '' : 's'}`;
-
-    if (filtered.length === 0) {
-        grid.classList.add('hidden');
-        if (emptyState) emptyState.classList.remove('hidden');
-        return;
-    }
-
-    grid.classList.remove('hidden');
-    if (emptyState) emptyState.classList.add('hidden');
-
-    grid.innerHTML = filtered.map(p => {
-        const amenitiesList = (p.amenities || 'Playground, Shaded Seating, Restrooms')
-            .split(',')
-            .map(a => a.trim())
-            .filter(Boolean);
-
-        const typeColorMap = {
-            'Park': 'bg-emerald-600 text-white',
-            'Playground': 'bg-teal-600 text-white',
-            'Clubhouse': 'bg-purple-600 text-white',
-            'Beach': 'bg-cyan-600 text-white',
-            'Pool': 'bg-blue-600 text-white',
-            'Sports Court': 'bg-amber-600 text-white'
-        };
-        const badgeStyle = typeColorMap[p.public_spot_type] || 'bg-primary text-white';
-
-        return `
-            <div class="bg-surface-container-lowest rounded-2xl overflow-hidden card-shadow card-shadow-hover relative flex flex-col border border-outline-variant/30">
-                <div class="h-44 relative overflow-hidden">
-                    <img class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="${p.image_url || 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600'}" alt="${p.name}">
-                    <div class="absolute top-3 left-3 ${badgeStyle} px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">park</span>
-                        <span>${p.public_spot_type}</span>
-                    </div>
-                    <div class="absolute top-3 right-3 bg-black/60 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur">
-                        ${p.district}
-                    </div>
-                </div>
-
-                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div class="space-y-2">
-                        <h3 class="font-display font-bold text-lg text-on-surface line-clamp-1">${p.name}</h3>
-                        <p class="text-xs text-on-surface-variant line-clamp-2">${p.description || 'Public neighborhood community spot for family playdates.'}</p>
-                    </div>
-
-                    <div class="space-y-3 pt-2 border-t border-outline-variant/30">
-                        <div class="flex flex-wrap gap-1">
-                            ${amenitiesList.map(am => `
-                                <span class="bg-surface-container text-on-surface-variant text-[10px] font-medium px-2 py-0.5 rounded-md border border-outline-variant/20">✓ ${am}</span>
-                            `).join('')}
-                        </div>
-
-                        <div class="flex items-center gap-2 pt-1">
-                            <button class="host-here-btn flex-1 bg-primary text-white font-bold text-xs py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-1 shadow-sm" data-place-name="${p.name}" data-place-district="${p.district}">
-                                <span class="material-symbols-outlined text-sm">add_circle</span>
-                                Host Meetup Here
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    grid.querySelectorAll('.host-here-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const placeName = btn.getAttribute('data-place-name');
-            const placeDistrict = btn.getAttribute('data-place-district');
-            openHostMeetupModal();
-            const locationInput = document.getElementById('meetupLocationInput');
-            const districtInput = document.getElementById('meetupDistrictInput');
-            if (locationInput) locationInput.value = placeName;
-            if (districtInput) districtInput.value = placeDistrict;
-        });
-    });
-
-    document.getElementById('placesAddBtn')?.addEventListener('click', openAddPlaceModal);
-    document.getElementById('emptyPlacesAddBtn')?.addEventListener('click', openAddPlaceModal);
-}
 
 function renderUniformBookSwap(items) {
     const container = document.getElementById('v2HubContainer');
@@ -980,21 +830,9 @@ async function fetchDirectMessages() {
 
 // App Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    fetchPlaces();
     fetchFeed();
-    fetchSquads();
-    fetchEvents();
     if (authToken) fetchProfile();
     updateAuthUI();
-    updateWeatherWidgetUI();
-
-    // Weather Toggle Listener
-    document.getElementById('toggleWeatherModeBtn')?.addEventListener('click', () => {
-        isSummerMode = !isSummerMode;
-        updateWeatherWidgetUI();
-        renderMeetupsGrid();
-        showToast(isSummerMode ? "Switched to Summer Season recommendations." : "Switched to Outdoor Season recommendations.");
-    });
 
     // Action Triggers
     document.getElementById('sidebarHostBtn')?.addEventListener('click', openHostMeetupModal);
