@@ -1004,12 +1004,14 @@ export const db = {
             grade_level: toyData.grade_level || 'All Ages',
             district: toyData.district || user.district || 'Dubai Hills',
             condition: toyData.condition || 'Gently Used',
-            swap_type: toyData.swap_type || 'Free Donation',
+            swap_type: toyData.swap_type || (toyData.price > 0 ? 'For Sale' : 'Free Pass-Along'),
+            price: toyData.price || 0,
             user_id: user.id || 'user_1',
             user_name: user.name || 'Parent',
-            user_contact: user.phone || '+971 50 123 4567',
-            user_phone: user.phone || '+971 50 123 4567',
+            user_contact: user.phone || toyData.user_phone || '+971 50 123 4567',
+            user_phone: user.phone || toyData.user_phone || '+971 50 123 4567',
             image_url: toyData.image_url || '',
+            description: toyData.description || '',
             status: 'available',
             created_at: new Date().toISOString()
         };

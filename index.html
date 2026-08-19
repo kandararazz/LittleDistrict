@@ -517,14 +517,32 @@
                     </div>
                 </div>
 
+                <!-- Listing Type & Price AED Fields -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Listing Type *</label>
+                        <select id="toySwapType" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="Free Pass-Along">🎁 Free Pass-Along (Giveaway)</option>
+                            <option value="For Sale">🏷️ For Sale (Set Price in AED)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Price in AED (0 if Free)</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold text-xs">AED</span>
+                            <input type="number" id="toyPrice" min="0" placeholder="0 (Free)" class="w-full pl-12 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-bold">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="space-y-1">
                     <label class="block text-slate-800 font-bold">Your Mobile Phone *</label>
                     <input type="tel" id="toyPhone" placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Description / Price Details</label>
-                    <textarea id="toyDescription" rows="2" placeholder="Provide price (e.g. AED 50 or Free Pass-Along), size, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    <label class="block text-slate-800 font-bold">Description / Size / Details</label>
+                    <textarea id="toyDescription" rows="2" placeholder="Provide size, grade level, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
                 </div>
 
                 <!-- Exchange Item Photo Upload Field -->

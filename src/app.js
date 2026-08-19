@@ -785,6 +785,9 @@ function renderToys() {
 
     grid.innerHTML = filtered.map(t => {
         const hasCustomImg = Boolean(t.image_url && t.image_url.trim() !== '' && !t.image_url.includes('/assets/') && !t.image_url.includes('logo') && !t.image_url.includes('unsplash.com'));
+        const isSale = t.swap_type === 'For Sale' || (t.price && Number(t.price) > 0);
+        const priceLabel = isSale ? `🏷️ AED ${t.price}` : (t.swap_type || '🎁 Free Pass-Along');
+        const priceBadgeClass = isSale ? 'bg-amber-100 text-amber-950 border border-amber-300' : 'bg-emerald-100 text-emerald-950 border border-emerald-300';
 
         return `
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
@@ -818,10 +821,13 @@ function renderToys() {
                             <span class="text-[11px] font-extrabold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-100">
                                 ${escapeHTML(t.condition || 'Gently Used')}
                             </span>
-                            ${t.school_name ? `<span class="text-[11px] font-bold text-slate-500">🏫 ${escapeHTML(t.school_name)}</span>` : ''}
+                            <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${priceBadgeClass}">
+                                ${escapeHTML(priceLabel)}
+                            </span>
                         </div>
 
                         <h3 class="font-display font-bold text-base text-slate-900 leading-snug">${escapeHTML(t.title)}</h3>
+                        ${t.school_name ? `<p class="text-xs font-bold text-slate-500">🏫 ${escapeHTML(t.school_name)}</p>` : ''}
                         <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">${escapeHTML(t.description || 'Pass-along item for neighborhood families.')}</p>
                     </div>
                 </div>
@@ -954,6 +960,9 @@ async function handleCreateToy(e) {
         state.user.phone = phoneVal;
     }
 
+    const priceVal = parseFloat(document.getElementById('toyPrice')?.value || '0') || 0;
+    const swapTypeVal = document.getElementById('toySwapType')?.value || (priceVal > 0 ? 'For Sale' : 'Free Pass-Along');
+
     const payload = {
         title: document.getElementById('toyTitle').value,
         category: document.getElementById('toyCategory').value,
@@ -961,7 +970,9 @@ async function handleCreateToy(e) {
         school_name: document.getElementById('toySchoolName').value || '',
         condition: document.getElementById('toyCondition').value,
         description: document.getElementById('toyDescription').value || '',
-        image_url: document.getElementById('toyImageUrl')?.value || ''
+        image_url: document.getElementById('toyImageUrl')?.value || '',
+        price: priceVal,
+        swap_type: swapTypeVal
     };
 
     try {
