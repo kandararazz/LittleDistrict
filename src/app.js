@@ -157,6 +157,10 @@ function toggleAuthMode() {
 
 async function handleAuthSubmit(e) {
     e.preventDefault();
+    const alertEl = document.getElementById('authErrorAlert');
+    const msgEl = document.getElementById('authErrorMsg');
+    if (alertEl) alertEl.classList.add('hidden');
+
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPassword').value;
     const endpoint = state.authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
@@ -182,10 +186,20 @@ async function handleAuthSubmit(e) {
             closeModal('authModal');
             showToast(`Welcome ${data.user.name}!`);
         } else {
-            alert(data.error || 'Authentication failed');
+            if (alertEl && msgEl) {
+                msgEl.textContent = data.error || 'Authentication failed. Please check details or click Register.';
+                alertEl.classList.remove('hidden');
+            } else {
+                alert(data.error || 'Authentication failed');
+            }
         }
     } catch (err) {
-        alert('Server error. Please try again.');
+        if (alertEl && msgEl) {
+            msgEl.textContent = 'Server error. Please check your network connection and try again.';
+            alertEl.classList.remove('hidden');
+        } else {
+            alert('Server error. Please try again.');
+        }
     }
 }
 

@@ -39,7 +39,7 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABA
 const SUPABASE_KEY = (process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 // Check if Supabase credentials are provided and non-placeholder
-const isSupabaseConfigured = Boolean(
+let isSupabaseConfigured = Boolean(
     SUPABASE_URL && 
     SUPABASE_KEY && 
     !SUPABASE_URL.includes('your-project-id') &&
@@ -86,15 +86,29 @@ class SupabaseRestClient {
     }
 
     async fetch(endpoint, options = {}) {
+        if (!isSupabaseConfigured) {
+            throw new Error('Supabase not configured');
+        }
         const url = `${this.baseUrl}${endpoint}`;
         const headers = { ...this.headers, ...(options.headers || {}) };
-        const response = await fetch(url, { ...options, headers });
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`Supabase API error (${response.status}): ${errText}`);
+        try {
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+                const errText = await response.text();
+                if (response.status === 401) {
+                    console.warn('[DB] Supabase API key is invalid or belongs to another project. Operating in Local Database Mode.');
+                    isSupabaseConfigured = false;
+                }
+                throw new Error(`Supabase API error (${response.status}): ${errText}`);
+            }
+            if (response.status === 204) return null;
+            return response.json();
+        } catch (err) {
+            if (err.message.includes('401')) {
+                isSupabaseConfigured = false;
+            }
+            throw err;
         }
-        if (response.status === 204) return null;
-        return response.json();
     }
 
     async select(table, params = {}) {

@@ -76,25 +76,33 @@ const server = http.createServer(async (req, res) => {
         // AUTH
         if (pathname === '/api/auth/register' && req.method === 'POST') {
             const body = await parseBody(req);
-            const result = await db.registerUser(body);
-            return sendJSON(res, 201, { success: true, ...result });
+            try {
+                const result = await db.registerUser(body);
+                return sendJSON(res, 201, { success: true, ...result });
+            } catch (err) {
+                return sendJSON(res, 400, { success: false, error: err.message });
+            }
         }
 
         if (pathname === '/api/auth/login' && req.method === 'POST') {
             const body = await parseBody(req);
-            const result = await db.loginUser(body);
-            return sendJSON(res, 200, { success: true, ...result });
+            try {
+                const result = await db.loginUser(body);
+                return sendJSON(res, 200, { success: true, ...result });
+            } catch (err) {
+                return sendJSON(res, 400, { success: false, error: err.message });
+            }
         }
 
         if (pathname === '/api/auth/me' && req.method === 'GET') {
             const user = await getUserFromReq(req);
-            if (!user) return sendJSON(res, 401, { error: 'Unauthorized' });
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
             return sendJSON(res, 200, { success: true, user });
         }
 
         if (pathname === '/api/auth/profile' && req.method === 'PUT') {
             const user = await getUserFromReq(req);
-            if (!user) return sendJSON(res, 401, { error: 'Unauthorized' });
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
             const body = await parseBody(req);
             const updated = await db.updateProfile({ ...body, id: user.id });
             return sendJSON(res, 200, { success: true, user: updated });
@@ -116,7 +124,7 @@ const server = http.createServer(async (req, res) => {
         if (pathname.match(/^\/api\/meetups\/([^/]+)\/rsvp$/) && req.method === 'POST') {
             const meetupId = pathname.split('/')[3];
             const user = await getUserFromReq(req);
-            if (!user) return sendJSON(res, 401, { error: 'Please log in to RSVP' });
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Please log in to RSVP' });
             const updated = await db.toggleRsvp(meetupId, user.id, user.name, user.avatar_url);
             return sendJSON(res, 200, { success: true, data: updated });
         }
@@ -124,7 +132,7 @@ const server = http.createServer(async (req, res) => {
         if (pathname.match(/^\/api\/meetups\/([^/]+)\/comments$/) && req.method === 'POST') {
             const meetupId = pathname.split('/')[3];
             const user = await getUserFromReq(req);
-            if (!user) return sendJSON(res, 401, { error: 'Please log in to comment' });
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Please log in to comment' });
             const body = await parseBody(req);
             const updated = await db.addComment(meetupId, user.id, user.name, user.avatar_url, body.content);
             return sendJSON(res, 200, { success: true, data: updated });
@@ -153,19 +161,6 @@ const server = http.createServer(async (req, res) => {
             const user = await getUserFromReq(req);
             const body = await parseBody(req);
             const created = await db.addToyItem(body, user || {});
-            return sendJSON(res, 201, { success: true, data: created });
-        }
-
-        // CARPOOLS
-        if (pathname === '/api/carpools' && req.method === 'GET') {
-            const rides = await db.getCarpoolRides(queryParams.district);
-            return sendJSON(res, 200, { success: true, data: rides });
-        }
-
-        if (pathname === '/api/carpools' && req.method === 'POST') {
-            const user = await getUserFromReq(req);
-            const body = await parseBody(req);
-            const created = await db.addCarpoolRide(body, user || {});
             return sendJSON(res, 201, { success: true, data: created });
         }
 
@@ -219,7 +214,7 @@ const server = http.createServer(async (req, res) => {
 
     } catch (err) {
         console.error('[Server Error]', err);
-        return sendJSON(res, 500, { error: err.message || 'Internal Server Error' });
+        return sendJSON(res, 500, { success: false, error: err.message || 'Internal Server Error' });
     }
 });
 
