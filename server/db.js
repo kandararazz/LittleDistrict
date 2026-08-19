@@ -317,27 +317,8 @@ if (DatabaseSync) {
 export const db = {
     isSupabase: isSupabaseConfigured,
 
-    // Authentication Methods
-    registerUser: async ({ name, email, password, district, phone }) => {
-        const cleanEmail = (email || '').trim().toLowerCase();
-        if (!cleanEmail || !password) throw new Error('Email and password are required.');
-
-        const existingUser = await db.getUserByEmail(cleanEmail);
-        if (existingUser) throw new Error('An account with this email already exists.');
-
-        const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-        const passwordHash = hashPassword(password);
-        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Parent')}`;
-
-        const userObj = {
-            id: userId,
-            name: name || 'Parent User',
-            email: cleanEmail,
-            password_hash: passwordHash,
-            district: district || 'Dubai Marina',
-            phone: phone || '+971 50 123 4567',
-            contact_preference: 'WhatsApp',
 const DEV_EMAILS = [
+    'kandararazz@gmail.com',
     'developer@littledistrict.ae',
     'raza@littledistrict.ae',
     'raza@gmail.com',
@@ -351,18 +332,33 @@ function isDeveloperEmail(email) {
     return DEV_EMAILS.includes(clean) || clean.startsWith('dev.') || clean.includes('developer');
 }
 
+    // Authentication Methods
+    registerUser: async ({ name, email, password, district, phone }) => {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        if (!cleanEmail || !password) throw new Error('Email and password are required.');
+
+        const existingUser = await db.getUserByEmail(cleanEmail);
+        if (existingUser) throw new Error('An account with this email already exists.');
+
+        const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        const passwordHash = hashPassword(password);
+        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Raza')}`;
         const isDev = isDeveloperEmail(cleanEmail);
+
         const userObj = {
             id: userId,
-            name: name ? name.trim() : 'Neighborhood Parent',
+            name: name ? name.trim() : (isDev ? 'Raza (Official Developer)' : 'Neighborhood Parent'),
             email: cleanEmail,
-            password_hash: hashPassword(password),
+            password_hash: passwordHash,
             district: district || 'Dubai Hills',
+            phone: phone || '+971 50 123 4567',
             contact_preference: 'In-App Message',
             avatar_url: avatarUrl,
             bio: isDev ? 'Official Platform Creator & Maintainer' : 'Active community parent',
             is_developer: isDev,
-            developer_badge: isDev ? 'Developer Badge 💻' : ''
+            developer_badge: isDev ? 'Developer Badge 💻' : '',
+            is_verified: isDev ? true : false,
+            verification_method: isDev ? 'Official Developer Credentials' : ''
         };
 
         if (isSupabaseConfigured) {
@@ -391,13 +387,14 @@ function isDeveloperEmail(email) {
         const cleanEmail = (email || '').trim().toLowerCase();
         let user = await db.getUserByEmail(cleanEmail);
         
-        // If developer logs in for the first time, auto-create developer account
+        // If developer logs in for the first time, auto-create developer account with exact credentials
         if (!user && isDeveloperEmail(cleanEmail)) {
             const registered = await db.registerUser({
                 email: cleanEmail,
                 password: password,
-                name: 'Raza (Developer)',
-                district: 'Dubai Hills'
+                name: 'Raza (Official Developer)',
+                district: 'Dubai Hills',
+                phone: '+971 50 123 4567'
             });
             return registered;
         }
@@ -415,7 +412,9 @@ function isDeveloperEmail(email) {
         const userWithDev = {
             ...fullUser,
             is_developer: isDev || Boolean(fullUser.is_developer),
-            developer_badge: (isDev || fullUser.is_developer) ? 'Developer Badge 💻' : ''
+            developer_badge: (isDev || fullUser.is_developer) ? 'Developer Badge 💻' : '',
+            is_verified: isDev ? true : Boolean(fullUser.is_verified),
+            verification_method: isDev ? 'Official Developer Credentials' : (fullUser.verification_method || '')
         };
         return { token, user: userWithDev };
     },
