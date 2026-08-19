@@ -13,7 +13,8 @@ let state = {
         interest: '',
         search: ''
     },
-    authMode: 'login'
+    authMode: 'login',
+    theme: localStorage.getItem('ld_theme') || 'light'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,11 +22,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initApp() {
+    initTheme();
     setupEventListeners();
     if (state.token) {
         await checkCurrentUser();
     }
     await loadCurrentTabData();
+}
+
+function initTheme() {
+    setTheme(state.theme);
+}
+
+function toggleTheme() {
+    const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+function setTheme(theme) {
+    state.theme = theme;
+    const icon = document.getElementById('themeIcon');
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        if (icon) icon.textContent = 'light_mode';
+        localStorage.setItem('ld_theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        if (icon) icon.textContent = 'dark_mode';
+        localStorage.setItem('ld_theme', 'light');
+    }
 }
 
 function setupEventListeners() {
@@ -107,11 +132,14 @@ function updateUserUI() {
     if (state.user) {
         section.innerHTML = `
             <div class="flex items-center gap-2">
-                <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + state.user.name}" alt="${state.user.name}" class="w-8 h-8 rounded-full border-2 border-teal-500 object-cover">
-                <div class="hidden sm:block text-left">
-                    <span class="block text-xs font-bold text-slate-800 leading-none">${escapeHTML(state.user.name)}</span>
-                    <span class="text-[10px] text-teal-700 font-semibold">${escapeHTML(state.user.district || 'Dubai')}</span>
+                <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)}" alt="${escapeHTML(state.user.name)}" class="w-8 h-8 rounded-full border-2 border-teal-500 object-cover cursor-pointer" onclick="openAccountSettings()">
+                <div class="hidden sm:block text-left cursor-pointer" onclick="openAccountSettings()">
+                    <span class="block text-xs font-bold leading-none">${escapeHTML(state.user.name)}</span>
+                    <span class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">${escapeHTML(state.user.district || 'Dubai')}</span>
                 </div>
+                <button onclick="openAccountSettings()" class="p-1 text-slate-500 hover:text-teal-600 transition-colors" title="Account Settings">
+                    <span class="material-symbols-outlined text-lg">settings</span>
+                </button>
                 <button onclick="logout()" class="p-1 text-slate-400 hover:text-rose-600 transition-colors" title="Log Out">
                     <span class="material-symbols-outlined text-lg">logout</span>
                 </button>
@@ -119,9 +147,9 @@ function updateUserUI() {
         `;
     } else {
         section.innerHTML = `
-            <button onclick="openModal('authModal')" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-full text-xs font-bold transition-colors">
+            <button onclick="openModal('authModal')" class="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-colors">
                 <span class="material-symbols-outlined text-lg text-teal-600">account_circle</span>
-                <span>Sign In</span>
+                <span class="hidden sm:inline">Sign In</span>
             </button>
         `;
     }
@@ -138,20 +166,23 @@ function logout() {
 function toggleAuthMode() {
     state.authMode = state.authMode === 'login' ? 'register' : 'login';
     const nameField = document.getElementById('nameField');
+    const phoneField = document.getElementById('phoneField');
     const districtField = document.getElementById('districtAuthField');
     const submitBtn = document.getElementById('authSubmitBtn');
     const toggleBtn = document.getElementById('authToggleBtn');
 
     if (state.authMode === 'register') {
-        nameField.classList.remove('hidden');
-        districtField.classList.remove('hidden');
-        submitBtn.textContent = 'Create Parent Account';
-        toggleBtn.textContent = 'Already have an account? Sign In';
+        if (nameField) nameField.classList.remove('hidden');
+        if (phoneField) phoneField.classList.remove('hidden');
+        if (districtField) districtField.classList.remove('hidden');
+        if (submitBtn) submitBtn.textContent = 'Create Parent Account';
+        if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign In';
     } else {
-        nameField.classList.add('hidden');
-        districtField.classList.add('hidden');
-        submitBtn.textContent = 'Sign In';
-        toggleBtn.textContent = 'Need an account? Register here';
+        if (nameField) nameField.classList.add('hidden');
+        if (phoneField) phoneField.classList.add('hidden');
+        if (districtField) districtField.classList.add('hidden');
+        if (submitBtn) submitBtn.textContent = 'Sign In';
+        if (toggleBtn) toggleBtn.textContent = 'Need an account? Register here';
     }
 }
 
@@ -168,6 +199,7 @@ async function handleAuthSubmit(e) {
     const payload = { email, password };
     if (state.authMode === 'register') {
         payload.name = document.getElementById('authName').value;
+        payload.phone = document.getElementById('authPhone').value;
         payload.district = document.getElementById('authDistrict').value;
     }
 
@@ -195,7 +227,7 @@ async function handleAuthSubmit(e) {
         }
     } catch (err) {
         if (alertEl && msgEl) {
-            msgEl.textContent = 'Server error. Please check your network connection and try again.';
+            msgEl.textContent = 'Server error. Please check network connection and try again.';
             alertEl.classList.remove('hidden');
         } else {
             alert('Server error. Please try again.');
@@ -203,17 +235,100 @@ async function handleAuthSubmit(e) {
     }
 }
 
+// --- ACCOUNT SETTINGS PROFILE ---
+function openAccountSettings(requirePhone = false) {
+    if (!state.user) {
+        openModal('authModal');
+        return;
+    }
+    const phoneAlert = document.getElementById('phoneRequireAlert');
+    if (phoneAlert) {
+        if (requirePhone) phoneAlert.classList.remove('hidden');
+        else phoneAlert.classList.add('hidden');
+    }
+    const nameIn = document.getElementById('profileName');
+    const phoneIn = document.getElementById('profilePhone');
+    const distIn = document.getElementById('profileDistrict');
+    const bioIn = document.getElementById('profileBio');
+    const avatarIn = document.getElementById('profileAvatarUrl');
+
+    if (nameIn) nameIn.value = state.user.name || '';
+    if (phoneIn) phoneIn.value = state.user.phone || '';
+    if (distIn) distIn.value = state.user.district || 'Dubai Hills';
+    if (bioIn) bioIn.value = state.user.bio || '';
+    if (avatarIn) avatarIn.value = state.user.avatar_url || '';
+
+    const previewEl = document.getElementById('profileAvatarPreview');
+    if (previewEl && state.user.avatar_url) {
+        previewEl.classList.remove('hidden');
+        const img = previewEl.querySelector('img');
+        if (img) img.src = state.user.avatar_url;
+    }
+
+    const modal = document.getElementById('accountSettingsModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+async function handleSaveProfile(e) {
+    e.preventDefault();
+    if (!state.user) return;
+
+    const payload = {
+        name: document.getElementById('profileName').value,
+        phone: document.getElementById('profilePhone').value,
+        district: document.getElementById('profileDistrict').value,
+        avatar_url: document.getElementById('profileAvatarUrl').value || state.user.avatar_url,
+        bio: document.getElementById('profileBio').value
+    };
+
+    try {
+        const res = await fetch('/api/auth/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+            state.user = data.user;
+            updateUserUI();
+            closeModal('accountSettingsModal');
+            showToast('Account profile updated successfully!');
+            await loadCurrentTabData();
+        } else {
+            alert(data.error || 'Failed to update profile');
+        }
+    } catch (err) {
+        alert('Error saving profile');
+    }
+}
+
 function switchTab(tabName) {
     state.currentTab = tabName;
 
+    // Desktop nav buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
         const isSelected = btn.dataset.tab === tabName;
         if (isSelected) {
             btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-teal-800 bg-teal-50 shadow-sm border border-teal-100/60 transition-all';
-            btn.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-xl text-teal-600';
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.className = 'material-symbols-outlined text-xl text-teal-600';
         } else {
             btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-all';
-            btn.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-xl text-slate-400';
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.className = 'material-symbols-outlined text-xl text-slate-400';
+        }
+    });
+
+    // Mobile bottom nav buttons
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        const isSelected = btn.dataset.tab === tabName;
+        if (isSelected) {
+            btn.className = 'mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-extrabold text-teal-700 dark:text-teal-400 transition-all scale-105';
+        } else {
+            btn.className = 'mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-teal-700 transition-all';
         }
     });
 
@@ -303,10 +418,10 @@ function renderMeetups() {
 
     if (filtered.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-200">
-                <span class="material-symbols-outlined text-4xl text-slate-300">event_busy</span>
-                <p class="text-sm font-bold text-slate-600 mt-2">No playdates found matching filters</p>
-                <button onclick="clearFilters()" class="mt-3 text-xs font-bold text-teal-700 hover:underline">+ Clear Search Filters</button>
+            <div class="col-span-full py-12 text-center bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">event_busy</span>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-300 mt-2">No playdates found matching filters</p>
+                <button onclick="clearFilters()" class="mt-3 text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline">+ Clear Search Filters</button>
             </div>
         `;
         return;
@@ -315,44 +430,57 @@ function renderMeetups() {
     grid.innerHTML = filtered.map(m => {
         const rsvps = m.rsvps || [];
         const isAttending = state.user && rsvps.some(r => r.user_id === state.user.id);
-        const coverImg = m.image_url || '/assets/logo-full.png';
+        const hasCustomImg = Boolean(m.image_url && m.image_url.trim() !== '' && !m.image_url.includes('logo-full.png'));
 
         return `
-            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
-                    <!-- Card Cover Photo -->
-                    <div class="h-48 bg-teal-950 relative overflow-hidden">
-                        <img src="${coverImg}" alt="${escapeHTML(m.title)}" class="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-500" onerror="this.src='/assets/logo-full.png'">
-                        <span class="absolute top-3 left-3 bg-teal-800/90 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
-                            📍 ${escapeHTML(m.district)}
-                        </span>
-                        <span class="absolute top-3 right-3 bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
-                            ${escapeHTML(m.interest_tag || 'Activity')}
-                        </span>
-                    </div>
+                    ${hasCustomImg ? `
+                        <!-- Card Cover Photo -->
+                        <div class="h-44 sm:h-48 bg-slate-900 relative overflow-hidden">
+                            <img src="${m.image_url}" alt="${escapeHTML(m.title)}" class="w-full h-full object-cover opacity-95 hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-3 left-3 bg-teal-900/90 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                                📍 ${escapeHTML(m.district)}
+                            </span>
+                            <span class="absolute top-3 right-3 bg-amber-500 text-slate-900 text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                                ${escapeHTML(m.interest_tag || 'Activity')}
+                            </span>
+                        </div>
+                    ` : ''}
 
                     <!-- Card Body -->
-                    <div class="p-5 space-y-3">
-                        <div class="flex items-center gap-2.5 text-xs text-slate-500 font-medium">
-                            <img src="${m.host_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + (m.host_name || 'Parent')}" class="w-6 h-6 rounded-full border border-teal-500 object-cover">
-                            <span>Hosted by <strong class="text-slate-700">${escapeHTML(m.host_name || 'Parent')}</strong></span>
+                    <div class="p-4 sm:p-5 space-y-3">
+                        ${!hasCustomImg ? `
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                    📍 ${escapeHTML(m.district)}
+                                </span>
+                                <span class="bg-amber-500 text-slate-900 text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full">
+                                    ${escapeHTML(m.interest_tag || 'Activity')}
+                                </span>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            <img src="${m.host_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(m.host_name || 'Parent')}" class="w-6 h-6 rounded-full border border-teal-500 object-cover shrink-0">
+                            <span class="truncate">Hosted by <strong class="text-slate-700 dark:text-slate-200">${escapeHTML(m.host_name || 'Parent')}</strong></span>
                         </div>
 
-                        <h3 class="font-display font-bold text-lg text-slate-900 leading-snug hover:text-teal-700 transition-colors cursor-pointer" onclick="toggleComments('${m.id}')">
+                        <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 leading-snug hover:text-teal-700 transition-colors cursor-pointer" onclick="toggleComments('${m.id}')">
                             ${escapeHTML(m.title)}
                         </h3>
 
-                        <div class="space-y-1.5 text-xs font-semibold text-slate-600">
+                        <div class="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-teal-600 text-lg">calendar_month</span>
+                                <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base sm:text-lg">calendar_month</span>
                                 <span>${escapeHTML(m.date_time)}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-teal-600 text-lg">location_on</span>
+                                <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base sm:text-lg">location_on</span>
                                 <span class="truncate">${escapeHTML(m.public_location)}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-amber-500 text-lg">face</span>
+                                <span class="material-symbols-outlined text-amber-500 text-base sm:text-lg">face</span>
                                 <span>Ages: ${m.min_age || 0} - ${m.max_age || 16} years</span>
                             </div>
                         </div>
@@ -360,36 +488,36 @@ function renderMeetups() {
                 </div>
 
                 <!-- Footer & RSVP -->
-                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div class="flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-teal-600 text-base">group</span>
-                        <span class="text-xs font-bold text-slate-700">${rsvps.length} / ${m.max_attendees || 10} Attending</span>
+                        <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base">group</span>
+                        <span class="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">${rsvps.length} / ${m.max_attendees || 10} Attending</span>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleComments('${m.id}')" class="p-2 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors" title="Comments">
+                        <button onclick="toggleComments('${m.id}')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-colors" title="Comments">
                             <span class="material-symbols-outlined text-lg">chat</span>
                         </button>
-                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-teal-700 hover:bg-teal-800 text-white'} text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">
+                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-teal-700 hover:bg-teal-800 text-white'} text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl transition-all shadow-sm">
                             ${isAttending ? '✓ Attending' : '+ Join RSVP'}
                         </button>
                     </div>
                 </div>
 
                 <!-- Comments Drawer -->
-                <div id="comments-${m.id}" class="hidden p-4 bg-slate-100 border-t border-slate-200 space-y-3">
-                    <h4 class="font-display font-bold text-xs text-slate-700">Discussion & Parent Q&A</h4>
+                <div id="comments-${m.id}" class="hidden p-4 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                    <h4 class="font-display font-bold text-xs text-slate-700 dark:text-slate-300">Discussion & Parent Q&A</h4>
                     <div class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs">
                         ${(m.comments || []).length > 0 ? (m.comments || []).map(c => `
-                            <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                                <span class="font-bold text-teal-800">${escapeHTML(c.user_name)}:</span>
-                                <span class="text-slate-700">${escapeHTML(c.content)}</span>
+                            <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <span class="font-bold text-teal-800 dark:text-teal-400">${escapeHTML(c.user_name)}:</span>
+                                <span class="text-slate-700 dark:text-slate-300">${escapeHTML(c.content)}</span>
                             </div>
                         `).join('') : '<p class="text-[11px] text-slate-400 italic">No comments yet. Ask a question below!</p>'}
                     </div>
 
                     <form onsubmit="handleAddComment(event, '${m.id}')" class="flex gap-2 pt-1">
-                        <input type="text" placeholder="Type a message..." required class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                        <input type="text" placeholder="Type a message..." required class="flex-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
                         <button type="submit" class="bg-teal-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-teal-800">Send</button>
                     </form>
                 </div>
@@ -403,15 +531,15 @@ function renderPlaces() {
     if (!grid) return;
 
     grid.innerHTML = state.places.map(p => `
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition-all">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all">
             <div class="flex items-start justify-between">
-                <span class="bg-teal-50 text-teal-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-teal-100">
+                <span class="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 text-[11px] font-bold px-2.5 py-1 rounded-full border border-teal-100 dark:border-teal-900">
                     📍 ${escapeHTML(p.district)}
                 </span>
-                <span class="text-xs font-semibold text-slate-500">${escapeHTML(p.public_spot_type || 'Park')}</span>
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${escapeHTML(p.public_spot_type || 'Park')}</span>
             </div>
-            <h3 class="font-display font-bold text-base text-slate-900">${escapeHTML(p.name)}</h3>
-            <p class="text-xs text-slate-600 line-clamp-3">${escapeHTML(p.description || 'Verified local community spot.')}</p>
+            <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100">${escapeHTML(p.name)}</h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-3">${escapeHTML(p.description || 'Verified local community spot.')}</p>
         </div>
     `).join('');
 }
@@ -426,39 +554,56 @@ function renderToys() {
     }
 
     grid.innerHTML = filtered.map(t => {
-        const itemImg = t.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400';
+        const hasCustomImg = Boolean(t.image_url && t.image_url.trim() !== '');
+
         return `
-            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
-                    <!-- Item Photo -->
-                    <div class="h-44 bg-slate-100 relative overflow-hidden">
-                        <img src="${itemImg}" alt="${escapeHTML(t.title)}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" onerror="this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'">
-                        <span class="absolute top-3 left-3 bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
-                            ${escapeHTML(t.category || 'Exchange')}
-                        </span>
-                        <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
-                            📍 ${escapeHTML(t.district)}
-                        </span>
-                    </div>
+                    ${hasCustomImg ? `
+                        <!-- Item Photo -->
+                        <div class="h-44 bg-slate-900 relative overflow-hidden">
+                            <img src="${t.image_url}" alt="${escapeHTML(t.title)}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-3 left-3 bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                                ${escapeHTML(t.category || 'Exchange')}
+                            </span>
+                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                                📍 ${escapeHTML(t.district)}
+                            </span>
+                        </div>
+                    ` : ''}
 
                     <div class="p-4 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                        ${!hasCustomImg ? `
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full">
+                                    ${escapeHTML(t.category || 'Exchange')}
+                                </span>
+                                <span class="bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                    📍 ${escapeHTML(t.district)}
+                                </span>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-[11px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-900">
                                 ${escapeHTML(t.condition || 'Gently Used')}
                             </span>
-                            ${t.school_name ? `<span class="text-[11px] font-bold text-slate-500">🏫 ${escapeHTML(t.school_name)}</span>` : ''}
+                            ${t.school_name ? `<span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">🏫 ${escapeHTML(t.school_name)}</span>` : ''}
                         </div>
 
-                        <h3 class="font-display font-bold text-base text-slate-900 leading-snug">${escapeHTML(t.title)}</h3>
-                        <p class="text-xs text-slate-600 line-clamp-2">${escapeHTML(t.description || 'Pass-along item for neighborhood families.')}</p>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100 leading-snug">${escapeHTML(t.title)}</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">${escapeHTML(t.description || 'Pass-along item for neighborhood families.')}</p>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-medium text-slate-500">Listed by <strong>${escapeHTML(t.user_name || 'Local Parent')}</strong></span>
-                    <a href="tel:${t.user_phone || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">chat</span>
-                        <span>Contact</span>
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex flex-col text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <span>Listed by <strong>${escapeHTML(t.user_name || 'Local Parent')}</strong></span>
+                        <span class="text-teal-700 dark:text-teal-400 font-bold text-[11px]">📱 ${escapeHTML(t.user_phone || t.user_contact || 'Number required')}</span>
+                    </div>
+                    <a href="tel:${t.user_phone || t.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                        <span class="material-symbols-outlined text-sm">call</span>
+                        <span>${escapeHTML(t.user_phone || t.user_contact || 'Contact Poster')}</span>
                     </a>
                 </div>
             </div>
@@ -470,13 +615,53 @@ function renderLostFound() {
     const grid = document.getElementById('lostFoundGrid');
     if (!grid) return;
 
-    grid.innerHTML = state.lostFound.map(lf => `
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-2">
-            <span class="inline-block bg-rose-100 text-rose-700 text-[11px] font-bold px-2.5 py-1 rounded-full">${escapeHTML(lf.status || 'Lost')}</span>
-            <h3 class="font-display font-bold text-base text-slate-900">${escapeHTML(lf.item_name || lf.title)}</h3>
-            <p class="text-xs text-slate-600">${escapeHTML(lf.location || lf.district)}</p>
-        </div>
-    `).join('');
+    grid.innerHTML = state.lostFound.map(lf => {
+        const hasCustomImg = Boolean(lf.image_url && lf.image_url.trim() !== '');
+
+        return `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                    ${hasCustomImg ? `
+                        <div class="h-44 bg-slate-900 relative overflow-hidden">
+                            <img src="${lf.image_url}" alt="${escapeHTML(lf.title || lf.item_name)}" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-rose-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                                ${escapeHTML(lf.status || 'Lost')}
+                            </span>
+                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                                📍 ${escapeHTML(lf.district)}
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <div class="p-4 space-y-2">
+                        ${!hasCustomImg ? `
+                            <div class="flex items-center justify-between">
+                                <span class="bg-rose-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                    ${escapeHTML(lf.status || 'Lost')}
+                                </span>
+                                <span class="bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                    📍 ${escapeHTML(lf.district)}
+                                </span>
+                            </div>
+                        ` : ''}
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100">${escapeHTML(lf.title || lf.item_name)}</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">${escapeHTML(lf.location_detail || lf.location || lf.district)}</p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex flex-col text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <span>Reported by <strong>${escapeHTML(lf.reported_by || 'Resident')}</strong></span>
+                        <span class="text-teal-700 dark:text-teal-400 font-bold text-[11px]">📱 ${escapeHTML(lf.user_phone || lf.user_contact || 'Number required')}</span>
+                    </div>
+                    <a href="tel:${lf.user_phone || lf.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                        <span class="material-symbols-outlined text-sm">call</span>
+                        <span>Call Poster</span>
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 async function handleCreateMeetup(e) {
@@ -484,6 +669,11 @@ async function handleCreateMeetup(e) {
     if (!state.user) {
         openModal('authModal');
         showToast('Please sign in to post playdates');
+        return;
+    }
+    if (!state.user.phone || !state.user.phone.trim()) {
+        openAccountSettings(true);
+        showToast('Phone number required before posting playdates');
         return;
     }
 
@@ -496,7 +686,7 @@ async function handleCreateMeetup(e) {
         max_attendees: parseInt(document.getElementById('meetupMaxAttendees').value) || 10,
         min_age: 0,
         max_age: 18,
-        image_url: document.getElementById('meetupImageUrl').value || '/assets/logo-full.png'
+        image_url: document.getElementById('meetupImageUrl').value || ''
     };
 
     try {
@@ -528,6 +718,11 @@ async function handleCreateToy(e) {
         showToast('Please sign in to list exchange items');
         return;
     }
+    if (!state.user.phone || !state.user.phone.trim()) {
+        openAccountSettings(true);
+        showToast('Phone number required before listing exchange items');
+        return;
+    }
 
     const payload = {
         title: document.getElementById('toyTitle').value,
@@ -536,7 +731,7 @@ async function handleCreateToy(e) {
         school_name: document.getElementById('toySchoolName').value || '',
         condition: document.getElementById('toyCondition').value,
         description: document.getElementById('toyDescription').value || '',
-        image_url: document.getElementById('toyImageUrl').value || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'
+        image_url: document.getElementById('toyImageUrl').value || ''
     };
 
     try {
@@ -564,6 +759,16 @@ async function handleCreateToy(e) {
 
 async function handleCreatePlace(e) {
     e.preventDefault();
+    if (!state.user) {
+        openModal('authModal');
+        return;
+    }
+    if (!state.user.phone || !state.user.phone.trim()) {
+        openAccountSettings(true);
+        showToast('Phone number required before sharing spots');
+        return;
+    }
+
     const payload = {
         name: document.getElementById('placeName').value,
         district: document.getElementById('placeDistrict').value,
@@ -648,6 +853,19 @@ function toggleComments(meetupId) {
 }
 
 function openModal(id) {
+    const postingModals = ['createMeetupModal', 'createToyModal', 'createPlaceModal', 'createLostFoundModal'];
+    if (postingModals.includes(id)) {
+        if (!state.user) {
+            openModal('authModal');
+            showToast('Please sign in to publish posts');
+            return;
+        }
+        if (!state.user.phone || !state.user.phone.trim()) {
+            openAccountSettings(true);
+            showToast('Phone number required before publishing posts');
+            return;
+        }
+    }
     const el = document.getElementById(id);
     if (el) el.classList.remove('hidden');
 }
@@ -670,6 +888,92 @@ function clearFilters() {
     renderCurrentTab();
 }
 
+// --- DISTRICTBOT AI ASSISTANT CLIENT HANDLERS ---
+function openDistrictBotModal() {
+    openModal('districtBotModal');
+}
+
+function sendDistrictBotPrompt(promptText) {
+    const input = document.getElementById('districtBotInput');
+    if (input) {
+        input.value = promptText;
+        handleDistrictBotSubmit(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+}
+
+async function handleDistrictBotSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const input = document.getElementById('districtBotInput');
+    const msgContainer = document.getElementById('districtBotMessages');
+    if (!input || !msgContainer) return;
+
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    // Append user message
+    msgContainer.innerHTML += `
+        <div class="flex items-start justify-end gap-2 text-xs">
+            <div class="bg-teal-700 text-white p-3 rounded-2xl max-w-[85%] leading-relaxed">
+                ${escapeHTML(userText)}
+            </div>
+        </div>
+    `;
+    input.value = '';
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    // Typing indicator
+    const typingId = 'typing_' + Date.now();
+    msgContainer.innerHTML += `
+        <div id="${typingId}" class="flex items-start gap-2 text-xs">
+            <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
+                <span class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-2xl text-slate-500 text-xs italic">
+                DistrictBot is thinking...
+            </div>
+        </div>
+    `;
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    try {
+        const res = await fetch('/api/bot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userText })
+        });
+        const data = await res.json();
+        const indicator = document.getElementById(typingId);
+        if (indicator) indicator.remove();
+
+        const botReply = data.reply || "I am DistrictBot, your friendly LittleDistrict AI assistant!";
+        msgContainer.innerHTML += `
+            <div class="flex items-start gap-2.5 text-xs">
+                <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
+                    <span class="material-symbols-outlined text-base">smart_toy</span>
+                </div>
+                <div class="bg-teal-50 dark:bg-teal-950/60 p-3 rounded-2xl border border-teal-100 dark:border-teal-900 text-slate-800 dark:text-slate-200 leading-relaxed max-w-[85%]">
+                    ${escapeHTML(botReply)}
+                </div>
+            </div>
+        `;
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    } catch (err) {
+        const indicator = document.getElementById(typingId);
+        if (indicator) indicator.remove();
+        msgContainer.innerHTML += `
+            <div class="flex items-start gap-2.5 text-xs">
+                <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
+                    <span class="material-symbols-outlined text-base">smart_toy</span>
+                </div>
+                <div class="bg-rose-50 dark:bg-rose-950 p-3 rounded-2xl text-rose-800 dark:text-rose-200 leading-relaxed max-w-[85%]">
+                    DistrictBot is temporarily offline. Please try asking again in a moment!
+                </div>
+            </div>
+        `;
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+}
+
 function escapeHTML(str) {
     if (!str) return '';
     return String(str)
@@ -682,8 +986,9 @@ function escapeHTML(str) {
 
 function showToast(msg) {
     const toast = document.createElement('div');
-    toast.className = 'fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce';
+    toast.className = 'fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce';
     toast.innerHTML = `<span class="material-symbols-outlined text-amber-400 text-base">info</span> <span>${escapeHTML(msg)}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
+

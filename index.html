@@ -57,27 +57,49 @@
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Dark Mode Theme Overrides */
+        html.dark body { background-color: #0f172a; color: #f8fafc; }
+        html.dark .glass-panel { background: rgba(15, 23, 42, 0.92); border-color: rgba(20, 184, 166, 0.2); }
+        html.dark .bg-white { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
+        html.dark .bg-slate-50 { background-color: #0f172a; color: #f8fafc; }
+        html.dark .bg-slate-100 { background-color: #1e293b; color: #f8fafc; }
+        html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700 { color: #f1f5f9; }
+        html.dark .text-slate-600, html.dark .text-slate-500 { color: #cbd5e1; }
+        html.dark input, html.dark select, html.dark textarea { background-color: #0f172a; color: #f1f5f9; border-color: #334155; }
+        html.dark #mobileBottomBar { background-color: rgba(15, 23, 42, 0.95); border-color: #334155; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased h-full flex flex-col min-h-screen">
 
     <!-- Top Global Header -->
-    <header class="sticky top-0 z-40 w-full glass-panel shadow-sm border-b border-teal-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
+    <header class="sticky top-0 z-40 w-full glass-panel shadow-sm border-b border-teal-100/80">
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14 sm:h-20">
                 
                 <!-- Logo & Attribution -->
-                <div class="flex items-center gap-4 cursor-pointer" onclick="switchTab('feed')">
-                    <img src="/assets/logo-full.png" alt="LittleDistrict Logo" class="h-12 w-auto object-contain hidden sm:block">
-                    <img src="/assets/logo.png" alt="LittleDistrict Logo" class="h-10 w-auto object-contain sm:hidden">
+                <div class="flex items-center gap-2.5 sm:gap-4 cursor-pointer shrink-0" onclick="switchTab('feed')">
+                    <img src="/assets/logo-full.png" alt="LittleDistrict Logo" class="h-10 sm:h-12 w-auto object-contain hidden sm:block">
+                    <img src="/assets/logo.png" alt="LittleDistrict Logo" class="h-8 w-auto object-contain sm:hidden">
+                    <div class="sm:hidden flex flex-col">
+                        <span class="font-display font-bold text-sm text-teal-900 dark:text-teal-400 leading-none tracking-tight">LittleDistrict</span>
+                        <span class="text-[9px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Dubai Kids</span>
+                    </div>
                     <div class="hidden md:flex flex-col border-l border-teal-200 pl-3">
-                        <span class="text-xs font-bold text-teal-800 tracking-wide uppercase">Dubai Kids Network</span>
-                        <span class="text-[11px] font-extrabold text-amber-600">Created by Raza Muhammed</span>
+                        <span class="text-xs font-bold text-teal-800 dark:text-teal-300 tracking-wide uppercase">Dubai Kids Network</span>
+                        <span class="text-[11px] font-extrabold text-amber-600 dark:text-amber-400">Created by Raza Muhammed</span>
                     </div>
                 </div>
 
-                <!-- District Selector & Search Bar -->
-                <div class="flex items-center gap-3">
+                <!-- Header Actions -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    
+                    <!-- Theme Mode Toggle Button -->
+                    <button onclick="toggleTheme()" class="p-2 text-slate-600 dark:text-amber-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-full transition-colors" title="Toggle Light/Dark Mode">
+                        <span id="themeIcon" class="material-symbols-outlined text-xl">dark_mode</span>
+                    </button>
+
+                    <!-- Desktop District Selector -->
                     <div class="relative hidden lg:block">
                         <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">location_on</span>
                         <select id="districtFilter" class="pl-9 pr-8 py-2 bg-white/90 border border-slate-200 rounded-full text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
@@ -92,22 +114,29 @@
                         </select>
                     </div>
 
-                    <!-- Post Buttons -->
-                    <button onclick="openModal('createMeetupModal')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-2 rounded-full text-xs font-bold shadow-md shadow-teal-600/20 transition-all hover:scale-[1.02]">
-                        <span class="material-symbols-outlined text-base">add_circle</span>
-                        <span>+ Playdate</span>
-                    </button>
+                    <!-- Desktop Action Buttons -->
+                    <div class="hidden sm:flex items-center gap-2">
+                        <button onclick="openModal('createMeetupModal')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-4 py-2 rounded-full text-xs font-bold shadow-md shadow-teal-600/20 transition-all hover:scale-[1.02]">
+                            <span class="material-symbols-outlined text-base">add_circle</span>
+                            <span>+ Playdate</span>
+                        </button>
+                        <button onclick="openModal('createToyModal')" class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 px-3.5 py-2 rounded-full text-xs font-bold shadow-sm transition-all">
+                            <span class="material-symbols-outlined text-base">checkroom</span>
+                            <span>+ Exchange</span>
+                        </button>
+                    </div>
 
-                    <button onclick="openModal('createToyModal')" class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 px-3.5 py-2 rounded-full text-xs font-bold shadow-sm transition-all">
-                        <span class="material-symbols-outlined text-base">checkroom</span>
-                        <span>+ Exchange Item</span>
+                    <!-- Mobile Quick Post Button -->
+                    <button onclick="openModal('createMeetupModal')" class="sm:hidden inline-flex items-center gap-1 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-3 py-1.5 rounded-full text-[11px] font-extrabold shadow-sm active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        <span>Playdate</span>
                     </button>
 
                     <!-- User Account / Login Button -->
                     <div id="userAccountSection">
-                        <button onclick="openModal('authModal')" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-full text-xs font-bold transition-colors">
+                        <button onclick="openModal('authModal')" class="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-colors">
                             <span class="material-symbols-outlined text-lg text-teal-600">account_circle</span>
-                            <span id="accountBtnText">Sign In</span>
+                            <span id="accountBtnText" class="hidden sm:inline">Sign In</span>
                         </button>
                     </div>
                 </div>
@@ -116,11 +145,11 @@
         </div>
     </header>
 
-    <!-- Main Body Container with Sidebar Nav -->
-    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-8">
+    <!-- Main Body Container -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col lg:flex-row gap-6 lg:gap-8 pb-24 lg:pb-6">
         
-        <!-- Sidebar Navigation -->
-        <aside class="w-full lg:w-64 shrink-0">
+        <!-- Desktop Sidebar Navigation (Hidden on Mobile) -->
+        <aside class="hidden lg:block lg:w-64 shrink-0">
             <div class="glass-panel rounded-2xl p-4 shadow-sm sticky top-24 space-y-6">
                 
                 <!-- Nav Options -->
@@ -146,20 +175,6 @@
                     </nav>
                 </div>
 
-                <!-- District Mobile Filter -->
-                <div class="lg:hidden border-t border-slate-200 pt-4">
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5">Select Neighborhood</label>
-                    <select id="mobileDistrictFilter" class="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
-                        <option value="">All Neighborhoods</option>
-                        <option value="Dubai Hills">Dubai Hills</option>
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="JBR">JBR & Marina</option>
-                        <option value="Mirdif">Mirdif</option>
-                        <option value="Silicon Oasis">Silicon Oasis</option>
-                        <option value="Downtown Dubai">Downtown Dubai</option>
-                    </select>
-                </div>
-
                 <!-- Quick Action Card -->
                 <div class="hero-gradient p-4 rounded-xl text-white shadow-md space-y-2">
                     <div class="flex items-center gap-2">
@@ -180,49 +195,63 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="flex-1 min-w-0 space-y-6">
+        <main class="flex-1 min-w-0 space-y-4 sm:space-y-6">
             
-            <!-- Hero Banner (Without Stat Counters) -->
-            <section class="hero-gradient rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-                    <span class="material-symbols-outlined text-[240px]">child_care</span>
+            <!-- Hero Banner -->
+            <section class="hero-gradient rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
+                    <span class="material-symbols-outlined text-[160px] sm:text-[240px]">child_care</span>
                 </div>
-                <div class="relative z-10 max-w-2xl space-y-3">
-                    <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">
+                <div class="relative z-10 max-w-2xl space-y-2 sm:space-y-3">
+                    <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
                         <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         Dubai's #1 Neighborhood Kids Hub
                     </span>
-                    <h1 class="font-display font-extrabold text-2xl sm:text-4xl leading-tight">
+                    <h1 class="font-display font-extrabold text-xl sm:text-3xl leading-tight">
                         Connect, Play & Share in Your Dubai Neighborhood
                     </h1>
-                    <p class="text-xs sm:text-sm text-teal-100 font-medium leading-relaxed">
+                    <p class="text-xs sm:text-sm text-teal-100 font-medium leading-relaxed hidden sm:block">
                         Join verified local parents for park playdates, sports cycling groups, books, school uniform swaps, and toy exchanges.
                     </p>
                 </div>
             </section>
 
-            <!-- Search & Tags Bar -->
-            <div class="glass-panel p-4 rounded-2xl shadow-sm space-y-3">
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="relative flex-1">
-                        <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-xl">search</span>
-                        <input type="text" id="searchInput" placeholder="Search playdates, uniforms, books, parks or toys..." class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <select id="interestFilter" class="py-2 px-3 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700">
-                            <option value="">All Categories</option>
-                            <option value="Cycling">Cycling</option>
-                            <option value="Swimming">Swimming</option>
-                            <option value="Park Play">Park Play</option>
-                            <option value="Board Games">Board Games</option>
-                            <option value="Sports">Sports & Football</option>
-                            <option value="School Uniform">School Uniform</option>
-                            <option value="Books">Books & Storytime</option>
-                        </select>
-                        <button onclick="clearFilters()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 text-xs font-bold">
-                            Reset
-                        </button>
-                    </div>
+            <!-- Search & Responsive Category Filter Bar -->
+            <div class="glass-panel p-3 sm:p-4 rounded-2xl shadow-sm space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3.5 top-2.5 text-slate-400 text-lg">search</span>
+                    <input type="text" id="searchInput" placeholder="Search playdates, uniforms, books, parks..." class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs">
+                </div>
+
+                <!-- Scrollable Filter Pills Container -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                    <!-- Mobile District Dropdown -->
+                    <select id="mobileDistrictFilter" class="lg:hidden py-1.5 px-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shrink-0 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="">All Districts</option>
+                        <option value="Dubai Hills">Dubai Hills</option>
+                        <option value="Arabian Ranches">Arabian Ranches</option>
+                        <option value="JBR">JBR & Marina</option>
+                        <option value="Mirdif">Mirdif</option>
+                        <option value="Silicon Oasis">Silicon Oasis</option>
+                        <option value="Downtown Dubai">Downtown Dubai</option>
+                        <option value="Palm Jumeirah">Palm Jumeirah</option>
+                    </select>
+
+                    <select id="interestFilter" class="py-1.5 px-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shrink-0 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="">All Categories</option>
+                        <option value="Cycling">Cycling</option>
+                        <option value="Swimming">Swimming</option>
+                        <option value="Park Play">Park Play</option>
+                        <option value="Board Games">Board Games</option>
+                        <option value="Sports">Sports & Football</option>
+                        <option value="School Uniform">School Uniform</option>
+                        <option value="Books">Books & Storytime</option>
+                    </select>
+
+                    <button onclick="clearFilters()" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 text-xs font-bold shrink-0 transition-colors">
+                        Reset Filters
+                    </button>
                 </div>
             </div>
 
@@ -230,12 +259,12 @@
 
             <!-- 1. FEED TAB -->
             <section id="tab-feed" class="space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                        <h2 class="font-display font-bold text-xl text-slate-800">Neighborhood Playdates & Meetups</h2>
+                        <h2 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-slate-100">Neighborhood Playdates</h2>
                         <p class="text-xs text-slate-500 font-medium">Upcoming community activities hosted by local parents</p>
                     </div>
-                    <button onclick="openModal('createMeetupModal')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm">
+                    <button onclick="openModal('createMeetupModal')" class="hidden sm:inline-flex bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm">
                         + Create Playdate
                     </button>
                 </div>
@@ -250,12 +279,12 @@
 
             <!-- 2. PARKS & PLACES TAB -->
             <section id="tab-places" class="hidden space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                        <h2 class="font-display font-bold text-xl text-slate-800">Parks, Playgrounds & Venues</h2>
+                        <h2 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-slate-100">Parks, Playgrounds & Venues</h2>
                         <p class="text-xs text-slate-500 font-medium">Kid-friendly community spots in Dubai</p>
                     </div>
-                    <button onclick="openModal('createPlaceModal')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm">
+                    <button onclick="openModal('createPlaceModal')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm self-start sm:self-auto">
                         + Add Spot
                     </button>
                 </div>
@@ -267,12 +296,12 @@
 
             <!-- 3. EXCHANGE TAB -->
             <section id="tab-toys" class="hidden space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                        <h2 class="font-display font-bold text-xl text-slate-800">Exchange</h2>
-                        <p class="text-xs text-slate-500 font-medium">Pass along strollers, school uniforms, books & sports gear to neighborhood parents</p>
+                        <h2 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-slate-100">Pass-Along Exchange</h2>
+                        <p class="text-xs text-slate-500 font-medium">Strollers, school uniforms, books & sports gear for neighborhood families</p>
                     </div>
-                    <button onclick="openModal('createToyModal')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm">
+                    <button onclick="openModal('createToyModal')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm self-start sm:self-auto">
                         + List Item
                     </button>
                 </div>
@@ -284,12 +313,12 @@
 
             <!-- 4. LOST & FOUND TAB -->
             <section id="tab-lostFound" class="hidden space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                        <h2 class="font-display font-bold text-xl text-slate-800">Community Lost & Found</h2>
+                        <h2 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-slate-100">Community Lost & Found</h2>
                         <p class="text-xs text-slate-500 font-medium">Found a water bottle or jacket at the park? Post it here!</p>
                     </div>
-                    <button onclick="openModal('createLostFoundModal')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm">
+                    <button onclick="openModal('createLostFoundModal')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm self-start sm:self-auto">
                         + Report Item
                     </button>
                 </div>
@@ -302,26 +331,173 @@
         </main>
     </div>
 
+    <!-- DistrictBot AI Assistant Floating Button -->
+    <button onclick="openDistrictBotModal()" class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-2xl flex items-center gap-2 border border-teal-300/40 hover:scale-105 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-xl sm:text-2xl text-amber-300 animate-pulse">smart_toy</span>
+        <span class="text-xs font-bold font-display tracking-wide">DistrictBot AI</span>
+    </button>
+
+    <!-- Mobile Fixed Bottom Navigation Bar (Visible only on Mobile) -->
+    <nav id="mobileBottomBar" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800 py-2 px-3 flex items-center justify-around lg:hidden shadow-lg">
+        <button onclick="switchTab('feed')" data-tab="feed" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-teal-400 transition-all">
+            <span class="material-symbols-outlined text-xl">family_restroom</span>
+            <span>Playdates</span>
+        </button>
+        <button onclick="switchTab('places')" data-tab="places" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-teal-700 transition-all">
+            <span class="material-symbols-outlined text-xl">park</span>
+            <span>Spots</span>
+        </button>
+        <button onclick="switchTab('toys')" data-tab="toys" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-teal-700 transition-all">
+            <span class="material-symbols-outlined text-xl">checkroom</span>
+            <span>Exchange</span>
+        </button>
+        <button onclick="switchTab('lostFound')" data-tab="lostFound" class="mobile-nav-btn flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-teal-700 transition-all">
+            <span class="material-symbols-outlined text-xl">search_check</span>
+            <span>Lost & Found</span>
+        </button>
+    </nav>
+
     <!-- MODALS -->
 
-    <!-- CREATE MEETUP MODAL WITH PHOTO UPLOAD -->
-    <div id="createMeetupModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative border border-teal-100 max-h-[90vh] overflow-y-auto">
+    <!-- DISTRICTBOT AI CHAT MODAL -->
+    <div id="districtBotModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900/40 flex flex-col max-h-[85vh]">
+            <button onclick="closeModal('districtBotModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <!-- Bot Header -->
+            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-600 to-teal-800 flex items-center justify-center text-amber-300 shadow">
+                    <span class="material-symbols-outlined text-2xl">smart_toy</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100">DistrictBot AI</h3>
+                        <span class="bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Assistant</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Intelligent Dubai Community Companion</p>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="districtBotMessages" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs min-h-[220px] max-h-[360px]">
+                <div class="flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
+                        <span class="material-symbols-outlined text-base">smart_toy</span>
+                    </div>
+                    <div class="bg-teal-50 dark:bg-teal-950/60 p-3 rounded-2xl border border-teal-100 dark:border-teal-900 text-slate-800 dark:text-slate-200 leading-relaxed max-w-[85%]">
+                        Hello! 👋 I'm <strong>DistrictBot</strong>, your friendly AI assistant for LittleDistrict. I'm here to help you organize activities, discover kid-friendly parks, answer platform questions, and connect with local Dubai parents! How can I help you today?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions Chips -->
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+                <button onclick="sendDistrictBotPrompt('Who are you?')" class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full shrink-0 hover:bg-teal-50 hover:text-teal-700 transition-colors">🤖 Who are you?</button>
+                <button onclick="sendDistrictBotPrompt('How do playdates work?')" class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full shrink-0 hover:bg-teal-50 hover:text-teal-700 transition-colors">👨‍👩‍👧 Playdates</button>
+                <button onclick="sendDistrictBotPrompt('Recommend a park in Dubai')" class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full shrink-0 hover:bg-teal-50 hover:text-teal-700 transition-colors">🌳 Kid Parks</button>
+                <button onclick="sendDistrictBotPrompt('How to exchange uniforms?')" class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full shrink-0 hover:bg-teal-50 hover:text-teal-700 transition-colors">👗 Uniform Exchange</button>
+            </div>
+
+            <!-- Input Form -->
+            <form id="districtBotForm" onsubmit="handleDistrictBotSubmit(event)" class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <input type="text" id="districtBotInput" placeholder="Ask DistrictBot anything..." required class="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow">
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ACCOUNT SETTINGS MODAL -->
+    <div id="accountSettingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('accountSettingsModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flex items-center gap-2 text-teal-800 dark:text-teal-400">
+                <span class="material-symbols-outlined text-2xl text-teal-600">manage_accounts</span>
+                <h3 class="font-display font-bold text-base sm:text-lg">Account Settings & Profile</h3>
+            </div>
+
+            <!-- Require Phone Warning Banner -->
+            <div id="phoneRequireAlert" class="hidden p-3 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-xs font-bold rounded-xl space-y-1">
+                <p>⚠️ Mobile phone number required! Please enter your phone number below before posting playdates or exchange items.</p>
+            </div>
+
+            <form id="profileForm" onsubmit="handleSaveProfile(event)" class="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <div>
+                    <label class="block mb-1">Your Full Name *</label>
+                    <input type="text" id="profileName" required placeholder="e.g. Sarah Mansour" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block mb-1">Mobile Phone Number (Required for Posting) *</label>
+                    <input type="tel" id="profilePhone" required placeholder="+971 50 123 4567" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block mb-1">Primary District *</label>
+                    <select id="profileDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <option value="Dubai Hills">Dubai Hills</option>
+                        <option value="Arabian Ranches">Arabian Ranches</option>
+                        <option value="JBR">JBR & Marina</option>
+                        <option value="Mirdif">Mirdif</option>
+                        <option value="Silicon Oasis">Silicon Oasis</option>
+                        <option value="Downtown Dubai">Downtown Dubai</option>
+                        <option value="Palm Jumeirah">Palm Jumeirah</option>
+                    </select>
+                </div>
+
+                <!-- Profile Photo Upload -->
+                <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <label class="block font-bold text-teal-800 dark:text-teal-300">Profile Picture / Avatar</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="profileAvatarFile" accept="image/*" onchange="handleImageFileSelect(event, 'profileAvatarPreview', 'profileAvatarUrl')" class="hidden">
+                        <button type="button" onclick="document.getElementById('profileAvatarFile').click()" class="inline-flex items-center gap-1.5 bg-teal-50 dark:bg-teal-950 border border-teal-200 text-teal-800 dark:text-teal-200 px-3.5 py-2 rounded-xl font-bold hover:bg-teal-100 transition-colors">
+                            <span class="material-symbols-outlined text-base">photo_camera</span>
+                            <span>Choose Photo</span>
+                        </button>
+                        <input type="hidden" id="profileAvatarUrl" value="">
+                    </div>
+                    <div id="profileAvatarPreview" class="hidden mt-2">
+                        <img src="" alt="Preview" class="h-16 w-16 rounded-full object-cover border-2 border-teal-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block mb-1">Short Parent Bio</label>
+                    <textarea id="profileBio" rows="2" placeholder="e.g. Resident in Dubai Hills, parent of 2 kids." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-md">
+                        Save Profile Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CREATE MEETUP MODAL WITH PHOTO SELECTION -->
+    <div id="createMeetupModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900 max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('createMeetupModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
+            <div class="flex items-center gap-2 text-teal-800 dark:text-teal-300">
                 <span class="material-symbols-outlined text-2xl text-teal-600">add_circle</span>
-                <h3 class="font-display font-bold text-lg">Create New Playdate Meetup</h3>
+                <h3 class="font-display font-bold text-base sm:text-lg">Create New Playdate Meetup</h3>
             </div>
 
-            <form id="createMeetupForm" onsubmit="handleCreateMeetup(event)" class="space-y-3 text-xs font-semibold text-slate-700">
+            <form id="createMeetupForm" onsubmit="handleCreateMeetup(event)" class="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div>
                     <label class="block mb-1">Playdate Title *</label>
                     <input type="text" id="meetupTitle" required placeholder="e.g. Saturday Morning Park Cycling & Picnic" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block mb-1">Neighborhood / District *</label>
                         <select id="meetupDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
@@ -352,7 +528,7 @@
                     <input type="text" id="meetupLocation" required placeholder="e.g. Dubai Hills Central Park Splash Area" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block mb-1">Date & Time *</label>
                         <input type="text" id="meetupDateTime" required placeholder="e.g. Saturday 10:00 AM" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
@@ -363,18 +539,17 @@
                     </div>
                 </div>
 
-                <!-- Playdate Photo Upload Field -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-2">
-                    <label class="block font-bold text-teal-800">Attach Playdate Photo *</label>
+                <!-- Playdate Photo File Selection -->
+                <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <label class="block font-bold text-teal-800 dark:text-teal-300">Attach Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="meetupPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'meetupPhotoPreview', 'meetupImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 px-3.5 py-2 rounded-xl font-bold hover:bg-teal-100 transition-colors">
+                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200 px-4 py-2 rounded-xl font-bold hover:bg-teal-100 transition-colors">
                             <span class="material-symbols-outlined text-base">photo_camera</span>
-                            <span>Upload Image File</span>
+                            <span>Choose from Photos</span>
                         </button>
-                        <span class="text-[11px] text-slate-400">or paste image URL below</span>
+                        <input type="hidden" id="meetupImageUrl" value="">
                     </div>
-                    <input type="text" id="meetupImageUrl" placeholder="https://example.com/photo.jpg" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs">
                     <div id="meetupPhotoPreview" class="hidden mt-2">
                         <img src="" alt="Preview" class="h-24 w-auto rounded-xl object-cover border border-slate-200">
                     </div>
@@ -390,23 +565,23 @@
     </div>
 
     <!-- CREATE TOY, BOOK & UNIFORM EXCHANGE ITEM MODAL -->
-    <div id="createToyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative border border-teal-100 max-h-[90vh] overflow-y-auto">
+    <div id="createToyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900 max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('createToyModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
+            <div class="flex items-center gap-2 text-teal-800 dark:text-amber-400">
                 <span class="material-symbols-outlined text-2xl text-amber-500">checkroom</span>
-                <h3 class="font-display font-bold text-lg">List Exchange Item (Uniform, Book, Toy)</h3>
+                <h3 class="font-display font-bold text-base sm:text-lg">List Exchange Item (Uniform, Book, Toy)</h3>
             </div>
 
-            <form id="createToyForm" onsubmit="handleCreateToy(event)" class="space-y-3 text-xs font-semibold text-slate-700">
+            <form id="createToyForm" onsubmit="handleCreateToy(event)" class="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div>
                     <label class="block mb-1">Item Title *</label>
-                    <input type="text" id="toyTitle" required placeholder="e.g. DESS School PE Kit & Hoodie Set (Size 32) or Harry Potter Book Boxset" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+                    <input type="text" id="toyTitle" required placeholder="e.g. DESS School PE Kit & Hoodie Set (Size 32)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block mb-1">Category *</label>
                         <select id="toyCategory" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
@@ -430,7 +605,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block mb-1">School / Brand (Optional)</label>
                         <input type="text" id="toySchoolName" placeholder="e.g. DESS / DESC / Kings / Horizon" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
@@ -451,17 +626,16 @@
                 </div>
 
                 <!-- Exchange Item Photo Upload Field -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-2">
-                    <label class="block font-bold text-teal-800">Attach Item Photo *</label>
+                <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <label class="block font-bold text-amber-800 dark:text-amber-300">Attach Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="toyPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'toyPhotoPreview', 'toyImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-2 rounded-xl font-bold hover:bg-amber-100 transition-colors">
+                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 px-4 py-2 rounded-xl font-bold hover:bg-amber-100 transition-colors">
                             <span class="material-symbols-outlined text-base">photo_camera</span>
-                            <span>Upload Item Photo</span>
+                            <span>Choose from Photos</span>
                         </button>
-                        <span class="text-[11px] text-slate-400">or paste image URL below</span>
+                        <input type="hidden" id="toyImageUrl" value="">
                     </div>
-                    <input type="text" id="toyImageUrl" placeholder="https://example.com/item-photo.jpg" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs">
                     <div id="toyPhotoPreview" class="hidden mt-2">
                         <img src="" alt="Preview" class="h-24 w-auto rounded-xl object-cover border border-slate-200">
                     </div>
@@ -477,17 +651,17 @@
     </div>
 
     <!-- CREATE PLACE MODAL -->
-    <div id="createPlaceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 relative border border-teal-100">
+    <div id="createPlaceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900">
             <button onclick="closeModal('createPlaceModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
+            <div class="flex items-center gap-2 text-teal-800 dark:text-teal-300">
                 <span class="material-symbols-outlined text-2xl text-teal-600">park</span>
-                <h3 class="font-display font-bold text-lg">Share Kid Spot / Park</h3>
+                <h3 class="font-display font-bold text-base sm:text-lg">Share Kid Spot / Park</h3>
             </div>
 
-            <form id="createPlaceForm" onsubmit="handleCreatePlace(event)" class="space-y-3 text-xs font-semibold text-slate-700">
+            <form id="createPlaceForm" onsubmit="handleCreatePlace(event)" class="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div>
                     <label class="block mb-1">Park / Spot Name *</label>
                     <input type="text" id="placeName" required placeholder="e.g. Arabian Ranches 2 Splash Pad" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
@@ -530,27 +704,32 @@
     </div>
 
     <!-- AUTH MODAL -->
-    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 relative border border-teal-100">
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 relative border border-teal-100 dark:border-teal-900">
             <button onclick="closeModal('authModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
             
             <div class="text-center space-y-1">
                 <img src="/assets/logo.png" alt="LittleDistrict" class="h-10 mx-auto object-contain">
-                <h3 class="font-display font-bold text-xl text-slate-800">Dubai Parent Sign In</h3>
-                <p class="text-xs text-slate-500">Join verified local playdates & community features</p>
+                <h3 class="font-display font-bold text-xl text-slate-800 dark:text-slate-100">Dubai Parent Sign In</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Join verified local playdates & community features</p>
             </div>
 
             <!-- Inline Auth Error Banner -->
-            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl space-y-1">
+            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold rounded-xl space-y-1">
                 <p id="authErrorMsg">Invalid credentials</p>
             </div>
 
-            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs font-semibold text-slate-700">
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div id="nameField" class="hidden">
                     <label class="block mb-1">Your Full Name</label>
                     <input type="text" id="authName" placeholder="e.g. Sarah Mansour" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div id="phoneField" class="hidden">
+                    <label class="block mb-1">Mobile Phone Number (Required) *</label>
+                    <input type="tel" id="authPhone" placeholder="+971 50 123 4567" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                 </div>
 
                 <div>
@@ -580,7 +759,7 @@
                 </div>
 
                 <div class="text-center pt-2">
-                    <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-teal-700 hover:underline text-xs font-bold">
+                    <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-teal-700 dark:text-teal-400 hover:underline text-xs font-bold">
                         Need an account? Register here
                     </button>
                 </div>
