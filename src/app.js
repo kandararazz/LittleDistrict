@@ -125,19 +125,23 @@ function updateUserUI() {
 
     if (state.user) {
         const isVerified = state.user.is_verified;
+        const isDev = state.user.is_developer;
         section.innerHTML = `
             <div class="flex items-center gap-2">
                 <div class="relative cursor-pointer" onclick="openAccountSettings()">
-                    <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)}" alt="${escapeHTML(state.user.name)}" class="w-8 h-8 rounded-full border-2 ${isVerified ? 'border-emerald-500' : 'border-teal-500'} object-cover">
-                    ${isVerified ? `<span class="absolute -bottom-1 -right-1 bg-emerald-600 text-white rounded-full p-0.5 shadow-xs"><span class="material-symbols-outlined text-[10px] leading-none block">verified</span></span>` : ''}
+                    <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)}" alt="${escapeHTML(state.user.name)}" class="w-8 h-8 rounded-full border-2 ${isDev ? 'border-teal-900' : isVerified ? 'border-emerald-500' : 'border-teal-500'} object-cover">
+                    ${isDev ? `<span class="absolute -bottom-1 -right-1 bg-slate-900 text-teal-400 rounded-full p-0.5 shadow-xs" title="Official Developer"><span class="material-symbols-outlined text-[10px] leading-none block">code</span></span>` : isVerified ? `<span class="absolute -bottom-1 -right-1 bg-emerald-600 text-white rounded-full p-0.5 shadow-xs"><span class="material-symbols-outlined text-[10px] leading-none block">verified</span></span>` : ''}
                 </div>
                 <div class="hidden sm:block text-left cursor-pointer" onclick="openAccountSettings()">
                     <div class="flex items-center gap-1">
                         <span class="block text-xs font-bold leading-none text-slate-800">${escapeHTML(state.user.name)}</span>
-                        ${isVerified ? `<span class="material-symbols-outlined text-xs text-emerald-600" title="Verified Neighbor">verified</span>` : ''}
+                        ${isDev ? `<span class="bg-slate-900 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border border-teal-700 flex items-center gap-0.5" title="Official Developer Badge"><span class="material-symbols-outlined text-[10px] text-teal-400">code</span> Dev</span>` : isVerified ? `<span class="material-symbols-outlined text-xs text-emerald-600" title="Verified Neighbor">verified</span>` : ''}
                     </div>
                     <span class="text-[10px] text-teal-600 font-semibold">${escapeHTML(state.user.district || 'Dubai')}</span>
                 </div>
+                <button onclick="openModal('developerAssistantModal')" class="p-1 text-teal-700 hover:text-teal-900 transition-colors" title="Developer Badge Assistant">
+                    <span class="material-symbols-outlined text-lg">code</span>
+                </button>
                 <button onclick="openAccountSettings()" class="p-1 text-slate-500 hover:text-teal-600 transition-colors" title="Account Settings">
                     <span class="material-symbols-outlined text-lg">settings</span>
                 </button>

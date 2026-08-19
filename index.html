@@ -478,6 +478,66 @@
         </div>
     </div>
 
+    <!-- DEVELOPER BADGE VERIFICATION ASSISTANT MODAL -->
+    <div id="developerAssistantModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('developerAssistantModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-teal-900 text-white rounded-2xl shadow-md">
+                    <span class="material-symbols-outlined text-3xl">code</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-display font-extrabold text-xl text-slate-900">Developer Badge Verification</h2>
+                        <span class="bg-teal-900 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">Official Badge</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">Platform Creator & Maintainer Access Control</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-teal-50/80 border border-teal-200/90 rounded-2xl space-y-2 text-xs text-teal-950">
+                <div class="flex items-center gap-2 font-bold text-teal-900">
+                    <span class="material-symbols-outlined text-base">verified_user</span>
+                    <span>Verification Assistant Message</span>
+                </div>
+                <p class="leading-relaxed font-medium">
+                    Hello! The official <strong>Developer Badge 💻</strong> signifies your official core role in creating, engineering, and maintaining the LittleDistrict community platform.
+                </p>
+            </div>
+
+            <!-- Official Developer Badge Preview Box -->
+            <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-2">
+                <span class="text-[10px] font-extrabold uppercase text-teal-400 tracking-wider">Official Icon Preview</span>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 bg-teal-800 text-white text-xs font-extrabold px-3 py-1.5 rounded-full border border-teal-600 shadow-sm">
+                        <span class="material-symbols-outlined text-base text-teal-300">code</span>
+                        <span>Developer Badge 💻</span>
+                    </span>
+                    <span class="text-xs text-slate-300">Official Platform Maintainer</span>
+                </div>
+            </div>
+
+            <div class="space-y-2 text-xs text-slate-600 font-medium">
+                <p><strong>Permanent Profile Display Policy:</strong></p>
+                <p>
+                    Developer access and permanent badge assignment are strictly restricted to authorized developer email and password credentials. If you are a platform developer or maintainer, please sign in with your developer email or contact the core team via <strong class="text-slate-900">developer@littledistrict.ae</strong> to complete developer account verification.
+                </p>
+            </div>
+
+            <div class="pt-2 flex items-center gap-3">
+                <button onclick="closeModal('developerAssistantModal'); openModal('authModal');" class="flex-1 bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
+                    Sign In with Developer Account
+                </button>
+                <button onclick="closeModal('developerAssistantModal')" class="px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ACCOUNT SETTINGS MODAL -->
     <div id="accountSettingsModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200 max-h-[90vh] overflow-y-auto">

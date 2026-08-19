@@ -337,8 +337,32 @@ export const db = {
             district: district || 'Dubai Marina',
             phone: phone || '+971 50 123 4567',
             contact_preference: 'WhatsApp',
+const DEV_EMAILS = [
+    'developer@littledistrict.ae',
+    'raza@littledistrict.ae',
+    'raza@gmail.com',
+    'admin@littledistrict.ae',
+    'dev@littledistrict.ae'
+];
+
+function isDeveloperEmail(email) {
+    if (!email) return false;
+    const clean = email.trim().toLowerCase();
+    return DEV_EMAILS.includes(clean) || clean.startsWith('dev.') || clean.includes('developer');
+}
+
+        const isDev = isDeveloperEmail(cleanEmail);
+        const userObj = {
+            id: userId,
+            name: name ? name.trim() : 'Neighborhood Parent',
+            email: cleanEmail,
+            password_hash: hashPassword(password),
+            district: district || 'Dubai Hills',
+            contact_preference: 'In-App Message',
             avatar_url: avatarUrl,
-            bio: 'Active community parent'
+            bio: isDev ? 'Official Platform Creator & Maintainer' : 'Active community parent',
+            is_developer: isDev,
+            developer_badge: isDev ? 'Developer Badge 💻' : ''
         };
 
         if (isSupabaseConfigured) {
@@ -365,7 +389,19 @@ export const db = {
 
     loginUser: async ({ email, password }) => {
         const cleanEmail = (email || '').trim().toLowerCase();
-        const user = await db.getUserByEmail(cleanEmail);
+        let user = await db.getUserByEmail(cleanEmail);
+        
+        // If developer logs in for the first time, auto-create developer account
+        if (!user && isDeveloperEmail(cleanEmail)) {
+            const registered = await db.registerUser({
+                email: cleanEmail,
+                password: password,
+                name: 'Raza (Developer)',
+                district: 'Dubai Hills'
+            });
+            return registered;
+        }
+
         if (!user) throw new Error('Invalid email or password.');
 
         const expectedHash = hashPassword(password);
@@ -375,7 +411,13 @@ export const db = {
 
         const token = generateToken(user.id);
         const fullUser = await db.getUserById(user.id);
-        return { token, user: fullUser };
+        const isDev = isDeveloperEmail(cleanEmail);
+        const userWithDev = {
+            ...fullUser,
+            is_developer: isDev || Boolean(fullUser.is_developer),
+            developer_badge: (isDev || fullUser.is_developer) ? 'Developer Badge 💻' : ''
+        };
+        return { token, user: userWithDev };
     },
 
     getUserByEmail: async (email) => {
