@@ -887,10 +887,10 @@ async function handleCreateMeetup(e) {
         showToast('Please sign in to post playdates');
         return;
     }
-    if (!state.user.phone || !state.user.phone.trim()) {
-        openAccountSettings(true);
-        showToast('Phone number required before posting playdates');
-        return;
+
+    const phoneVal = document.getElementById('meetupPhone')?.value;
+    if (phoneVal && (!state.user.phone || state.user.phone !== phoneVal)) {
+        state.user.phone = phoneVal;
     }
 
     const payload = {
@@ -899,10 +899,10 @@ async function handleCreateMeetup(e) {
         interest_tag: document.getElementById('meetupInterest').value,
         public_location: document.getElementById('meetupLocation').value,
         date_time: document.getElementById('meetupDateTime').value,
-        max_attendees: parseInt(document.getElementById('meetupMaxAttendees').value) || 10,
+        max_attendees: 10,
         min_age: 0,
         max_age: 18,
-        image_url: document.getElementById('meetupImageUrl').value || ''
+        image_url: document.getElementById('meetupImageUrl')?.value || ''
     };
 
     try {
@@ -934,10 +934,10 @@ async function handleCreateToy(e) {
         showToast('Please sign in to list exchange items');
         return;
     }
-    if (!state.user.phone || !state.user.phone.trim()) {
-        openAccountSettings(true);
-        showToast('Phone number required before listing exchange items');
-        return;
+
+    const phoneVal = document.getElementById('toyPhone')?.value;
+    if (phoneVal && (!state.user.phone || state.user.phone !== phoneVal)) {
+        state.user.phone = phoneVal;
     }
 
     const payload = {
@@ -947,7 +947,7 @@ async function handleCreateToy(e) {
         school_name: document.getElementById('toySchoolName').value || '',
         condition: document.getElementById('toyCondition').value,
         description: document.getElementById('toyDescription').value || '',
-        image_url: document.getElementById('toyImageUrl').value || ''
+        image_url: document.getElementById('toyImageUrl')?.value || ''
     };
 
     try {
@@ -1076,14 +1076,17 @@ function openModal(id) {
             showToast('Please sign in to publish posts');
             return;
         }
-        if (!state.user.phone || !state.user.phone.trim()) {
-            openAccountSettings(true);
-            showToast('Phone number required before publishing posts');
-            return;
-        }
     }
     const el = document.getElementById(id);
-    if (el) el.classList.remove('hidden');
+    if (el) {
+        el.classList.remove('hidden');
+        if (state.user) {
+            const phoneIn = el.querySelector('input[type="tel"]');
+            if (phoneIn && state.user.phone && !phoneIn.value) {
+                phoneIn.value = state.user.phone;
+            }
+        }
+    }
 }
 
 function closeModal(id) {

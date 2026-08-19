@@ -367,26 +367,30 @@
     </div>
 
     <!-- CREATE MEETUP MODAL -->
-    <div id="createMeetupModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div id="createMeetupModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('createMeetupModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
-                <span class="material-symbols-outlined text-2xl text-teal-600">add_circle</span>
-                <h3 class="font-display font-bold text-base sm:text-lg">Create New Playdate Meetup</h3>
+            
+            <div class="flex items-center gap-2.5 text-[#006654]">
+                <span class="material-symbols-outlined text-3xl">add_circle</span>
+                <div>
+                    <h3 class="font-display font-bold text-xl text-slate-900">Create New Playdate</h3>
+                    <p class="text-xs text-slate-500 font-medium">Host a neighborhood meetup for local Dubai kids</p>
+                </div>
             </div>
 
-            <form id="createMeetupForm" onsubmit="handleCreateMeetup(event)" class="space-y-3 text-xs font-semibold text-slate-700">
-                <div>
-                    <label class="block mb-1">Playdate Title *</label>
-                    <input type="text" id="meetupTitle" required placeholder="e.g. Saturday Morning Park Cycling & Picnic" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+            <form id="createMeetupForm" onsubmit="handleCreateMeetup(event)" class="space-y-3.5 text-xs font-semibold text-slate-700">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Playdate Title *</label>
+                    <input type="text" id="meetupTitle" required placeholder="e.g. Saturday Morning Park Football & Picnic" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006654] outline-none">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block mb-1">Neighborhood / District *</label>
-                        <select id="meetupDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
+                        <select id="meetupDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                             <option value="Dubai Hills">Dubai Hills</option>
                             <option value="Arabian Ranches">Arabian Ranches</option>
                             <option value="JBR">JBR & Marina</option>
@@ -396,41 +400,41 @@
                             <option value="Palm Jumeirah">Palm Jumeirah</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block mb-1">Activity Interest *</label>
-                        <select id="meetupInterest" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Activity Category *</label>
+                        <select id="meetupInterest" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
+                            <option value="Sports">Sports & Football</option>
                             <option value="Cycling">Cycling</option>
                             <option value="Swimming">Swimming</option>
                             <option value="Park Play">Park Play</option>
                             <option value="Board Games">Board Games</option>
-                            <option value="Sports">Sports & Football</option>
                             <option value="Toddler Storytime">Toddler Storytime</option>
                         </select>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Exact Location Name *</label>
-                    <input type="text" id="meetupLocation" required placeholder="e.g. Dubai Hills Central Park Splash Area" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Exact Location Name *</label>
+                    <input type="text" id="meetupLocation" required placeholder="e.g. Marina Park / Dubai Hills Central Lawn" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block mb-1">Date & Time *</label>
-                        <input type="text" id="meetupDateTime" required placeholder="e.g. Saturday 10:00 AM" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Date & Time *</label>
+                        <input type="text" id="meetupDateTime" required placeholder="e.g. August 16, 2026, 4:00 PM - 6:00 PM" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
-                    <div>
-                        <label class="block mb-1">Max Attendees</label>
-                        <input type="number" id="meetupMaxAttendees" value="10" min="2" max="50" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Your Mobile Phone *</label>
+                        <input type="tel" id="meetupPhone" placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
                 </div>
 
                 <!-- Playdate Photo File Selection -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-2">
-                    <label class="block font-bold text-teal-800">Attach Photo (Optional)</label>
+                <div class="space-y-1.5 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-[#006654]">Attach Cover Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="meetupPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'meetupPhotoPreview', 'meetupImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-2 rounded-xl font-bold hover:bg-teal-100 transition-colors">
+                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-[#006654] px-4 py-2.5 rounded-xl font-bold hover:bg-teal-100 transition-colors">
                             <span class="material-symbols-outlined text-base">photo_camera</span>
                             <span>Choose from Photos</span>
                         </button>
@@ -442,7 +446,7 @@
                 </div>
 
                 <div class="pt-3">
-                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-xs">
+                    <button type="submit" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
                         Publish Playdate Meetup
                     </button>
                 </div>
@@ -451,26 +455,30 @@
     </div>
 
     <!-- CREATE EXCHANGE ITEM MODAL -->
-    <div id="createToyModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div id="createToyModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('createToyModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
-                <span class="material-symbols-outlined text-2xl text-amber-500">checkroom</span>
-                <h3 class="font-display font-bold text-base sm:text-lg">List Exchange Item (Uniform, Book, Toy)</h3>
+            
+            <div class="flex items-center gap-2.5 text-amber-600">
+                <span class="material-symbols-outlined text-3xl">checkroom</span>
+                <div>
+                    <h3 class="font-display font-bold text-xl text-slate-900">List Exchange Item</h3>
+                    <p class="text-xs text-slate-500 font-medium">Pass along school uniforms, books, or toys</p>
+                </div>
             </div>
 
-            <form id="createToyForm" onsubmit="handleCreateToy(event)" class="space-y-3 text-xs font-semibold text-slate-700">
-                <div>
-                    <label class="block mb-1">Item Title *</label>
-                    <input type="text" id="toyTitle" required placeholder="e.g. DESS School PE Kit & Hoodie Set (Size 32)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+            <form id="createToyForm" onsubmit="handleCreateToy(event)" class="space-y-3.5 text-xs font-semibold text-slate-700">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Item Title *</label>
+                    <input type="text" id="toyTitle" required placeholder="e.g. DESS School PE Kit & Hoodie Set (Size 32)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block mb-1">Category *</label>
-                        <select id="toyCategory" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Category *</label>
+                        <select id="toyCategory" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                             <option value="School Uniform">School Uniform</option>
                             <option value="Books">Books & Storybooks</option>
                             <option value="Toys & Games">Toys & Board Games</option>
@@ -478,9 +486,9 @@
                             <option value="Sports Equipment">Sports Equipment</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block mb-1">Neighborhood / District *</label>
-                        <select id="toyDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
+                        <select id="toyDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                             <option value="Dubai Hills">Dubai Hills</option>
                             <option value="Arabian Ranches">Arabian Ranches</option>
                             <option value="JBR">JBR & Marina</option>
@@ -492,13 +500,13 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block mb-1">School / Brand (Optional)</label>
-                        <input type="text" id="toySchoolName" placeholder="e.g. DESS / DESC / Kings / Horizon" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">School / Brand (Optional)</label>
+                        <input type="text" id="toySchoolName" placeholder="e.g. DESS / DESC / Kings" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
-                    <div>
-                        <label class="block mb-1">Item Condition *</label>
-                        <select id="toyCondition" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Item Condition *</label>
+                        <select id="toyCondition" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                             <option value="Brand New">Brand New with Tags</option>
                             <option value="Gently Used">Gently Used (Like New)</option>
                             <option value="Good Condition">Good Condition</option>
@@ -506,17 +514,22 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Description / Size / Details</label>
-                    <textarea id="toyDescription" rows="2" placeholder="Provide size, grade level, or details for parents..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Your Mobile Phone *</label>
+                    <input type="tel" id="toyPhone" placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Description / Size Details</label>
+                    <textarea id="toyDescription" rows="2" placeholder="Provide size, grade level, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
                 </div>
 
                 <!-- Exchange Item Photo Upload Field -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-2">
+                <div class="space-y-1.5 border-t border-slate-100 pt-3">
                     <label class="block font-bold text-amber-800">Attach Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="toyPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'toyPhotoPreview', 'toyImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2 rounded-xl font-bold hover:bg-amber-100 transition-colors">
+                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-xl font-bold hover:bg-amber-100 transition-colors">
                             <span class="material-symbols-outlined text-base">photo_camera</span>
                             <span>Choose from Photos</span>
                         </button>
@@ -528,7 +541,7 @@
                 </div>
 
                 <div class="pt-3">
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-xl text-xs transition-all shadow-xs">
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
                         List Item for Exchange
                     </button>
                 </div>
@@ -537,25 +550,29 @@
     </div>
 
     <!-- CREATE PLACE MODAL -->
-    <div id="createPlaceModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200">
+    <div id="createPlaceModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90">
             <button onclick="closeModal('createPlaceModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <div class="flex items-center gap-2 text-teal-800">
-                <span class="material-symbols-outlined text-2xl text-teal-600">park</span>
-                <h3 class="font-display font-bold text-base sm:text-lg">Share Kid Spot / Park</h3>
+            
+            <div class="flex items-center gap-2.5 text-[#006654]">
+                <span class="material-symbols-outlined text-3xl">park</span>
+                <div>
+                    <h3 class="font-display font-bold text-xl text-slate-900">Share Kid Spot / Park</h3>
+                    <p class="text-xs text-slate-500 font-medium">Recommend a great venue for Dubai parents</p>
+                </div>
             </div>
 
-            <form id="createPlaceForm" onsubmit="handleCreatePlace(event)" class="space-y-3 text-xs font-semibold text-slate-700">
-                <div>
-                    <label class="block mb-1">Park / Spot Name *</label>
-                    <input type="text" id="placeName" required placeholder="e.g. Arabian Ranches 2 Splash Pad" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+            <form id="createPlaceForm" onsubmit="handleCreatePlace(event)" class="space-y-3.5 text-xs font-semibold text-slate-700">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Park / Spot Name *</label>
+                    <input type="text" id="placeName" required placeholder="e.g. Arabian Ranches 2 Splash Pad" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
-                <div>
-                    <label class="block mb-1">Neighborhood / District *</label>
-                    <select id="placeDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
+                    <select id="placeDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                         <option value="Dubai Hills">Dubai Hills</option>
                         <option value="Arabian Ranches">Arabian Ranches</option>
                         <option value="JBR">JBR & Marina</option>
@@ -565,9 +582,9 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Spot Type *</label>
-                    <select id="placeSpotType" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Spot Type *</label>
+                    <select id="placeSpotType" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                         <option value="Park">Park & Green Lawn</option>
                         <option value="Playground">Shaded Playground</option>
                         <option value="Splash Pad">Splash Pad & Pool</option>
@@ -575,13 +592,13 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Description / Parent Tips</label>
-                    <textarea id="placeDescription" rows="3" placeholder="e.g. Free admission, shaded seating, coffee shop nearby..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Description / Parent Tips</label>
+                    <textarea id="placeDescription" rows="3" placeholder="e.g. Free admission, shaded seating, coffee shop nearby..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]"></textarea>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-xs">
+                    <button type="submit" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
                         Save Community Spot
                     </button>
                 </div>
