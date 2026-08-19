@@ -88,6 +88,20 @@ function handleImageFileSelect(event, previewId, inputId) {
     reader.readAsDataURL(file);
 }
 
+function removeImagePreview(previewId, inputId, fileInputId) {
+    const inputEl = document.getElementById(inputId);
+    const previewEl = document.getElementById(previewId);
+    const fileEl = document.getElementById(fileInputId);
+    
+    if (inputEl) inputEl.value = '';
+    if (fileEl) fileEl.value = '';
+    if (previewEl) {
+        previewEl.classList.add('hidden');
+        const img = previewEl.querySelector('img');
+        if (img) img.src = '';
+    }
+}
+
 async function checkCurrentUser() {
     try {
         const res = await fetch('/api/auth/me', {

@@ -430,18 +430,21 @@
                 </div>
 
                 <!-- Playdate Photo File Selection -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-3">
-                    <label class="block font-bold text-[#006654]">Attach Cover Photo (Optional)</label>
+                <div class="space-y-2 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-[#006654]">Item / Cover Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="meetupPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'meetupPhotoPreview', 'meetupImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-[#006654] px-4 py-2.5 rounded-xl font-bold hover:bg-teal-100 transition-colors">
-                            <span class="material-symbols-outlined text-base">photo_camera</span>
-                            <span>Choose from Photos</span>
+                        <button type="button" onclick="document.getElementById('meetupPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-[#006654] px-4 py-2.5 rounded-2xl font-bold hover:bg-teal-100 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-lg">add_a_photo</span>
+                            <span>+ Choose Photo from Device</span>
                         </button>
                         <input type="hidden" id="meetupImageUrl" value="">
                     </div>
-                    <div id="meetupPhotoPreview" class="hidden mt-2">
-                        <img src="" alt="Preview" class="h-24 w-auto rounded-xl object-cover border border-slate-200">
+                    <div id="meetupPhotoPreview" class="hidden mt-2 relative inline-block">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-teal-500 shadow-sm">
+                        <button type="button" onclick="removeImagePreview('meetupPhotoPreview', 'meetupImageUrl', 'meetupPhotoFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
+                            <span class="material-symbols-outlined text-xs">close</span>
+                        </button>
                     </div>
                 </div>
 
@@ -464,8 +467,8 @@
             <div class="flex items-center gap-2.5 text-amber-600">
                 <span class="material-symbols-outlined text-3xl">checkroom</span>
                 <div>
-                    <h3 class="font-display font-bold text-xl text-slate-900">List Exchange Item</h3>
-                    <p class="text-xs text-slate-500 font-medium">Pass along school uniforms, books, or toys</p>
+                    <h3 class="font-display font-bold text-xl text-slate-900">List Exchange Item / Sell</h3>
+                    <p class="text-xs text-slate-500 font-medium">Pass along or sell school uniforms, books, or toys</p>
                 </div>
             </div>
 
@@ -520,23 +523,26 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Description / Size Details</label>
-                    <textarea id="toyDescription" rows="2" placeholder="Provide size, grade level, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    <label class="block text-slate-800 font-bold">Description / Price Details</label>
+                    <textarea id="toyDescription" rows="2" placeholder="Provide price (e.g. AED 50 or Free Pass-Along), size, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
                 </div>
 
                 <!-- Exchange Item Photo Upload Field -->
-                <div class="space-y-1.5 border-t border-slate-100 pt-3">
-                    <label class="block font-bold text-amber-800">Attach Photo (Optional)</label>
+                <div class="space-y-2 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-amber-800">Item Photo (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="toyPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'toyPhotoPreview', 'toyImageUrl')" class="hidden">
-                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-xl font-bold hover:bg-amber-100 transition-colors">
-                            <span class="material-symbols-outlined text-base">photo_camera</span>
-                            <span>Choose from Photos</span>
+                        <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl font-bold hover:bg-amber-100 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-lg">add_a_photo</span>
+                            <span>+ Choose Photo from Device</span>
                         </button>
                         <input type="hidden" id="toyImageUrl" value="">
                     </div>
-                    <div id="toyPhotoPreview" class="hidden mt-2">
-                        <img src="" alt="Preview" class="h-24 w-auto rounded-xl object-cover border border-slate-200">
+                    <div id="toyPhotoPreview" class="hidden mt-2 relative inline-block">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-amber-400 shadow-sm">
+                        <button type="button" onclick="removeImagePreview('toyPhotoPreview', 'toyImageUrl', 'toyPhotoFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
+                            <span class="material-symbols-outlined text-xs">close</span>
+                        </button>
                     </div>
                 </div>
 
