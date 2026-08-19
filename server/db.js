@@ -947,6 +947,16 @@ export const db = {
     },
 
     getToyItems: async (district) => {
+        if (isSupabaseConfigured) {
+            try {
+                const query = district && district !== 'All' ? { district: `eq.${district}` } : {};
+                const data = await supabase.select('toys', query);
+                if (data && Array.isArray(data) && data.length > 0) return data;
+            } catch (err) {
+                console.error('[Supabase Error] getToyItems:', err.message);
+            }
+        }
+
         const defaultToys = [
             {
                 id: 'item_1',
@@ -966,7 +976,7 @@ export const db = {
             }
         ];
 
-        let result = defaultToys;
+        let result = memoryStore.toys && memoryStore.toys.length > 0 ? memoryStore.toys : defaultToys;
         if (district && district !== 'All') {
             result = result.filter(t => t.district.toLowerCase() === district.toLowerCase());
         }
@@ -974,7 +984,7 @@ export const db = {
     },
 
     addToyItem: async (toyData, user) => {
-        return {
+        const itemObj = {
             id: 'item_' + Date.now(),
             title: toyData.title,
             category: toyData.category || 'School Uniform',
@@ -991,6 +1001,18 @@ export const db = {
             status: 'available',
             created_at: new Date().toISOString()
         };
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.insert('toys', [itemObj]);
+            } catch (err) {
+                console.error('[Supabase Error] addToyItem:', err.message);
+            }
+        }
+
+        if (!memoryStore.toys) memoryStore.toys = [];
+        memoryStore.toys.unshift(itemObj);
+        return itemObj;
     },
 
     getVenueDiscounts: async () => {
@@ -1026,6 +1048,16 @@ export const db = {
     },
 
     getLostFoundItems: async (district) => {
+        if (isSupabaseConfigured) {
+            try {
+                const query = district && district !== 'All' ? { district: `eq.${district}` } : {};
+                const data = await supabase.select('lost_found', query);
+                if (data && Array.isArray(data) && data.length > 0) return data;
+            } catch (err) {
+                console.error('[Supabase Error] getLostFoundItems:', err.message);
+            }
+        }
+
         if (!global._lostFoundStore) {
             global._lostFoundStore = [
                 {
@@ -1050,7 +1082,6 @@ export const db = {
     },
 
     addLostFoundItem: async (itemData, user) => {
-        if (!global._lostFoundStore) await db.getLostFoundItems();
         const itemObj = {
             id: 'lf_' + Date.now(),
             title: itemData.title,
@@ -1062,11 +1093,29 @@ export const db = {
             image_url: itemData.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
             created_at: new Date().toISOString()
         };
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.insert('lost_found', [itemObj]);
+            } catch (err) {
+                console.error('[Supabase Error] addLostFoundItem:', err.message);
+            }
+        }
+
+        if (!global._lostFoundStore) await db.getLostFoundItems();
         global._lostFoundStore.unshift(itemObj);
         return itemObj;
     },
 
     markLostFoundAsFound: async (id) => {
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.update('lost_found', { status: 'Found' }, id);
+            } catch (err) {
+                console.error('[Supabase Error] markLostFoundAsFound:', err.message);
+            }
+        }
+
         if (!global._lostFoundStore) await db.getLostFoundItems();
         const item = global._lostFoundStore.find(i => i.id === id);
         if (item) item.status = 'Found';
