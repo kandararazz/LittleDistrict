@@ -979,11 +979,6 @@ async function handleCreatePlace(e) {
         openModal('authModal');
         return;
     }
-    if (!state.user.phone || !state.user.phone.trim()) {
-        openAccountSettings(true);
-        showToast('Phone number required before sharing spots');
-        return;
-    }
 
     const payload = {
         name: document.getElementById('placeName').value,
