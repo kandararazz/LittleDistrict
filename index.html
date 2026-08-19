@@ -259,6 +259,18 @@
                 </div>
             </section>
 
+            <!-- 5. PLAYDATE DETAIL VIEW (Matching Screenshot 1 Design) -->
+            <section id="tab-playdateDetail" class="hidden space-y-6">
+                <button onclick="switchTab('feed')" class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-800 hover:text-teal-900 transition-colors">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    <span>Back to Playdates</span>
+                </button>
+
+                <div id="playdateDetailContainer">
+                    <!-- Loaded dynamically in app.js -->
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -577,48 +589,65 @@
         </div>
     </div>
 
-    <!-- AUTH MODAL -->
-    <div id="authModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200">
+    <!-- AUTH MODAL (Matching Screenshot 2 Design) -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 text-center">
             <button onclick="closeModal('authModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
             
-            <div class="text-center space-y-1">
-                <img src="/assets/logo.png" alt="LittleDistrict" class="h-10 mx-auto object-contain">
-                <h3 class="font-display font-bold text-xl text-slate-800">Dubai Parent Sign In</h3>
-                <p class="text-xs text-slate-500">Join verified local playdates & community features</p>
+            <!-- Logo Header -->
+            <div class="flex justify-center">
+                <img src="/assets/logo-full.png" alt="LittleDistrict Logo" class="h-10 w-auto object-contain">
+            </div>
+
+            <div class="space-y-1">
+                <h2 id="authHeading" class="font-display font-bold text-2xl text-[#006654] tracking-tight">Welcome back, Neighbor!</h2>
+                <p id="authSubheading" class="text-xs font-medium text-slate-500">Log in to connect with your local community.</p>
             </div>
 
             <!-- Inline Auth Error Banner -->
-            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl space-y-1">
+            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-2xl">
                 <p id="authErrorMsg">Invalid credentials</p>
             </div>
 
-            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3 text-xs font-semibold text-slate-700">
-                <div id="nameField" class="hidden">
-                    <label class="block mb-1">Your Full Name</label>
-                    <input type="text" id="authName" placeholder="e.g. Sarah Mansour" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left text-xs font-semibold text-slate-700">
+                <div id="nameField" class="hidden space-y-1">
+                    <label class="block text-slate-700 font-bold">Your Full Name *</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">person</span>
+                        <input type="text" id="authName" placeholder="Sarah Mansour" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
+                    </div>
                 </div>
 
-                <div id="phoneField" class="hidden">
-                    <label class="block mb-1">Mobile Phone Number (Required) *</label>
-                    <input type="tel" id="authPhone" placeholder="+971 50 123 4567" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <div id="phoneField" class="hidden space-y-1">
+                    <label class="block text-slate-700 font-bold">Mobile Phone Number (Required) *</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">call</span>
+                        <input type="tel" id="authPhone" placeholder="+971 50 123 4567" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Email Address *</label>
-                    <input type="email" id="authEmail" required placeholder="parent@dubaimail.com" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <div class="space-y-1">
+                    <label class="block text-slate-700 font-bold">Email Address</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">mail</span>
+                        <input type="email" id="authEmail" required placeholder="name@domain.com" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block mb-1">Password *</label>
-                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <div class="space-y-1">
+                    <label class="block text-slate-700 font-bold">Password</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">lock</span>
+                        <input type="password" id="authPassword" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
+                        <span class="material-symbols-outlined absolute right-3.5 top-3 text-slate-400 text-lg cursor-pointer select-none" onclick="togglePasswordVisibility('authPassword', this)">visibility</span>
+                    </div>
                 </div>
 
-                <div id="districtAuthField" class="hidden">
-                    <label class="block mb-1">Primary District</label>
-                    <select id="authDistrict" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div id="districtAuthField" class="hidden space-y-1">
+                    <label class="block text-slate-700 font-bold">Primary District</label>
+                    <select id="authDistrict" class="w-full p-2.5 bg-slate-50/80 border border-slate-200 rounded-xl">
                         <option value="Dubai Hills">Dubai Hills</option>
                         <option value="Arabian Ranches">Arabian Ranches</option>
                         <option value="JBR">JBR & Marina</option>
@@ -626,14 +655,40 @@
                     </select>
                 </div>
 
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-600 select-none">
+                        <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 text-[#006654] focus:ring-[#006654]">
+                        <span>Remember me</span>
+                    </label>
+                    <button type="button" class="text-xs font-bold text-[#006654] hover:underline">Forgot Password?</button>
+                </div>
+
                 <div class="pt-2">
-                    <button type="submit" id="authSubmitBtn" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-xs">
-                        Sign In
+                    <button type="submit" id="authSubmitBtn" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
+                        Log In
+                    </button>
+                </div>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-3 text-xs text-slate-400 font-semibold">or</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <!-- Social Buttons -->
+                <div class="space-y-2">
+                    <button type="button" onclick="showToast('Google Sign-In ready')" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 rounded-full text-xs transition-all shadow-xs">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                        <span>Continue with Google</span>
+                    </button>
+                    <button type="button" onclick="showToast('Apple Sign-In ready')" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 rounded-full text-xs transition-all shadow-xs">
+                        <svg class="w-4 h-4 fill-current text-slate-900" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-.96.04-2.13.64-2.82 1.44-.61.71-1.14 1.86-1 2.97 1.08.08 2.17-.57 2.83-1.37z"/></svg>
+                        <span>Continue with Apple</span>
                     </button>
                 </div>
 
                 <div class="text-center pt-2">
-                    <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-teal-700 hover:underline text-xs font-bold">
+                    <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-[#006654] hover:underline text-xs font-bold">
                         Need an account? Register here
                     </button>
                 </div>

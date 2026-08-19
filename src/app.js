@@ -380,6 +380,242 @@ function renderCurrentTab() {
     else if (state.currentTab === 'lostFound') renderLostFound();
 }
 
+function togglePasswordVisibility(inputId, iconEl) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconEl.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        iconEl.textContent = 'visibility';
+    }
+}
+
+function openPlaydateDetail(id) {
+    const meetup = state.meetups.find(m => m.id === id) || state.meetups[0];
+    if (!meetup) return;
+
+    state.activePlaydateId = meetup.id;
+
+    // Hide all tabs
+    ['feed', 'places', 'toys', 'lostFound'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        if (sec) sec.classList.add('hidden');
+    });
+
+    const detailSec = document.getElementById('tab-playdateDetail');
+    if (detailSec) detailSec.classList.remove('hidden');
+
+    renderPlaydateDetail(meetup);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderPlaydateDetail(m) {
+    const container = document.getElementById('playdateDetailContainer');
+    if (!container) return;
+
+    const rsvps = m.rsvps || [];
+    const isAttending = state.user && rsvps.some(r => r.user_id === state.user.id);
+    const comments = m.comments || [];
+
+    container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- Left Main Content Column -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Hero Header Card -->
+                <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-6">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 bg-sky-100/80 text-sky-800 text-xs font-bold px-3 py-1 rounded-full">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span>${escapeHTML(m.district || 'Dubai Marina')}</span>
+                        </span>
+                        <span class="bg-amber-500 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">
+                            ${escapeHTML(m.interest_tag || 'Sports')}
+                        </span>
+                    </div>
+
+                    <h1 class="font-serif text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+                        ${escapeHTML(m.title)}
+                    </h1>
+
+                    <div class="border-t border-slate-100 pt-5 flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${m.host_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(m.host_name || 'Razax')}" class="w-11 h-11 rounded-full border-2 border-teal-500 object-cover">
+                            <div>
+                                <span class="block text-xs text-slate-400 font-medium">Hosted by</span>
+                                <span class="text-sm font-bold text-slate-800">${escapeHTML(m.host_name || 'Razax')}</span>
+                            </div>
+                        </div>
+
+                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-[#006654] hover:bg-[#005243] text-white'} text-xs font-bold px-6 py-3 rounded-full transition-all shadow-xs">
+                            ${isAttending ? '✓ Attending' : '+ Join RSVP'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2-Column Info Grid (Date/Time & Age) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 flex items-center gap-4 shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-2xl">calendar_month</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-bold text-slate-800">Date & Time</span>
+                            <span class="block text-xs font-medium text-slate-600 mt-0.5">${escapeHTML(m.date_time)}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200/90 p-5 flex items-center gap-4 shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-2xl">face</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-bold text-slate-800">Age Group</span>
+                            <span class="block text-xs font-medium text-slate-600 mt-0.5">${m.min_age || 4} - ${m.max_age || 8} years</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About this playdate Card -->
+                <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-4">
+                    <h2 class="font-serif font-bold text-xl text-slate-900">About this playdate</h2>
+                    <div class="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-3 font-normal">
+                        <p>${escapeHTML(m.description || `Join us for a fun and friendly kids' activity at ${m.public_location}! This is a casual meetup aimed at getting the kids active, teaching them basic teamwork, and mostly just having a great time running around.`)}</p>
+                        <p>We'll provide water, pop-up goals, and light snacks. Parents are encouraged to bring water bottles, light snacks, and a picnic blanket to sit on while watching.</p>
+                        <p>No prior experience needed, just enthusiasm! Please make sure kids are wearing comfortable sports shoes.</p>
+                    </div>
+                </div>
+
+                <!-- Attending Section -->
+                <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xl text-[#006654]">groups</span>
+                            <h2 class="font-serif font-bold text-xl text-slate-900">Attending</h2>
+                        </div>
+                        <span class="text-xs font-bold text-slate-500">${rsvps.length} / ${m.max_attendees || 10} Spots Filled</span>
+                    </div>
+
+                    ${rsvps.length > 0 ? `
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            ${rsvps.map(r => `
+                                <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl flex items-center gap-2.5">
+                                    <img src="${r.user_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(r.user_name || 'Parent')}" class="w-8 h-8 rounded-full border border-teal-500 object-cover">
+                                    <span class="text-xs font-bold text-slate-800 truncate">${escapeHTML(r.user_name || 'Neighbor')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2">
+                            <span class="material-symbols-outlined text-3xl text-slate-300">person_add</span>
+                            <p class="text-xs font-semibold text-slate-500">Be the first to join this playdate!</p>
+                        </div>
+                    `}
+                </div>
+
+            </div>
+
+            <!-- Right Sidebar Column -->
+            <div class="space-y-6">
+                
+                <!-- Location & Map Card -->
+                <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs space-y-4 p-5 sm:p-6">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-2xl text-[#006654]">location_on</span>
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-900">${escapeHTML(m.public_location)}</h3>
+                            <p class="text-xs text-slate-500">${escapeHTML(m.district)} District</p>
+                        </div>
+                    </div>
+
+                    <!-- Map Stylized Graphic Box -->
+                    <div class="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200 bg-sky-50">
+                        <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=${encodeURIComponent(m.public_location + ', ' + m.district + ', Dubai')}&t=&z=14&ie=UTF8&iwloc=&output=embed" class="w-full h-full border-0"></iframe>
+                    </div>
+
+                    <a href="https://maps.google.com/?q=${encodeURIComponent(m.public_location + ', ' + m.district + ', Dubai')}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#006654] hover:underline pt-1">
+                        <span>Get Directions</span>
+                        <span class="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                </div>
+
+                <!-- Discussion Card -->
+                <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[440px]">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="material-symbols-outlined text-xl text-[#006654]">chat</span>
+                            <h3 class="font-serif font-bold text-lg text-slate-900">Discussion</h3>
+                        </div>
+
+                        <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                            ${comments.length > 0 ? comments.map(c => `
+                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-1">
+                                    <span class="block text-xs font-bold text-[#006654]">${escapeHTML(c.user_name)}:</span>
+                                    <p class="text-xs text-slate-700 leading-relaxed">${escapeHTML(c.content)}</p>
+                                </div>
+                            `).join('') : `
+                                <div class="py-12 text-center space-y-2">
+                                    <span class="material-symbols-outlined text-4xl text-slate-300">chat_bubble_outline</span>
+                                    <p class="text-xs font-semibold text-slate-500">No comments yet.<br>Got a question for the host?</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Comment Bar -->
+                    <form onsubmit="handleAddDetailComment(event, '${m.id}')" class="flex items-center gap-2 pt-4 border-t border-slate-100">
+                        <img src="${state.user ? (state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)) : 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest'}" class="w-8 h-8 rounded-full border border-teal-500 object-cover shrink-0">
+                        <div class="relative flex-1">
+                            <input type="text" id="detailCommentInput" placeholder="Add a comment..." required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-xs outline-none focus:ring-2 focus:ring-[#006654]">
+                            <button type="submit" class="absolute right-2 top-2 text-[#006654] hover:text-teal-900 p-1">
+                                <span class="material-symbols-outlined text-lg">send</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    `;
+}
+
+async function handleAddDetailComment(e, meetupId) {
+    e.preventDefault();
+    if (!state.user) {
+        openModal('authModal');
+        return;
+    }
+
+    const input = document.getElementById('detailCommentInput');
+    if (!input || !input.value.trim()) return;
+
+    try {
+        const res = await fetch(`/api/meetups/${meetupId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ content: input.value.trim() })
+        });
+        const data = await res.json();
+        if (data.success) {
+            input.value = '';
+            const mRes = await fetch('/api/meetups');
+            const mData = await mRes.json();
+            if (mData.success) {
+                state.meetups = mData.data || [];
+                const updated = state.meetups.find(m => m.id === meetupId);
+                if (updated) renderPlaydateDetail(updated);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to post comment:', err);
+    }
+}
+
 function renderMeetups() {
     const grid = document.getElementById('meetupsGrid');
     if (!grid) return;
@@ -413,12 +649,12 @@ function renderMeetups() {
         const hasCustomImg = Boolean(m.image_url && m.image_url.trim() !== '' && !m.image_url.includes('/assets/') && !m.image_url.includes('logo') && !m.image_url.includes('unsplash.com'));
 
         return `
-            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group" onclick="openPlaydateDetail('${m.id}')">
                 <div>
                     ${hasCustomImg ? `
                         <!-- Card Cover Photo -->
                         <div class="card-cover-box h-48 sm:h-52 bg-slate-900 relative overflow-hidden">
-                            <img src="${m.image_url}" alt="${escapeHTML(m.title)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <img src="${m.image_url}" alt="${escapeHTML(m.title)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             <span class="absolute top-3.5 left-3.5 bg-teal-900/90 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
                                 📍 ${escapeHTML(m.district)}
                             </span>
@@ -446,7 +682,7 @@ function renderMeetups() {
                             <span class="truncate">Hosted by <strong class="text-slate-800">${escapeHTML(m.host_name || 'Parent')}</strong></span>
                         </div>
 
-                        <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 leading-snug hover:text-teal-700 transition-colors cursor-pointer" onclick="toggleComments('${m.id}')">
+                        <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 leading-snug group-hover:text-teal-700 transition-colors">
                             ${escapeHTML(m.title)}
                         </h3>
 
@@ -468,38 +704,20 @@ function renderMeetups() {
                 </div>
 
                 <!-- Footer & RSVP -->
-                <div class="px-5 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                <div class="px-5 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between" onclick="event.stopPropagation()">
                     <div class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-teal-600 text-lg">group</span>
                         <span class="text-xs font-bold text-slate-700">${rsvps.length} / ${m.max_attendees || 10} Attending</span>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleComments('${m.id}')" class="p-2 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors" title="Comments">
-                            <span class="material-symbols-outlined text-lg">chat</span>
+                        <button onclick="openPlaydateDetail('${m.id}')" class="p-2 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors" title="View Detail">
+                            <span class="material-symbols-outlined text-lg">visibility</span>
                         </button>
-                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-teal-700 hover:bg-teal-800 text-white'} text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
+                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-[#006654] hover:bg-[#005243] text-white'} text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
                             ${isAttending ? '✓ Attending' : '+ Join RSVP'}
                         </button>
                     </div>
-                </div>
-
-                <!-- Comments Drawer -->
-                <div id="comments-${m.id}" class="hidden p-4 bg-slate-50 border-t border-slate-200 space-y-3">
-                    <h4 class="font-display font-bold text-xs text-slate-700">Discussion & Parent Q&A</h4>
-                    <div class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs">
-                        ${(m.comments || []).length > 0 ? (m.comments || []).map(c => `
-                            <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                                <span class="font-bold text-teal-800">${escapeHTML(c.user_name)}:</span>
-                                <span class="text-slate-700">${escapeHTML(c.content)}</span>
-                            </div>
-                        `).join('') : '<p class="text-[11px] text-slate-400 italic">No comments yet. Ask a question below!</p>'}
-                    </div>
-
-                    <form onsubmit="handleAddComment(event, '${m.id}')" class="flex gap-2 pt-1">
-                        <input type="text" placeholder="Type a message..." required class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
-                        <button type="submit" class="bg-teal-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-teal-800">Send</button>
-                    </form>
                 </div>
             </div>
         `;
