@@ -124,11 +124,18 @@ function updateUserUI() {
     if (!section) return;
 
     if (state.user) {
+        const isVerified = state.user.is_verified;
         section.innerHTML = `
             <div class="flex items-center gap-2">
-                <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)}" alt="${escapeHTML(state.user.name)}" class="w-8 h-8 rounded-full border-2 border-teal-500 object-cover cursor-pointer" onclick="openAccountSettings()">
+                <div class="relative cursor-pointer" onclick="openAccountSettings()">
+                    <img src="${state.user.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(state.user.name)}" alt="${escapeHTML(state.user.name)}" class="w-8 h-8 rounded-full border-2 ${isVerified ? 'border-emerald-500' : 'border-teal-500'} object-cover">
+                    ${isVerified ? `<span class="absolute -bottom-1 -right-1 bg-emerald-600 text-white rounded-full p-0.5 shadow-xs"><span class="material-symbols-outlined text-[10px] leading-none block">verified</span></span>` : ''}
+                </div>
                 <div class="hidden sm:block text-left cursor-pointer" onclick="openAccountSettings()">
-                    <span class="block text-xs font-bold leading-none text-slate-800">${escapeHTML(state.user.name)}</span>
+                    <div class="flex items-center gap-1">
+                        <span class="block text-xs font-bold leading-none text-slate-800">${escapeHTML(state.user.name)}</span>
+                        ${isVerified ? `<span class="material-symbols-outlined text-xs text-emerald-600" title="Verified Neighbor">verified</span>` : ''}
+                    </div>
                     <span class="text-[10px] text-teal-600 font-semibold">${escapeHTML(state.user.district || 'Dubai')}</span>
                 </div>
                 <button onclick="openAccountSettings()" class="p-1 text-slate-500 hover:text-teal-600 transition-colors" title="Account Settings">
@@ -229,6 +236,52 @@ async function handleAuthSubmit(e) {
     }
 }
 
+// --- RESIDENCY VERIFICATION SYSTEM ---
+function toggleVerifyMethodFields(methodVal) {
+    const docSec = document.getElementById('verifyDocSection');
+    const codeSec = document.getElementById('verifyCodeSection');
+    if (methodVal === 'Neighborhood Code') {
+        if (docSec) docSec.classList.add('hidden');
+        if (codeSec) codeSec.classList.remove('hidden');
+    } else {
+        if (docSec) docSec.classList.remove('hidden');
+        if (codeSec) codeSec.classList.add('hidden');
+    }
+}
+
+async function handleSubmitVerification(e) {
+    e.preventDefault();
+    if (!state.user) {
+        openModal('authModal');
+        return;
+    }
+
+    const method = document.getElementById('verifyMethod')?.value || 'Ejari Lease Contract';
+    
+    try {
+        const res = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ verification_method: method })
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+            state.user = data.user;
+            updateUserUI();
+            closeModal('verificationModal');
+            showToast('🛡️ Congratulations! You are now a Verified Resident Neighbor!');
+            await loadCurrentTabData();
+        } else {
+            alert(data.error || 'Verification failed');
+        }
+    } catch (err) {
+        alert('Error completing verification');
+    }
+}
+
 // --- ACCOUNT SETTINGS PROFILE ---
 function openAccountSettings(requirePhone = false) {
     if (!state.user) {
@@ -240,6 +293,39 @@ function openAccountSettings(requirePhone = false) {
         if (requirePhone) phoneAlert.classList.remove('hidden');
         else phoneAlert.classList.add('hidden');
     }
+
+    // Residency status box update
+    const statusBox = document.getElementById('verificationStatusBox');
+    if (statusBox) {
+        if (state.user.is_verified) {
+            statusBox.className = 'p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/80 flex items-center justify-between gap-3 text-xs';
+            statusBox.innerHTML = `
+                <div class="flex items-center gap-2.5 text-emerald-900">
+                    <span class="material-symbols-outlined text-2xl text-emerald-600">verified</span>
+                    <div>
+                        <span class="font-extrabold block text-sm leading-tight text-emerald-950">Verified Neighbor ✅</span>
+                        <span class="text-[11px] text-emerald-700 font-medium">Confirmed via ${escapeHTML(state.user.verification_method || 'Ejari Contract')}</span>
+                    </div>
+                </div>
+                <span class="bg-emerald-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-2xs">Verified</span>
+            `;
+        } else {
+            statusBox.className = 'p-3.5 rounded-2xl border border-amber-200 bg-amber-50/70 flex items-center justify-between gap-3 text-xs';
+            statusBox.innerHTML = `
+                <div class="flex items-center gap-2.5 text-amber-950">
+                    <span class="material-symbols-outlined text-2xl text-amber-600">shield</span>
+                    <div>
+                        <span class="font-bold block leading-tight">Unverified Resident</span>
+                        <span class="text-[11px] text-amber-800 font-medium">Verify Ejari or DEWA to earn badge</span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('accountSettingsModal'); openModal('verificationModal');" class="bg-[#006654] hover:bg-[#005243] text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full transition-all shadow-xs shrink-0">
+                    Verify Now 🛡️
+                </button>
+            `;
+        }
+    }
+
     const nameIn = document.getElementById('profileName');
     const phoneIn = document.getElementById('profilePhone');
     const distIn = document.getElementById('profileDistrict');

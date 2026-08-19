@@ -403,6 +403,81 @@
         </div>
     </div>
 
+    <!-- VERIFICATION MODAL (Verified Resident Badge System) -->
+    <div id="verificationModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('verificationModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+                    <span class="material-symbols-outlined text-3xl">verified</span>
+                </div>
+                <div>
+                    <h2 class="font-display font-extrabold text-xl text-slate-900">Verified Neighbor Status 🛡️</h2>
+                    <p class="text-xs text-slate-500 font-medium">Build trust by confirming your local Dubai neighborhood residency</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl space-y-1.5 text-xs text-emerald-950">
+                <div class="flex items-center gap-2 font-bold text-emerald-800">
+                    <span class="material-symbols-outlined text-base">shield</span>
+                    <span>Why get verified?</span>
+                </div>
+                <p class="leading-relaxed">
+                    Verified Neighbors earn an exclusive <strong>Verified Resident ✅</strong> badge on all playdate meetups, exchange items, comments, and profile cards.
+                </p>
+            </div>
+
+            <form id="verificationForm" onsubmit="handleSubmitVerification(event)" class="space-y-4 text-xs font-semibold text-slate-700">
+                
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Select Verification Method *</label>
+                    <select id="verifyMethod" onchange="toggleVerifyMethodFields(this.value)" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
+                        <option value="Ejari Contract">📄 Option A: Ejari Lease / Tenancy Contract</option>
+                        <option value="DEWA Bill">⚡ Option B: Recent DEWA Utility Bill</option>
+                        <option value="Neighborhood Code">📬 Option C: Neighborhood Postal Verification Code</option>
+                    </select>
+                </div>
+
+                <!-- Document Upload Section (For Ejari or DEWA) -->
+                <div id="verifyDocSection" class="space-y-2 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-slate-800">Upload Verification Document (Ejari / DEWA Photo)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="verifyDocFile" accept="image/*,.pdf" onchange="handleImageFileSelect(event, 'verifyDocPreview', 'verifyDocUrl')" class="hidden">
+                        <button type="button" onclick="document.getElementById('verifyDocFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-[#006654] px-4 py-2.5 rounded-2xl font-bold hover:bg-teal-100 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-lg">upload_file</span>
+                            <span>Choose Document Photo</span>
+                        </button>
+                        <input type="hidden" id="verifyDocUrl" value="">
+                    </div>
+                    <div id="verifyDocPreview" class="hidden mt-2 relative inline-block">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-teal-500 shadow-sm">
+                        <button type="button" onclick="removeImagePreview('verifyDocPreview', 'verifyDocUrl', 'verifyDocFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
+                            <span class="material-symbols-outlined text-xs">close</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-normal">Documents are encrypted and used solely for instant neighborhood verification.</p>
+                </div>
+
+                <!-- Neighborhood Code Section -->
+                <div id="verifyCodeSection" class="space-y-1 border-t border-slate-100 pt-3 hidden">
+                    <label class="block text-slate-800 font-bold">6-Digit Neighborhood Verification Code</label>
+                    <input type="text" id="verifyCodeInput" maxlength="6" placeholder="e.g. 888999 or 123456" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] font-mono tracking-wider text-sm">
+                    <p class="text-[11px] text-slate-500 font-normal">Enter the 6-digit code received via community mailer or neighborhood coordinator.</p>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md inline-flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-base">verified</span>
+                        <span>Complete Residency Verification</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ACCOUNT SETTINGS MODAL -->
     <div id="accountSettingsModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 relative border border-slate-200 max-h-[90vh] overflow-y-auto">
@@ -417,6 +492,11 @@
             <!-- Require Phone Warning Banner -->
             <div id="phoneRequireAlert" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold rounded-xl space-y-1">
                 <p>⚠️ Mobile phone number required! Please enter your phone number below before posting playdates or exchange items.</p>
+            </div>
+
+            <!-- Residency Verification Status Banner -->
+            <div id="verificationStatusBox" class="p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs">
+                <!-- Loaded dynamically -->
             </div>
 
             <form id="profileForm" onsubmit="handleSaveProfile(event)" class="space-y-3 text-xs font-semibold text-slate-700">

@@ -457,45 +457,20 @@ export const db = {
     updateProfile: async (updatedData) => {
         const userId = updatedData.id || 'user_1';
 
-        if (isSupabaseConfigured) {
-            try {
-                const userObj = {
-                    id: userId,
-                    name: updatedData.name ?? '',
-                    email: updatedData.email ?? '',
-                    district: updatedData.district ?? '',
-                    contact_preference: updatedData.contact_preference ?? 'In-App Message',
-                    avatar_url: updatedData.avatar_url ?? '',
-                    bio: updatedData.bio ?? ''
-                };
-                await supabase.upsert('users', [userObj]);
-                return await db.getUserById(userId);
-            } catch (err) {}
-        }
-
-        if (sqlite) {
-            try {
-                sqlite.prepare(`
-                    INSERT INTO users (id, name, email, district, contact_preference, avatar_url, bio)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET
-                        name = COALESCE(excluded.name, users.name),
-                        email = COALESCE(excluded.email, users.email),
-                        district = COALESCE(excluded.district, users.district),
-                        contact_preference = COALESCE(excluded.contact_preference, users.contact_preference),
-                        avatar_url = COALESCE(excluded.avatar_url, users.avatar_url),
-                        bio = COALESCE(excluded.bio, users.bio)
-                `).run(userId, updatedData.name ?? '', updatedData.email ?? '', updatedData.district ?? '', updatedData.contact_preference ?? 'In-App Message', updatedData.avatar_url ?? '', updatedData.bio ?? '');
-            } catch (e) {}
-        }
-
         let u = memoryStore.users.find(x => x.id === userId);
         if (!u) {
-            u = { id: userId, name: '', email: '', district: '', contact_preference: 'In-App Message', avatar_url: '', bio: '', children: [] };
+            u = { id: userId, name: '', email: '', district: '', contact_preference: 'In-App Message', avatar_url: '', bio: '', is_verified: false, verification_method: '', children: [] };
             memoryStore.users.push(u);
         }
         Object.assign(u, updatedData);
-        return db.getUserById(userId);
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.upsert('users', [u]);
+            } catch (err) {}
+        }
+
+        return u;
     },
 
     // Places

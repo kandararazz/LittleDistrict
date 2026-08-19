@@ -108,6 +108,18 @@ const server = http.createServer(async (req, res) => {
             return sendJSON(res, 200, { success: true, user: updated });
         }
 
+        if (pathname === '/api/auth/verify' && req.method === 'POST') {
+            const user = await getUserFromReq(req);
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+            const body = await parseBody(req);
+            const updated = await db.updateProfile({
+                id: user.id,
+                is_verified: true,
+                verification_method: body.verification_method || 'Ejari Lease Contract'
+            });
+            return sendJSON(res, 200, { success: true, user: updated, message: 'Residency verified successfully!' });
+        }
+
         // MEETUPS / FEED
         if ((pathname === '/api/meetups' || pathname === '/api/community/feed') && req.method === 'GET') {
             const meetups = await db.getMeetups(queryParams);
