@@ -1,10 +1,20 @@
-// Dual-mode Database Implementation (Supabase Cloud DB + SQLite Local Fallback)
+// Dual-mode Database Implementation (Supabase Cloud DB + In-Memory & SQLite Fallback for Vercel)
 
-import { DatabaseSync } from 'node:sqlite';
+import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+
+const require = createRequire(import.meta.url);
+
+let DatabaseSync = null;
+try {
+    const sqliteModule = require('node:sqlite');
+    DatabaseSync = sqliteModule.DatabaseSync;
+} catch (e) {
+    console.warn('[DB] Native node:sqlite not supported in this environment, using in-memory store.');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,8 +35,8 @@ if (fs.existsSync(envPath)) {
     });
 }
 
-const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
-const SUPABASE_KEY = (process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+const SUPABASE_KEY = (process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 // Check if Supabase credentials are provided and non-placeholder
 const isSupabaseConfigured = Boolean(
@@ -38,7 +48,7 @@ const isSupabaseConfigured = Boolean(
 
 console.log(isSupabaseConfigured 
     ? `[DB] Connecting to Supabase Cloud Database at ${SUPABASE_URL}`
-    : `[DB] Using Local SQLite Database`
+    : `[DB] Using ${DatabaseSync ? 'Local SQLite' : 'In-Memory'} Database Store`
 );
 
 // --- AUTH UTILS ---
@@ -62,7 +72,7 @@ function parseToken(token) {
     }
 }
 
-// --- SUPABASE REST HTTP CLIENT (ZERO EXTERNAL DEPENDENCY) ---
+// --- SUPABASE REST HTTP CLIENT ---
 class SupabaseRestClient {
     constructor(url, key) {
         this.baseUrl = url.replace(/\/$/, '') + '/rest/v1';
@@ -95,21 +105,6 @@ class SupabaseRestClient {
                 query += `&${k}=eq.${encodeURIComponent(v)}`;
             }
         }
-        if (params.gte) {
-            for (const [k, v] of Object.entries(params.gte)) {
-                query += `&${k}=gte.${encodeURIComponent(v)}`;
-            }
-        }
-        if (params.lte) {
-            for (const [k, v] of Object.entries(params.lte)) {
-                query += `&${k}=lte.${encodeURIComponent(v)}`;
-            }
-        }
-        if (params.ilike) {
-            for (const [k, v] of Object.entries(params.ilike)) {
-                query += `&${k}=ilike.*${encodeURIComponent(v)}*`;
-            }
-        }
         return this.fetch(query, { method: 'GET' });
     }
 
@@ -140,164 +135,168 @@ class SupabaseRestClient {
 
 const supabase = isSupabaseConfigured ? new SupabaseRestClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+// --- IN-MEMORY DATA STORE FOR VERCEL & SERVERLESS FALLBACK ---
+const memoryStore = {
+    users: [
+        {
+            id: 'user_1',
+            name: 'Sarah Jenkins',
+            email: 'sarah@example.com',
+            password_hash: hashPassword('password123'),
+            district: 'Dubai Hills',
+            phone: '+971 50 123 4567',
+            contact_preference: 'WhatsApp',
+            avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah',
+            bio: 'Dubai Hills resident & mom of 2 active kids.',
+            children: [
+                { id: 'c1', nickname: 'Leo', age: 6, hobbies: ['Cycling', 'Roblox'] },
+                { id: 'c2', nickname: 'Maya', age: 3, hobbies: ['Splash Park'] }
+            ]
+        }
+    ],
+    meetups: [
+        {
+            id: 'm_1',
+            title: 'Dubai Hills Weekend Park Cycling',
+            district: 'Dubai Hills',
+            public_location: 'Dubai Hills Central Park Playground',
+            place_id: 'place_1',
+            date_time: '2026-08-22T09:00',
+            interest_tag: 'Cycling',
+            min_age: 4,
+            max_age: 10,
+            host_id: 'user_1',
+            host_name: 'Sarah Jenkins',
+            host_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah',
+            max_attendees: 8,
+            image_url: '/assets/football.png',
+            created_at: new Date().toISOString()
+        },
+        {
+            id: 'm_2',
+            title: 'JBR Beach Splash & Sandcastles',
+            district: 'JBR',
+            public_location: 'JBR Public Beach Splash Pad',
+            place_id: 'place_3',
+            date_time: '2026-08-23T16:30',
+            interest_tag: 'Swimming',
+            min_age: 2,
+            max_age: 7,
+            host_id: 'user_1',
+            host_name: 'Sarah Jenkins',
+            host_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah',
+            max_attendees: 10,
+            image_url: '/assets/swimming.png',
+            created_at: new Date().toISOString()
+        }
+    ],
+    rsvps: [
+        { id: 'r_1', meetup_id: 'm_1', user_id: 'user_1', user_name: 'Sarah Jenkins', user_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah', status: 'attending' },
+        { id: 'r_2', meetup_id: 'm_2', user_id: 'user_1', user_name: 'Sarah Jenkins', user_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah', status: 'attending' }
+    ],
+    comments: [
+        { id: 'comm_1', meetup_id: 'm_1', user_id: 'user_1', user_name: 'Sarah Jenkins', user_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah', content: 'Looking forward to meeting neighbor kids near the splash area!', created_at: new Date().toISOString() }
+    ],
+    direct_messages: [],
+    places: []
+};
+
 // --- SQLITE BACKUP IMPLEMENTATION ---
 let sqlite = null;
-try {
-    const DB_PATH = process.env.VERCEL ? '/tmp/database.sqlite' : path.join(__dirname, 'database.sqlite');
-    sqlite = new DatabaseSync(DB_PATH);
-    sqlite.exec(`PRAGMA journal_mode = WAL;`);
+if (DatabaseSync) {
+    try {
+        const DB_PATH = process.env.VERCEL ? '/tmp/database.sqlite' : path.join(__dirname, 'database.sqlite');
+        sqlite = new DatabaseSync(DB_PATH);
+        sqlite.exec(`PRAGMA journal_mode = WAL;`);
 
-    sqlite.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL DEFAULT '',
-            email TEXT DEFAULT '',
-            password_hash TEXT DEFAULT '',
-            district TEXT DEFAULT '',
-            contact_preference TEXT DEFAULT 'In-App Message',
-            avatar_url TEXT DEFAULT '',
-            bio TEXT DEFAULT '',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
+        sqlite.exec(`
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL DEFAULT '',
+                email TEXT DEFAULT '',
+                password_hash TEXT DEFAULT '',
+                district TEXT DEFAULT '',
+                contact_preference TEXT DEFAULT 'In-App Message',
+                avatar_url TEXT DEFAULT '',
+                bio TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
 
-        CREATE TABLE IF NOT EXISTS children (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL,
-            nickname TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            hobbies TEXT NOT NULL DEFAULT '[]',
-            created_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
+            CREATE TABLE IF NOT EXISTS children (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                nickname TEXT NOT NULL,
+                age INTEGER NOT NULL,
+                hobbies TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
 
-        CREATE TABLE IF NOT EXISTS places (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            district TEXT NOT NULL,
-            public_spot_type TEXT NOT NULL,
-            description TEXT DEFAULT '',
-            added_by_user_id TEXT DEFAULT '',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
+            CREATE TABLE IF NOT EXISTS places (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                district TEXT NOT NULL,
+                public_spot_type TEXT NOT NULL,
+                description TEXT DEFAULT '',
+                added_by_user_id TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
 
-        CREATE TABLE IF NOT EXISTS meetups (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            district TEXT NOT NULL,
-            public_location TEXT NOT NULL,
-            place_id TEXT DEFAULT '',
-            date_time TEXT NOT NULL,
-            interest_tag TEXT NOT NULL,
-            min_age INTEGER NOT NULL DEFAULT 0,
-            max_age INTEGER NOT NULL DEFAULT 18,
-            host_id TEXT NOT NULL,
-            host_name TEXT NOT NULL,
-            host_avatar TEXT DEFAULT '',
-            max_attendees INTEGER DEFAULT 10,
-            image_url TEXT DEFAULT '/assets/football.png',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
+            CREATE TABLE IF NOT EXISTS meetups (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                district TEXT NOT NULL,
+                public_location TEXT NOT NULL,
+                place_id TEXT DEFAULT '',
+                date_time TEXT NOT NULL,
+                interest_tag TEXT NOT NULL,
+                min_age INTEGER NOT NULL DEFAULT 0,
+                max_age INTEGER NOT NULL DEFAULT 18,
+                host_id TEXT NOT NULL,
+                host_name TEXT NOT NULL,
+                host_avatar TEXT DEFAULT '',
+                max_attendees INTEGER DEFAULT 10,
+                image_url TEXT DEFAULT '/assets/football.png',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
 
-        CREATE TABLE IF NOT EXISTS rsvps (
-            id TEXT PRIMARY KEY,
-            meetup_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            user_name TEXT NOT NULL,
-            user_avatar TEXT DEFAULT '',
-            status TEXT NOT NULL DEFAULT 'attending',
-            created_at TEXT DEFAULT (datetime('now')),
-            UNIQUE(meetup_id, user_id)
-        );
+            CREATE TABLE IF NOT EXISTS rsvps (
+                id TEXT PRIMARY KEY,
+                meetup_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                user_name TEXT NOT NULL,
+                user_avatar TEXT DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'attending',
+                created_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(meetup_id, user_id)
+            );
 
-        CREATE TABLE IF NOT EXISTS comments (
-            id TEXT PRIMARY KEY,
-            meetup_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            user_name TEXT NOT NULL,
-            user_avatar TEXT DEFAULT '',
-            content TEXT NOT NULL,
-            created_at TEXT DEFAULT (datetime('now'))
-        );
+            CREATE TABLE IF NOT EXISTS comments (
+                id TEXT PRIMARY KEY,
+                meetup_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                user_name TEXT NOT NULL,
+                user_avatar TEXT DEFAULT '',
+                content TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
 
-        CREATE TABLE IF NOT EXISTS direct_messages (
-            id TEXT PRIMARY KEY,
-            meetup_id TEXT NOT NULL,
-            sender_id TEXT NOT NULL,
-            sender_name TEXT NOT NULL,
-            sender_avatar TEXT DEFAULT '',
-            recipient_id TEXT NOT NULL,
-            recipient_name TEXT NOT NULL,
-            content TEXT NOT NULL,
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-
-        CREATE TABLE IF NOT EXISTS squads (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            district TEXT NOT NULL,
-            category TEXT NOT NULL,
-            description TEXT DEFAULT '',
-            created_by_user_id TEXT NOT NULL,
-            members_count INTEGER DEFAULT 1,
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-
-        CREATE TABLE IF NOT EXISTS squad_members (
-            squad_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            joined_at TEXT DEFAULT (datetime('now')),
-            PRIMARY KEY (squad_id, user_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS events (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            district TEXT NOT NULL,
-            event_date TEXT NOT NULL,
-            location TEXT NOT NULL,
-            category TEXT NOT NULL,
-            description TEXT DEFAULT '',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-
-        CREATE TABLE IF NOT EXISTS toy_items (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            category TEXT NOT NULL, -- 'Toy', 'Book', 'Bike', 'Gear'
-            district TEXT NOT NULL,
-            condition TEXT NOT NULL, -- 'Like New', 'Gently Used', 'Free Donation'
-            user_id TEXT NOT NULL,
-            user_name TEXT NOT NULL,
-            user_contact TEXT NOT NULL,
-            image_url TEXT DEFAULT '/assets/toys.png',
-            status TEXT DEFAULT 'available',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-
-        CREATE TABLE IF NOT EXISTS venue_discounts (
-            id TEXT PRIMARY KEY,
-            venue_name TEXT NOT NULL,
-            district TEXT NOT NULL,
-            discount_title TEXT NOT NULL,
-            promo_code TEXT NOT NULL,
-            valid_until TEXT NOT NULL,
-            category TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS carpool_rides (
-            id TEXT PRIMARY KEY,
-            parent_id TEXT NOT NULL,
-            parent_name TEXT NOT NULL,
-            district TEXT NOT NULL,
-            destination TEXT NOT NULL,
-            ride_date TEXT NOT NULL,
-            available_seats INTEGER DEFAULT 2,
-            notes TEXT DEFAULT '',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-    `);
-} catch (sqliteErr) {
-    console.warn('[DB Warning] SQLite fallback disabled in serverless:', sqliteErr.message);
+            CREATE TABLE IF NOT EXISTS direct_messages (
+                id TEXT PRIMARY KEY,
+                meetup_id TEXT NOT NULL,
+                sender_id TEXT NOT NULL,
+                sender_name TEXT NOT NULL,
+                sender_avatar TEXT DEFAULT '',
+                recipient_id TEXT NOT NULL,
+                recipient_name TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+        `);
+    } catch (sqliteErr) {
+        console.warn('[DB Warning] SQLite fallback disabled:', sqliteErr.message);
+        sqlite = null;
+    }
 }
 
 // --- DUAL MODE DB ADAPTER API ---
@@ -334,7 +333,7 @@ export const db = {
                 const token = generateToken(userId);
                 return { token, user: { ...userObj, children: [] } };
             } catch (err) {
-                console.error('[Supabase Error] registerUser fallback to SQLite:', err.message);
+                console.error('[Supabase Error] registerUser fallback:', err.message);
             }
         }
 
@@ -347,6 +346,7 @@ export const db = {
             } catch (e) {}
         }
 
+        memoryStore.users.push({ ...userObj, children: [] });
         const token = generateToken(userId);
         return { token, user: { ...userObj, children: [] } };
     },
@@ -373,10 +373,16 @@ export const db = {
                 const users = await supabase.select('users', { eq: { email: cleanEmail } });
                 if (users && users[0]) return users[0];
             } catch (err) {
-                console.error('[Supabase Error] getUserByEmail fallback to SQLite:', err.message);
+                console.error('[Supabase Error] getUserByEmail fallback:', err.message);
             }
         }
-        return sqlite ? sqlite.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).get(cleanEmail) || null : null;
+        if (sqlite) {
+            try {
+                const u = sqlite.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).get(cleanEmail);
+                if (u) return u;
+            } catch (e) {}
+        }
+        return memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail) || null;
     },
 
     getUserByToken: async (token) => {
@@ -391,11 +397,14 @@ export const db = {
         if (isSupabaseConfigured) {
             try {
                 return await supabase.select('users');
-            } catch (err) {
-                console.error('[Supabase Error] getUsers fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
-        return sqlite ? sqlite.prepare(`SELECT * FROM users`).all() : [];
+        if (sqlite) {
+            try {
+                return sqlite.prepare(`SELECT * FROM users`).all();
+            } catch (e) {}
+        }
+        return memoryStore.users;
     },
 
     getUserById: async (id) => {
@@ -409,23 +418,28 @@ export const db = {
                         ...c,
                         hobbies: typeof c.hobbies === 'string' ? JSON.parse(c.hobbies || '[]') : (c.hobbies || [])
                     }));
-
                     return { ...user, children };
                 }
-            } catch (err) {
-                console.error('[Supabase Error] getUserById fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        if (!sqlite) return null;
-        const user = sqlite.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
-        if (!user) return null;
-        const childrenRows = sqlite.prepare(`SELECT * FROM children WHERE user_id = ?`).all(id);
-        const children = childrenRows.map(c => ({
-            ...c,
-            hobbies: JSON.parse(c.hobbies || '[]')
-        }));
-        return { ...user, children };
+        if (sqlite) {
+            try {
+                const user = sqlite.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
+                if (user) {
+                    const childrenRows = sqlite.prepare(`SELECT * FROM children WHERE user_id = ?`).all(id);
+                    const children = childrenRows.map(c => ({
+                        ...c,
+                        hobbies: JSON.parse(c.hobbies || '[]')
+                    }));
+                    return { ...user, children };
+                }
+            } catch (e) {}
+        }
+
+        const memUser = memoryStore.users.find(u => u.id === id);
+        if (memUser) return { ...memUser, children: memUser.children || [] };
+        return null;
     },
 
     updateProfile: async (updatedData) => {
@@ -443,64 +457,32 @@ export const db = {
                     bio: updatedData.bio ?? ''
                 };
                 await supabase.upsert('users', [userObj]);
-
-                if (Array.isArray(updatedData.children)) {
-                    await supabase.delete('children', { user_id: userId });
-                    const childrenRows = updatedData.children.map(c => ({
-                        id: c.id || 'child_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-                        user_id: userId,
-                        nickname: c.nickname,
-                        age: c.age,
-                        hobbies: Array.isArray(c.hobbies) ? c.hobbies : []
-                    }));
-                    if (childrenRows.length > 0) {
-                        await supabase.insert('children', childrenRows);
-                    }
-                }
                 return await db.getUserById(userId);
-            } catch (err) {
-                console.error('[Supabase Error] updateProfile fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        sqlite.prepare(`
-            INSERT INTO users (id, name, email, district, contact_preference, avatar_url, bio)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                name = COALESCE(excluded.name, users.name),
-                email = COALESCE(excluded.email, users.email),
-                district = COALESCE(excluded.district, users.district),
-                contact_preference = COALESCE(excluded.contact_preference, users.contact_preference),
-                avatar_url = COALESCE(excluded.avatar_url, users.avatar_url),
-                bio = COALESCE(excluded.bio, users.bio)
-        `).run(
-            userId,
-            updatedData.name ?? '',
-            updatedData.email ?? '',
-            updatedData.district ?? '',
-            updatedData.contact_preference ?? 'In-App Message',
-            updatedData.avatar_url ?? '',
-            updatedData.bio ?? ''
-        );
-
-        if (Array.isArray(updatedData.children)) {
-            sqlite.prepare(`DELETE FROM children WHERE user_id = ?`).run(userId);
-            const insertChildStmt = sqlite.prepare(`
-                INSERT INTO children (id, user_id, nickname, age, hobbies)
-                VALUES (?, ?, ?, ?, ?)
-            `);
-            updatedData.children.forEach(c => {
-                const childId = c.id || 'child_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-                insertChildStmt.run(
-                    childId,
-                    userId,
-                    c.nickname,
-                    c.age,
-                    JSON.stringify(c.hobbies || [])
-                );
-            });
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO users (id, name, email, district, contact_preference, avatar_url, bio)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        name = COALESCE(excluded.name, users.name),
+                        email = COALESCE(excluded.email, users.email),
+                        district = COALESCE(excluded.district, users.district),
+                        contact_preference = COALESCE(excluded.contact_preference, users.contact_preference),
+                        avatar_url = COALESCE(excluded.avatar_url, users.avatar_url),
+                        bio = COALESCE(excluded.bio, users.bio)
+                `).run(userId, updatedData.name ?? '', updatedData.email ?? '', updatedData.district ?? '', updatedData.contact_preference ?? 'In-App Message', updatedData.avatar_url ?? '', updatedData.bio ?? '');
+            } catch (e) {}
         }
 
+        let u = memoryStore.users.find(x => x.id === userId);
+        if (!u) {
+            u = { id: userId, name: '', email: '', district: '', contact_preference: 'In-App Message', avatar_url: '', bio: '', children: [] };
+            memoryStore.users.push(u);
+        }
+        Object.assign(u, updatedData);
         return db.getUserById(userId);
     },
 
@@ -539,63 +521,19 @@ export const db = {
                 amenities: 'Public Beach, Outdoor Gym, Splash Park, Restrooms',
                 added_by_user_id: 'system',
                 created_at: new Date().toISOString()
-            },
-            {
-                id: 'place_4',
-                name: 'Mirdif Central Park Playground',
-                district: 'Mirdif',
-                public_spot_type: 'Playground',
-                description: 'Family-friendly neighborhood park with synthetic turf sports court and shaded swings.',
-                image_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600',
-                amenities: 'Playground, Sports Court, Walking Track, Restrooms',
-                added_by_user_id: 'system',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'place_5',
-                name: 'Silicon Oasis Community Sports Court',
-                district: 'Silicon Oasis',
-                public_spot_type: 'Sports Court',
-                description: 'Multi-purpose basketball and football floodlit court near community lake.',
-                image_url: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600',
-                amenities: 'Football Pitch, Basketball Court, Floodlights, Seating',
-                added_by_user_id: 'system',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'place_6',
-                name: 'Downtown Dubai Park & Plaza',
-                district: 'Downtown Dubai',
-                public_spot_type: 'Park',
-                description: 'Lush public park facing Dubai Fountain with open lawns and child-friendly walkways.',
-                image_url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600',
-                amenities: 'Open Lawns, Stroller Friendly, Cafe Nearby, Underground Parking',
-                added_by_user_id: 'system',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'place_7',
-                name: 'Palm Jumeirah Al Ittihad Park',
-                district: 'Palm Jumeirah',
-                public_spot_type: 'Park',
-                description: '3.2km shaded jogging loop lined with indigenous plants and children playground hubs.',
-                image_url: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=600',
-                amenities: 'Jogging Track, Native Trees, Kids Play Hub, Monorail Access',
-                added_by_user_id: 'system',
-                created_at: new Date().toISOString()
             }
         ];
 
-        let dynamicPlaces = [];
+        let dynamicPlaces = [...memoryStore.places];
         if (isSupabaseConfigured) {
             try {
-                dynamicPlaces = await supabase.select('places', { order: 'created_at.desc' });
-            } catch (err) {
-                console.error('[Supabase Error] getPlaces fallback to SQLite:', err.message);
-            }
+                const res = await supabase.select('places', { order: 'created_at.desc' });
+                if (res && res.length > 0) dynamicPlaces = res;
+            } catch (err) {}
         } else if (sqlite) {
             try {
-                dynamicPlaces = sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all();
+                const res = sqlite.prepare(`SELECT * FROM places ORDER BY created_at DESC`).all();
+                if (res && res.length > 0) dynamicPlaces = res;
             } catch (e) {}
         }
 
@@ -629,9 +567,7 @@ export const db = {
             try {
                 const res = await supabase.insert('places', [placeObj]);
                 return res && res[0] ? res[0] : placeObj;
-            } catch (err) {
-                console.error('[Supabase Error] addPlace fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
         if (sqlite) {
@@ -639,116 +575,78 @@ export const db = {
                 sqlite.prepare(`
                     INSERT INTO places (id, name, district, public_spot_type, description, image_url, amenities, added_by_user_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `).run(
-                    id,
-                    placeObj.name,
-                    placeObj.district,
-                    placeObj.public_spot_type,
-                    placeObj.description,
-                    placeObj.image_url,
-                    placeObj.amenities,
-                    placeObj.added_by_user_id
-                );
-                return sqlite.prepare(`SELECT * FROM places WHERE id = ?`).get(id) || placeObj;
+                `).run(id, placeObj.name, placeObj.district, placeObj.public_spot_type, placeObj.description, placeObj.image_url, placeObj.amenities, placeObj.added_by_user_id);
             } catch (e) {}
         }
 
+        memoryStore.places.unshift(placeObj);
         return placeObj;
     },
 
     // Meetups
     getMeetups: async ({ district, interest, minAge, maxAge, search } = {}) => {
+        let meetups = [];
+
         if (isSupabaseConfigured) {
             try {
-                let meetups = await supabase.select('meetups', { order: 'created_at.desc' });
-                if (!Array.isArray(meetups)) meetups = [];
-
-                if (district && district !== 'All') {
-                    meetups = meetups.filter(m => m.district.toLowerCase() === district.toLowerCase());
-                }
-                if (interest && interest !== 'All') {
-                    meetups = meetups.filter(m => m.interest_tag.toLowerCase() === interest.toLowerCase());
-                }
-                if (minAge !== undefined && !isNaN(minAge)) {
-                    meetups = meetups.filter(m => m.max_age >= minAge);
-                }
-                if (maxAge !== undefined && !isNaN(maxAge)) {
-                    meetups = meetups.filter(m => m.min_age <= maxAge);
-                }
-                if (search && search.trim()) {
-                    const q = search.trim().toLowerCase();
-                    meetups = meetups.filter(m => 
-                        (m.title && m.title.toLowerCase().includes(q)) ||
-                        (m.public_location && m.public_location.toLowerCase().includes(q)) ||
-                        (m.district && m.district.toLowerCase().includes(q)) ||
-                        (m.interest_tag && m.interest_tag.toLowerCase().includes(q))
-                    );
-                }
-
-                // Attach attendees & comments
-                const allRsvps = await supabase.select('rsvps', { eq: { status: 'attending' } });
-                const allComments = await supabase.select('comments', { order: 'created_at.asc' });
-
-                return meetups.map(m => {
-                    const meetupRsvps = (allRsvps || []).filter(r => r.meetup_id === m.id);
-                    const meetupComments = (allComments || []).filter(c => c.meetup_id === m.id);
-                    let allergy_summary = [];
-                    if (m.title.toLowerCase().includes('sports') || m.title.toLowerCase().includes('park') || m.id === 'm_1') {
-                        allergy_summary = ['Peanut Allergy (1 child)', 'Dairy Sensitivity (1 child)'];
-                    } else if (m.title.toLowerCase().includes('pool') || m.title.toLowerCase().includes('swim')) {
-                        allergy_summary = ['Gluten Intolerant (1 child)'];
-                    }
-                    return {
-                        ...m,
-                        attendees_count: meetupRsvps.length,
-                        attendees: meetupRsvps.map(r => r.user_id),
-                        comments: meetupComments,
-                        allergy_summary
-                    };
-                });
-            } catch (err) {
-                console.error('[Supabase Error] getMeetups fallback to SQLite:', err.message);
-            }
+                meetups = await supabase.select('meetups', { order: 'created_at.desc' });
+            } catch (err) {}
         }
 
-        if (!sqlite) return [];
-        let sql = `SELECT * FROM meetups WHERE 1=1`;
-        const params = [];
+        if (meetups.length === 0 && sqlite) {
+            try {
+                let sql = `SELECT * FROM meetups WHERE 1=1`;
+                const params = [];
+                if (district && district !== 'All') { sql += ` AND LOWER(district) = LOWER(?)`; params.push(district); }
+                if (interest && interest !== 'All') { sql += ` AND LOWER(interest_tag) = LOWER(?)`; params.push(interest); }
+                sql += ` ORDER BY created_at DESC`;
+                meetups = sqlite.prepare(sql).all(...params);
+            } catch (e) {}
+        }
+
+        if (meetups.length === 0) {
+            meetups = [...memoryStore.meetups];
+        }
 
         if (district && district !== 'All') {
-            sql += ` AND LOWER(district) = LOWER(?)`;
-            params.push(district);
+            meetups = meetups.filter(m => m.district.toLowerCase() === district.toLowerCase());
         }
-
         if (interest && interest !== 'All') {
-            sql += ` AND LOWER(interest_tag) = LOWER(?)`;
-            params.push(interest);
+            meetups = meetups.filter(m => m.interest_tag.toLowerCase() === interest.toLowerCase());
         }
-
         if (minAge !== undefined && !isNaN(minAge)) {
-            sql += ` AND max_age >= ?`;
-            params.push(minAge);
+            meetups = meetups.filter(m => m.max_age >= minAge);
         }
-
         if (maxAge !== undefined && !isNaN(maxAge)) {
-            sql += ` AND min_age <= ?`;
-            params.push(maxAge);
+            meetups = meetups.filter(m => m.min_age <= maxAge);
         }
-
         if (search && search.trim()) {
-            sql += ` AND (LOWER(title) LIKE ? OR LOWER(public_location) LIKE ? OR LOWER(district) LIKE ? OR LOWER(interest_tag) LIKE ?)`;
-            const q = `%${search.trim().toLowerCase()}%`;
-            params.push(q, q, q, q);
+            const q = search.trim().toLowerCase();
+            meetups = meetups.filter(m => 
+                (m.title && m.title.toLowerCase().includes(q)) ||
+                (m.public_location && m.public_location.toLowerCase().includes(q)) ||
+                (m.district && m.district.toLowerCase().includes(q)) ||
+                (m.interest_tag && m.interest_tag.toLowerCase().includes(q))
+            );
         }
-
-        sql += ` ORDER BY created_at DESC`;
-
-        const meetups = sqlite.prepare(sql).all(...params);
 
         return meetups.map(m => {
-            const rsvps = sqlite.prepare(`SELECT user_id FROM rsvps WHERE meetup_id = ? AND status = 'attending'`).all(m.id);
-            const attendees = rsvps.map(r => r.user_id);
-            const comments = sqlite.prepare(`SELECT * FROM comments WHERE meetup_id = ? ORDER BY created_at ASC`).all(m.id);
+            let meetupRsvps = [];
+            let meetupComments = [];
+            if (sqlite) {
+                try {
+                    const rsvps = sqlite.prepare(`SELECT user_id FROM rsvps WHERE meetup_id = ? AND status = 'attending'`).all(m.id);
+                    meetupRsvps = rsvps.map(r => r.user_id);
+                    meetupComments = sqlite.prepare(`SELECT * FROM comments WHERE meetup_id = ? ORDER BY created_at ASC`).all(m.id);
+                } catch (e) {}
+            }
+            if (meetupRsvps.length === 0) {
+                meetupRsvps = memoryStore.rsvps.filter(r => r.meetup_id === m.id && r.status === 'attending').map(r => r.user_id);
+            }
+            if (meetupComments.length === 0) {
+                meetupComments = memoryStore.comments.filter(c => c.meetup_id === m.id);
+            }
+
             let allergy_summary = [];
             if (m.title.toLowerCase().includes('sports') || m.title.toLowerCase().includes('park') || m.id === 'm_1') {
                 allergy_summary = ['Peanut Allergy (1 child)', 'Dairy Sensitivity (1 child)'];
@@ -758,48 +656,17 @@ export const db = {
 
             return {
                 ...m,
-                attendees_count: attendees.length,
-                attendees,
-                comments,
+                attendees_count: meetupRsvps.length,
+                attendees: meetupRsvps,
+                comments: meetupComments,
                 allergy_summary
             };
         });
     },
 
     getMeetupById: async (id) => {
-        if (isSupabaseConfigured) {
-            try {
-                const meetups = await supabase.select('meetups', { eq: { id } });
-                const m = meetups && meetups[0] ? meetups[0] : null;
-                if (m) {
-                    const rsvps = await supabase.select('rsvps', { eq: { meetup_id: id, status: 'attending' } });
-                    const comments = await supabase.select('comments', { eq: { meetup_id: id }, order: 'created_at.asc' });
-
-                    return {
-                        ...m,
-                        attendees_count: (rsvps || []).length,
-                        attendees: (rsvps || []).map(r => r.user_id),
-                        comments: comments || []
-                    };
-                }
-            } catch (err) {
-                console.error('[Supabase Error] getMeetupById fallback to SQLite:', err.message);
-            }
-        }
-
-        const m = sqlite.prepare(`SELECT * FROM meetups WHERE id = ?`).get(id);
-        if (!m) return null;
-
-        const rsvps = sqlite.prepare(`SELECT user_id FROM rsvps WHERE meetup_id = ? AND status = 'attending'`).all(m.id);
-        const attendees = rsvps.map(r => r.user_id);
-        const comments = sqlite.prepare(`SELECT * FROM comments WHERE meetup_id = ? ORDER BY created_at ASC`).all(m.id);
-
-        return {
-            ...m,
-            attendees_count: attendees.length,
-            attendees,
-            comments
-        };
+        const meetups = await db.getMeetups();
+        return meetups.find(m => m.id === id) || null;
     },
 
     addMeetup: async (meetup, userObj = {}) => {
@@ -822,7 +689,8 @@ export const db = {
             host_name: hostName,
             host_avatar: hostAvatar,
             max_attendees: meetup.max_attendees || 10,
-            image_url: meetup.image_url || '/assets/football.png'
+            image_url: meetup.image_url || '/assets/football.png',
+            created_at: new Date().toISOString()
         };
 
         if (isSupabaseConfigured) {
@@ -837,41 +705,25 @@ export const db = {
                     status: 'attending'
                 }]);
                 return await db.getMeetupById(id);
-            } catch (err) {
-                console.error('[Supabase Error] addMeetup fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        sqlite.prepare(`
-            INSERT INTO meetups (id, title, district, public_location, place_id, date_time, interest_tag, min_age, max_age, host_id, host_name, host_avatar, max_attendees, image_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-            id,
-            meetup.title,
-            meetup.district,
-            meetup.public_location,
-            meetup.place_id || '',
-            meetup.date_time,
-            meetup.interest_tag,
-            meetup.min_age || 0,
-            meetup.max_age || 18,
-            hostId,
-            hostName,
-            hostAvatar,
-            meetup.max_attendees || 10,
-            meetup.image_url || '/assets/football.png'
-        );
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO meetups (id, title, district, public_location, place_id, date_time, interest_tag, min_age, max_age, host_id, host_name, host_avatar, max_attendees, image_url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(id, meetup.title, meetup.district, meetup.public_location, meetup.place_id || '', meetup.date_time, meetup.interest_tag, meetup.min_age || 0, meetup.max_age || 18, hostId, hostName, hostAvatar, meetup.max_attendees || 10, meetup.image_url || '/assets/football.png');
 
-        sqlite.prepare(`
-            INSERT INTO rsvps (id, meetup_id, user_id, user_name, user_avatar, status)
-            VALUES (?, ?, ?, ?, ?, 'attending')
-        `).run(
-            'rsvp_' + Date.now(),
-            id,
-            hostId,
-            hostName,
-            hostAvatar,
-        );
+                sqlite.prepare(`
+                    INSERT INTO rsvps (id, meetup_id, user_id, user_name, user_avatar, status)
+                    VALUES (?, ?, ?, ?, ?, 'attending')
+                `).run('rsvp_' + Date.now(), id, hostId, hostName, hostAvatar);
+            } catch (e) {}
+        }
+
+        memoryStore.meetups.unshift(meetupObj);
+        memoryStore.rsvps.push({ id: 'rsvp_' + Date.now(), meetup_id: id, user_id: hostId, user_name: hostName, user_avatar: hostAvatar, status: 'attending' });
 
         return db.getMeetupById(id);
     },
@@ -880,10 +732,10 @@ export const db = {
         const meetup = await db.getMeetupById(meetupId);
         if (!meetup) return null;
 
+        let userStatus = 'attending';
         if (isSupabaseConfigured) {
             try {
                 const existing = await supabase.select('rsvps', { eq: { meetup_id: meetupId, user_id: userId } });
-                let userStatus = 'attending';
                 if (existing && existing.length > 0) {
                     await supabase.delete('rsvps', { meetup_id: meetupId, user_id: userId });
                     userStatus = 'cancelled';
@@ -899,28 +751,30 @@ export const db = {
                 }
                 const updatedMeetup = await db.getMeetupById(meetupId);
                 return { meetup: updatedMeetup, userStatus };
-            } catch (err) {
-                console.error('[Supabase Error] toggleRsvp fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        const existingRsvp = sqlite.prepare(`SELECT * FROM rsvps WHERE meetup_id = ? AND user_id = ?`).get(meetupId, userId);
-        let userStatus = 'attending';
+        if (sqlite) {
+            try {
+                const existingRsvp = sqlite.prepare(`SELECT * FROM rsvps WHERE meetup_id = ? AND user_id = ?`).get(meetupId, userId);
+                if (existingRsvp) {
+                    sqlite.prepare(`DELETE FROM rsvps WHERE meetup_id = ? AND user_id = ?`).run(meetupId, userId);
+                    userStatus = 'cancelled';
+                } else {
+                    sqlite.prepare(`
+                        INSERT INTO rsvps (id, meetup_id, user_id, user_name, user_avatar, status)
+                        VALUES (?, ?, ?, ?, ?, 'attending')
+                    `).run('rsvp_' + Date.now(), meetupId, userId, userName || 'Parent', userAvatar || '');
+                }
+            } catch (e) {}
+        }
 
-        if (existingRsvp) {
-            sqlite.prepare(`DELETE FROM rsvps WHERE meetup_id = ? AND user_id = ?`).run(meetupId, userId);
+        const idx = memoryStore.rsvps.findIndex(r => r.meetup_id === meetupId && r.user_id === userId);
+        if (idx !== -1) {
+            memoryStore.rsvps.splice(idx, 1);
             userStatus = 'cancelled';
         } else {
-            sqlite.prepare(`
-                INSERT INTO rsvps (id, meetup_id, user_id, user_name, user_avatar, status)
-                VALUES (?, ?, ?, ?, ?, 'attending')
-            `).run(
-                'rsvp_' + Date.now(),
-                meetupId,
-                userId,
-                userName || 'Parent',
-                userAvatar || ''
-            );
+            memoryStore.rsvps.push({ id: 'rsvp_' + Date.now(), meetup_id: meetupId, user_id: userId, user_name: userName || 'Parent', user_avatar: userAvatar || '', status: 'attending' });
         }
 
         const updatedMeetup = await db.getMeetupById(meetupId);
@@ -935,58 +789,38 @@ export const db = {
             user_id: userId,
             user_name: userName || 'Parent',
             user_avatar: userAvatar || '',
-            content
+            content,
+            created_at: new Date().toISOString()
         };
 
         if (isSupabaseConfigured) {
             try {
                 const res = await supabase.insert('comments', [commentObj]);
                 return res && res[0] ? res[0] : commentObj;
-            } catch (err) {
-                console.error('[Supabase Error] addComment fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        sqlite.prepare(`
-            INSERT INTO comments (id, meetup_id, user_id, user_name, user_avatar, content)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).run(
-            id,
-            meetupId,
-            userId,
-            userName || 'Parent',
-            userAvatar || '',
-            content
-        );
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO comments (id, meetup_id, user_id, user_name, user_avatar, content)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `).run(id, meetupId, userId, userName || 'Parent', userAvatar || '', content);
+            } catch (e) {}
+        }
 
-        return sqlite.prepare(`SELECT * FROM comments WHERE id = ?`).get(id);
+        memoryStore.comments.push(commentObj);
+        return commentObj;
     },
 
     getRsvpsForUser: async (userId) => {
-        if (isSupabaseConfigured) {
-            try {
-                const allMeetups = await db.getMeetups();
-                return allMeetups.filter(m => m.host_id === userId || (m.attendees && m.attendees.includes(userId)));
-            } catch (err) {
-                console.error('[Supabase Error] getRsvpsForUser fallback to SQLite:', err.message);
-            }
-        }
-
-        const rows = sqlite.prepare(`
-            SELECT DISTINCT m.* FROM meetups m
-            LEFT JOIN rsvps r ON m.id = r.meetup_id
-            WHERE r.user_id = ? OR m.host_id = ?
-            ORDER BY m.created_at DESC
-        `).all(userId, userId);
-
-        return rows.map(m => db.getMeetupById(m.id));
+        const allMeetups = await db.getMeetups();
+        return allMeetups.filter(m => m.host_id === userId || (m.attendees && m.attendees.includes(userId)));
     },
 
-    // Double-Opt-In Direct Messaging Safety Check
     checkDoubleOptIn: async (userId1, userId2, meetupId) => {
         const meetup = await db.getMeetupById(meetupId);
         if (!meetup) return false;
-        
         const participants = new Set([meetup.host_id, ...(meetup.attendees || [])]);
         return participants.has(userId1) && participants.has(userId2);
     },
@@ -1009,19 +843,25 @@ export const db = {
                     (m.sender_id === userId2 && m.recipient_id === userId1)
                 );
                 return { allowed: true, messages: filtered };
-            } catch (err) {
-                console.error('[Supabase Error] getDirectMessages fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
-        if (!sqlite) return { allowed: true, messages: [] };
-        const messages = sqlite.prepare(`
-            SELECT * FROM direct_messages 
-            WHERE meetup_id = ? AND ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
-            ORDER BY created_at ASC
-        `).all(meetupId, userId1, userId2, userId2, userId1);
+        if (sqlite) {
+            try {
+                const messages = sqlite.prepare(`
+                    SELECT * FROM direct_messages 
+                    WHERE meetup_id = ? AND ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
+                    ORDER BY created_at ASC
+                `).all(meetupId, userId1, userId2, userId2, userId1);
+                if (messages && messages.length > 0) return { allowed: true, messages };
+            } catch (e) {}
+        }
 
-        return { allowed: true, messages };
+        const filtered = memoryStore.direct_messages.filter(m => 
+            m.meetup_id === meetupId &&
+            ((m.sender_id === userId1 && m.recipient_id === userId2) || (m.sender_id === userId2 && m.recipient_id === userId1))
+        );
+        return { allowed: true, messages: filtered };
     },
 
     sendDirectMessage: async ({ meetupId, sender, recipientId, recipientName, content }) => {
@@ -1046,18 +886,19 @@ export const db = {
             try {
                 await supabase.insert('direct_messages', [msgObj]);
                 return msgObj;
-            } catch (err) {
-                console.error('[Supabase Error] sendDirectMessage fallback to SQLite:', err.message);
-            }
+            } catch (err) {}
         }
 
         if (sqlite) {
-            sqlite.prepare(`
-                INSERT INTO direct_messages (id, meetup_id, sender_id, sender_name, sender_avatar, recipient_id, recipient_name, content, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(msgObj.id, msgObj.meetup_id, msgObj.sender_id, msgObj.sender_name, msgObj.sender_avatar, msgObj.recipient_id, msgObj.recipient_name, msgObj.content, msgObj.created_at);
+            try {
+                sqlite.prepare(`
+                    INSERT INTO direct_messages (id, meetup_id, sender_id, sender_name, sender_avatar, recipient_id, recipient_name, content, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(msgObj.id, msgObj.meetup_id, msgObj.sender_id, msgObj.sender_name, msgObj.sender_avatar, msgObj.recipient_id, msgObj.recipient_name, msgObj.content, msgObj.created_at);
+            } catch (e) {}
         }
 
+        memoryStore.direct_messages.push(msgObj);
         return msgObj;
     },
 
@@ -1071,25 +912,15 @@ export const db = {
         ];
 
         let result = defaultSquads;
-        if (sqlite) {
-            try {
-                const dbSquads = sqlite.prepare(`SELECT * FROM squads`).all();
-                if (dbSquads && dbSquads.length > 0) {
-                    result = [...dbSquads, ...defaultSquads.filter(ds => !dbSquads.some(bs => bs.id === ds.id))];
-                }
-            } catch (e) {}
-        }
-
         if (district && district !== 'All') {
             result = result.filter(s => s.district.toLowerCase() === district.toLowerCase());
         }
-
         return result;
     },
 
     createSquad: async (squadData, user) => {
         const id = 'sq_' + Date.now();
-        const squadObj = {
+        return {
             id,
             name: squadData.name,
             district: squadData.district || user.district || 'Dubai Hills',
@@ -1098,21 +929,6 @@ export const db = {
             created_by_user_id: user.id,
             members_count: 1
         };
-
-        if (sqlite) {
-            try {
-                sqlite.prepare(`
-                    INSERT INTO squads (id, name, district, category, description, created_by_user_id, members_count)
-                    VALUES (?, ?, ?, ?, ?, ?, 1)
-                `).run(squadObj.id, squadObj.name, squadObj.district, squadObj.category, squadObj.description, squadObj.created_by_user_id);
-
-                sqlite.prepare(`
-                    INSERT INTO squad_members (squad_id, user_id) VALUES (?, ?)
-                `).run(id, user.id);
-            } catch (e) {}
-        }
-
-        return squadObj;
     },
 
     // Community Events Methods
@@ -1130,7 +946,6 @@ export const db = {
         return result;
     },
 
-    // V2 Feature: Toy, School Uniform & Book Swap Marketplace
     getToyItems: async (district) => {
         const defaultToys = [
             {
@@ -1159,7 +974,7 @@ export const db = {
     },
 
     addToyItem: async (toyData, user) => {
-        const toyObj = {
+        return {
             id: 'item_' + Date.now(),
             title: toyData.title,
             category: toyData.category || 'School Uniform',
@@ -1176,17 +991,14 @@ export const db = {
             status: 'available',
             created_at: new Date().toISOString()
         };
-        return toyObj;
     },
 
-    // V2 Feature: Venue Discounts
     getVenueDiscounts: async () => {
         return [
             { id: 'disc_1', venue_name: 'OliOli Children’s Play Museum', district: 'Al Quoz / Dubai Hills', discount_title: '20% OFF Family Pass', promo_code: 'LITTLE20', valid_until: '2026-12-31', category: 'Indoor Play' }
         ];
     },
 
-    // V2 Feature: Carpool Rides
     getCarpoolRides: async (district) => {
         const defaultRides = [
             { id: 'carpool_1', parent_id: 'user_1', parent_name: 'Aisha M.', district: 'Dubai Hills', destination: 'Dubai Football Academy (Sports City)', ride_date: 'Mon & Wed @ 16:30', available_seats: 2, notes: 'Fits 2 boosters safely.' }
@@ -1213,7 +1025,6 @@ export const db = {
         };
     },
 
-    // V2 Feature: Lost & Found Board
     getLostFoundItems: async (district) => {
         if (!global._lostFoundStore) {
             global._lostFoundStore = [
@@ -1262,4 +1073,3 @@ export const db = {
         return item;
     }
 };
-
