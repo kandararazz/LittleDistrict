@@ -183,7 +183,7 @@ const memoryStore = {
             host_name: 'Sarah Jenkins',
             host_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah',
             max_attendees: 8,
-            image_url: '/assets/football.png',
+            image_url: '',
             created_at: new Date().toISOString()
         },
         {
@@ -200,7 +200,7 @@ const memoryStore = {
             host_name: 'Sarah Jenkins',
             host_avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah',
             max_attendees: 10,
-            image_url: '/assets/swimming.png',
+            image_url: '',
             created_at: new Date().toISOString()
         }
     ],
@@ -507,7 +507,7 @@ export const db = {
                 district: 'Dubai Hills',
                 public_spot_type: 'Park',
                 description: 'Expansive green lawn, splash park, adventure playground, and shaded seating area.',
-                image_url: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600',
+                image_url: '',
                 amenities: 'Playground, Splash Pad, Shaded Seating, Restrooms, Parking',
                 added_by_user_id: 'system',
                 created_at: new Date().toISOString()
@@ -518,7 +518,7 @@ export const db = {
                 district: 'Arabian Ranches',
                 public_spot_type: 'Clubhouse',
                 description: 'Community pool, kids paddling pool, shaded bbq pavilions, and tennis court.',
-                image_url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=600',
+                image_url: '',
                 amenities: 'Community Pool, Shaded Pavilion, Tennis Court, Restrooms',
                 added_by_user_id: 'system',
                 created_at: new Date().toISOString()
@@ -529,7 +529,7 @@ export const db = {
                 district: 'JBR',
                 public_spot_type: 'Beach',
                 description: 'Public beach promenade with kids splash pads, outdoor playground, and beach volleyball.',
-                image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600',
+                image_url: '',
                 amenities: 'Public Beach, Outdoor Gym, Splash Park, Restrooms',
                 added_by_user_id: 'system',
                 created_at: new Date().toISOString()
@@ -701,7 +701,7 @@ export const db = {
             host_name: hostName,
             host_avatar: hostAvatar,
             max_attendees: meetup.max_attendees || 10,
-            image_url: meetup.image_url || '/assets/football.png',
+            image_url: meetup.image_url || '',
             created_at: new Date().toISOString()
         };
 
@@ -984,7 +984,7 @@ export const db = {
                 user_contact: '+971 50 492 8172',
                 user_phone: '+971 50 492 8172',
                 status: 'available',
-                image_url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400'
+                image_url: ''
             }
         ];
 
@@ -1009,7 +1009,7 @@ export const db = {
             user_name: user.name || 'Parent',
             user_contact: user.phone || '+971 50 123 4567',
             user_phone: user.phone || '+971 50 123 4567',
-            image_url: toyData.image_url || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400',
+            image_url: toyData.image_url || '',
             status: 'available',
             created_at: new Date().toISOString()
         };
@@ -1080,7 +1080,7 @@ export const db = {
                     district: 'Dubai Hills',
                     location_detail: 'Dropped along Central Park splash area walking track',
                     reported_by: 'Sarah J. (050-XXXXXXX)',
-                    image_url: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+                    image_url: '',
                     created_at: '2026-08-13T10:00:00.000Z'
                 }
             ];
@@ -1102,7 +1102,7 @@ export const db = {
             district: itemData.district || user.district || 'Dubai Hills',
             location_detail: itemData.location_detail || 'Neighborhood path',
             reported_by: user.name || 'Parent Resident',
-            image_url: itemData.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400',
+            image_url: itemData.image_url || '',
             created_at: new Date().toISOString()
         };
 

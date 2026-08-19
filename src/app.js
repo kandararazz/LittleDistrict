@@ -13,8 +13,7 @@ let state = {
         interest: '',
         search: ''
     },
-    authMode: 'login',
-    theme: localStorage.getItem('ld_theme') || 'light'
+    authMode: 'login'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,35 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initApp() {
-    initTheme();
     setupEventListeners();
     if (state.token) {
         await checkCurrentUser();
     }
     await loadCurrentTabData();
-}
-
-function initTheme() {
-    setTheme(state.theme);
-}
-
-function toggleTheme() {
-    const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-    setTheme(newTheme);
-}
-
-function setTheme(theme) {
-    state.theme = theme;
-    const icon = document.getElementById('themeIcon');
-    if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        if (icon) icon.textContent = 'light_mode';
-        localStorage.setItem('ld_theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        if (icon) icon.textContent = 'dark_mode';
-        localStorage.setItem('ld_theme', 'light');
-    }
 }
 
 function setupEventListeners() {
@@ -418,10 +393,10 @@ function renderMeetups() {
 
     if (filtered.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full py-12 text-center bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
-                <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">event_busy</span>
-                <p class="text-sm font-bold text-slate-600 dark:text-slate-300 mt-2">No playdates found matching filters</p>
-                <button onclick="clearFilters()" class="mt-3 text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline">+ Clear Search Filters</button>
+            <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+                <span class="material-symbols-outlined text-4xl text-slate-300">event_busy</span>
+                <p class="text-sm font-bold text-slate-600 mt-2">No playdates found matching filters</p>
+                <button onclick="clearFilters()" class="mt-3 text-xs font-bold text-teal-700 hover:underline">+ Clear Search Filters</button>
             </div>
         `;
         return;
@@ -430,19 +405,19 @@ function renderMeetups() {
     grid.innerHTML = filtered.map(m => {
         const rsvps = m.rsvps || [];
         const isAttending = state.user && rsvps.some(r => r.user_id === state.user.id);
-        const hasCustomImg = Boolean(m.image_url && m.image_url.trim() !== '' && !m.image_url.includes('logo-full.png'));
+        const hasCustomImg = Boolean(m.image_url && m.image_url.trim() !== '' && !m.image_url.includes('/assets/') && !m.image_url.includes('logo') && !m.image_url.includes('unsplash.com'));
 
         return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                     ${hasCustomImg ? `
                         <!-- Card Cover Photo -->
-                        <div class="h-44 sm:h-48 bg-slate-900 relative overflow-hidden">
-                            <img src="${m.image_url}" alt="${escapeHTML(m.title)}" class="w-full h-full object-cover opacity-95 hover:scale-105 transition-transform duration-500">
-                            <span class="absolute top-3 left-3 bg-teal-900/90 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                        <div class="card-cover-box h-44 sm:h-48 bg-slate-900 relative overflow-hidden">
+                            <img src="${m.image_url}" alt="${escapeHTML(m.title)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-3 left-3 bg-teal-900/90 text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
                                 📍 ${escapeHTML(m.district)}
                             </span>
-                            <span class="absolute top-3 right-3 bg-amber-500 text-slate-900 text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                            <span class="absolute top-3 right-3 bg-amber-500 text-slate-900 text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
                                 ${escapeHTML(m.interest_tag || 'Activity')}
                             </span>
                         </div>
@@ -452,7 +427,7 @@ function renderMeetups() {
                     <div class="p-4 sm:p-5 space-y-3">
                         ${!hasCustomImg ? `
                             <div class="flex items-center justify-between gap-2">
-                                <span class="bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                <span class="bg-teal-100 text-teal-800 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full">
                                     📍 ${escapeHTML(m.district)}
                                 </span>
                                 <span class="bg-amber-500 text-slate-900 text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full">
@@ -461,22 +436,22 @@ function renderMeetups() {
                             </div>
                         ` : ''}
 
-                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
                             <img src="${m.host_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(m.host_name || 'Parent')}" class="w-6 h-6 rounded-full border border-teal-500 object-cover shrink-0">
-                            <span class="truncate">Hosted by <strong class="text-slate-700 dark:text-slate-200">${escapeHTML(m.host_name || 'Parent')}</strong></span>
+                            <span class="truncate">Hosted by <strong class="text-slate-700">${escapeHTML(m.host_name || 'Parent')}</strong></span>
                         </div>
 
-                        <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 leading-snug hover:text-teal-700 transition-colors cursor-pointer" onclick="toggleComments('${m.id}')">
+                        <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 leading-snug hover:text-teal-700 transition-colors cursor-pointer" onclick="toggleComments('${m.id}')">
                             ${escapeHTML(m.title)}
                         </h3>
 
-                        <div class="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <div class="space-y-1.5 text-xs font-semibold text-slate-600">
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base sm:text-lg">calendar_month</span>
+                                <span class="material-symbols-outlined text-teal-600 text-base sm:text-lg">calendar_month</span>
                                 <span>${escapeHTML(m.date_time)}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base sm:text-lg">location_on</span>
+                                <span class="material-symbols-outlined text-teal-600 text-base sm:text-lg">location_on</span>
                                 <span class="truncate">${escapeHTML(m.public_location)}</span>
                             </div>
                             <div class="flex items-center gap-2">
@@ -488,36 +463,36 @@ function renderMeetups() {
                 </div>
 
                 <!-- Footer & RSVP -->
-                <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                     <div class="flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-base">group</span>
-                        <span class="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">${rsvps.length} / ${m.max_attendees || 10} Attending</span>
+                        <span class="material-symbols-outlined text-teal-600 text-base">group</span>
+                        <span class="text-[11px] sm:text-xs font-bold text-slate-700">${rsvps.length} / ${m.max_attendees || 10} Attending</span>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleComments('${m.id}')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-colors" title="Comments">
+                        <button onclick="toggleComments('${m.id}')" class="p-2 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors" title="Comments">
                             <span class="material-symbols-outlined text-lg">chat</span>
                         </button>
-                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-teal-700 hover:bg-teal-800 text-white'} text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl transition-all shadow-sm">
+                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-teal-700 hover:bg-teal-800 text-white'} text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl transition-all shadow-xs">
                             ${isAttending ? '✓ Attending' : '+ Join RSVP'}
                         </button>
                     </div>
                 </div>
 
                 <!-- Comments Drawer -->
-                <div id="comments-${m.id}" class="hidden p-4 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 space-y-3">
-                    <h4 class="font-display font-bold text-xs text-slate-700 dark:text-slate-300">Discussion & Parent Q&A</h4>
+                <div id="comments-${m.id}" class="hidden p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+                    <h4 class="font-display font-bold text-xs text-slate-700">Discussion & Parent Q&A</h4>
                     <div class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs">
                         ${(m.comments || []).length > 0 ? (m.comments || []).map(c => `
-                            <div class="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <span class="font-bold text-teal-800 dark:text-teal-400">${escapeHTML(c.user_name)}:</span>
-                                <span class="text-slate-700 dark:text-slate-300">${escapeHTML(c.content)}</span>
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200">
+                                <span class="font-bold text-teal-800">${escapeHTML(c.user_name)}:</span>
+                                <span class="text-slate-700">${escapeHTML(c.content)}</span>
                             </div>
                         `).join('') : '<p class="text-[11px] text-slate-400 italic">No comments yet. Ask a question below!</p>'}
                     </div>
 
                     <form onsubmit="handleAddComment(event, '${m.id}')" class="flex gap-2 pt-1">
-                        <input type="text" placeholder="Type a message..." required class="flex-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
+                        <input type="text" placeholder="Type a message..." required class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500">
                         <button type="submit" class="bg-teal-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-teal-800">Send</button>
                     </form>
                 </div>
@@ -530,18 +505,36 @@ function renderPlaces() {
     const grid = document.getElementById('placesGrid');
     if (!grid) return;
 
-    grid.innerHTML = state.places.map(p => `
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all">
-            <div class="flex items-start justify-between">
-                <span class="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 text-[11px] font-bold px-2.5 py-1 rounded-full border border-teal-100 dark:border-teal-900">
-                    📍 ${escapeHTML(p.district)}
-                </span>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${escapeHTML(p.public_spot_type || 'Park')}</span>
+    grid.innerHTML = state.places.map(p => {
+        const hasCustomImg = Boolean(p.image_url && p.image_url.trim() !== '' && !p.image_url.includes('/assets/') && !p.image_url.includes('logo') && !p.image_url.includes('unsplash.com'));
+
+        return `
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                    ${hasCustomImg ? `
+                        <div class="card-cover-box h-44 bg-slate-900 relative overflow-hidden">
+                            <img src="${p.image_url}" alt="${escapeHTML(p.name)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                                📍 ${escapeHTML(p.district)}
+                            </span>
+                        </div>
+                    ` : ''}
+                    <div class="p-4 sm:p-5 space-y-3">
+                        <div class="flex items-start justify-between">
+                            ${!hasCustomImg ? `
+                                <span class="bg-teal-50 text-teal-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-teal-100">
+                                    📍 ${escapeHTML(p.district)}
+                                </span>
+                            ` : ''}
+                            <span class="text-xs font-semibold text-slate-500">${escapeHTML(p.public_spot_type || 'Park')}</span>
+                        </div>
+                        <h3 class="font-display font-bold text-base text-slate-900">${escapeHTML(p.name)}</h3>
+                        <p class="text-xs text-slate-600 line-clamp-3">${escapeHTML(p.description || 'Verified local community spot.')}</p>
+                    </div>
+                </div>
             </div>
-            <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100">${escapeHTML(p.name)}</h3>
-            <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-3">${escapeHTML(p.description || 'Verified local community spot.')}</p>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderToys() {
@@ -554,19 +547,19 @@ function renderToys() {
     }
 
     grid.innerHTML = filtered.map(t => {
-        const hasCustomImg = Boolean(t.image_url && t.image_url.trim() !== '');
+        const hasCustomImg = Boolean(t.image_url && t.image_url.trim() !== '' && !t.image_url.includes('/assets/') && !t.image_url.includes('logo') && !t.image_url.includes('unsplash.com'));
 
         return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                     ${hasCustomImg ? `
                         <!-- Item Photo -->
-                        <div class="h-44 bg-slate-900 relative overflow-hidden">
-                            <img src="${t.image_url}" alt="${escapeHTML(t.title)}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
-                            <span class="absolute top-3 left-3 bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                        <div class="card-cover-box h-44 bg-slate-900 relative overflow-hidden">
+                            <img src="${t.image_url}" alt="${escapeHTML(t.title)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-3 left-3 bg-amber-500 text-slate-900 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
                                 ${escapeHTML(t.category || 'Exchange')}
                             </span>
-                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
                                 📍 ${escapeHTML(t.district)}
                             </span>
                         </div>
@@ -585,21 +578,21 @@ function renderToys() {
                         ` : ''}
 
                         <div class="flex items-center justify-between pt-1">
-                            <span class="text-[11px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-900">
+                            <span class="text-[11px] font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
                                 ${escapeHTML(t.condition || 'Gently Used')}
                             </span>
-                            ${t.school_name ? `<span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">🏫 ${escapeHTML(t.school_name)}</span>` : ''}
+                            ${t.school_name ? `<span class="text-[11px] font-bold text-slate-500">🏫 ${escapeHTML(t.school_name)}</span>` : ''}
                         </div>
 
-                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100 leading-snug">${escapeHTML(t.title)}</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">${escapeHTML(t.description || 'Pass-along item for neighborhood families.')}</p>
+                        <h3 class="font-display font-bold text-base text-slate-900 leading-snug">${escapeHTML(t.title)}</h3>
+                        <p class="text-xs text-slate-600 line-clamp-2">${escapeHTML(t.description || 'Pass-along item for neighborhood families.')}</p>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex flex-col text-xs font-medium text-slate-500 dark:text-slate-400">
+                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <div class="flex flex-col text-xs font-medium text-slate-500">
                         <span>Listed by <strong>${escapeHTML(t.user_name || 'Local Parent')}</strong></span>
-                        <span class="text-teal-700 dark:text-teal-400 font-bold text-[11px]">📱 ${escapeHTML(t.user_phone || t.user_contact || 'Number required')}</span>
+                        <span class="text-teal-700 font-bold text-[11px]">📱 ${escapeHTML(t.user_phone || t.user_contact || 'Number required')}</span>
                     </div>
                     <a href="tel:${t.user_phone || t.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
                         <span class="material-symbols-outlined text-sm">call</span>
@@ -616,18 +609,18 @@ function renderLostFound() {
     if (!grid) return;
 
     grid.innerHTML = state.lostFound.map(lf => {
-        const hasCustomImg = Boolean(lf.image_url && lf.image_url.trim() !== '');
+        const hasCustomImg = Boolean(lf.image_url && lf.image_url.trim() !== '' && !lf.image_url.includes('/assets/') && !lf.image_url.includes('logo') && !lf.image_url.includes('unsplash.com'));
 
         return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                     ${hasCustomImg ? `
-                        <div class="h-44 bg-slate-900 relative overflow-hidden">
-                            <img src="${lf.image_url}" alt="${escapeHTML(lf.title || lf.item_name)}" class="w-full h-full object-cover">
-                            <span class="absolute top-3 left-3 bg-rose-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                        <div class="card-cover-box h-44 bg-slate-900 relative overflow-hidden">
+                            <img src="${lf.image_url}" alt="${escapeHTML(lf.title || lf.item_name)}" onerror="this.closest('.card-cover-box').remove()" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-rose-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
                                 ${escapeHTML(lf.status || 'Lost')}
                             </span>
-                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
+                            <span class="absolute top-3 right-3 bg-teal-800 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
                                 📍 ${escapeHTML(lf.district)}
                             </span>
                         </div>
@@ -644,15 +637,15 @@ function renderLostFound() {
                                 </span>
                             </div>
                         ` : ''}
-                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-slate-100">${escapeHTML(lf.title || lf.item_name)}</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-300">${escapeHTML(lf.location_detail || lf.location || lf.district)}</p>
+                        <h3 class="font-display font-bold text-base text-slate-900">${escapeHTML(lf.title || lf.item_name)}</h3>
+                        <p class="text-xs text-slate-600">${escapeHTML(lf.location_detail || lf.location || lf.district)}</p>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex flex-col text-xs font-medium text-slate-500 dark:text-slate-400">
+                <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <div class="flex flex-col text-xs font-medium text-slate-500">
                         <span>Reported by <strong>${escapeHTML(lf.reported_by || 'Resident')}</strong></span>
-                        <span class="text-teal-700 dark:text-teal-400 font-bold text-[11px]">📱 ${escapeHTML(lf.user_phone || lf.user_contact || 'Number required')}</span>
+                        <span class="text-teal-700 font-bold text-[11px]">📱 ${escapeHTML(lf.user_phone || lf.user_contact || 'Number required')}</span>
                     </div>
                     <a href="tel:${lf.user_phone || lf.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
                         <span class="material-symbols-outlined text-sm">call</span>
@@ -888,92 +881,6 @@ function clearFilters() {
     renderCurrentTab();
 }
 
-// --- DISTRICTBOT AI ASSISTANT CLIENT HANDLERS ---
-function openDistrictBotModal() {
-    openModal('districtBotModal');
-}
-
-function sendDistrictBotPrompt(promptText) {
-    const input = document.getElementById('districtBotInput');
-    if (input) {
-        input.value = promptText;
-        handleDistrictBotSubmit(new Event('submit', { cancelable: true, bubbles: true }));
-    }
-}
-
-async function handleDistrictBotSubmit(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const input = document.getElementById('districtBotInput');
-    const msgContainer = document.getElementById('districtBotMessages');
-    if (!input || !msgContainer) return;
-
-    const userText = input.value.trim();
-    if (!userText) return;
-
-    // Append user message
-    msgContainer.innerHTML += `
-        <div class="flex items-start justify-end gap-2 text-xs">
-            <div class="bg-teal-700 text-white p-3 rounded-2xl max-w-[85%] leading-relaxed">
-                ${escapeHTML(userText)}
-            </div>
-        </div>
-    `;
-    input.value = '';
-    msgContainer.scrollTop = msgContainer.scrollHeight;
-
-    // Typing indicator
-    const typingId = 'typing_' + Date.now();
-    msgContainer.innerHTML += `
-        <div id="${typingId}" class="flex items-start gap-2 text-xs">
-            <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
-                <span class="material-symbols-outlined text-base animate-spin">progress_activity</span>
-            </div>
-            <div class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-2xl text-slate-500 text-xs italic">
-                DistrictBot is thinking...
-            </div>
-        </div>
-    `;
-    msgContainer.scrollTop = msgContainer.scrollHeight;
-
-    try {
-        const res = await fetch('/api/bot/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: userText })
-        });
-        const data = await res.json();
-        const indicator = document.getElementById(typingId);
-        if (indicator) indicator.remove();
-
-        const botReply = data.reply || "I am DistrictBot, your friendly LittleDistrict AI assistant!";
-        msgContainer.innerHTML += `
-            <div class="flex items-start gap-2.5 text-xs">
-                <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
-                    <span class="material-symbols-outlined text-base">smart_toy</span>
-                </div>
-                <div class="bg-teal-50 dark:bg-teal-950/60 p-3 rounded-2xl border border-teal-100 dark:border-teal-900 text-slate-800 dark:text-slate-200 leading-relaxed max-w-[85%]">
-                    ${escapeHTML(botReply)}
-                </div>
-            </div>
-        `;
-        msgContainer.scrollTop = msgContainer.scrollHeight;
-    } catch (err) {
-        const indicator = document.getElementById(typingId);
-        if (indicator) indicator.remove();
-        msgContainer.innerHTML += `
-            <div class="flex items-start gap-2.5 text-xs">
-                <div class="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center text-amber-300 shrink-0 text-sm">
-                    <span class="material-symbols-outlined text-base">smart_toy</span>
-                </div>
-                <div class="bg-rose-50 dark:bg-rose-950 p-3 rounded-2xl text-rose-800 dark:text-rose-200 leading-relaxed max-w-[85%]">
-                    DistrictBot is temporarily offline. Please try asking again in a moment!
-                </div>
-            </div>
-        `;
-        msgContainer.scrollTop = msgContainer.scrollHeight;
-    }
-}
-
 function escapeHTML(str) {
     if (!str) return '';
     return String(str)
@@ -986,7 +893,7 @@ function escapeHTML(str) {
 
 function showToast(msg) {
     const toast = document.createElement('div');
-    toast.className = 'fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce';
+    toast.className = 'fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce';
     toast.innerHTML = `<span class="material-symbols-outlined text-amber-400 text-base">info</span> <span>${escapeHTML(msg)}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);

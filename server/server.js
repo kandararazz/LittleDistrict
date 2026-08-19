@@ -183,14 +183,6 @@ const server = http.createServer(async (req, res) => {
             return sendJSON(res, 200, { success: true, data: updated });
         }
 
-        // DISTRICTBOT AI CHAT
-        if (pathname === '/api/bot/chat' && req.method === 'POST') {
-            const body = await parseBody(req);
-            const userMessage = (body.message || '').trim();
-            const reply = generateDistrictBotReply(userMessage);
-            return sendJSON(res, 200, { success: true, reply });
-        }
-
         // DISCOUNTS & SQUADS
         if (pathname === '/api/discounts' && req.method === 'GET') {
             const discounts = await db.getVenueDiscounts();
@@ -225,40 +217,6 @@ const server = http.createServer(async (req, res) => {
         return sendJSON(res, 500, { success: false, error: err.message || 'Internal Server Error' });
     }
 });
-
-function generateDistrictBotReply(msg) {
-    const lower = (msg || '').toLowerCase();
-
-    if (lower.includes('who are you') || lower.includes('what are you') || lower.includes('what is districtbot') || lower.includes('who is districtbot') || lower.includes('purpose') || lower.includes('about yourself')) {
-        return "I am DistrictBot, an intelligent, friendly AI assistant built inside the Little District web platform! My purpose is to help community members organize activities, find local events, answer questions about the platform, and connect neighbors across Dubai. Keep asking me anything!";
-    }
-
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
-        return "Hello! 👋 Welcome to LittleDistrict! I'm DistrictBot, your neighborhood AI assistant. How can I help you and your family today?";
-    }
-
-    if (lower.includes('park') || lower.includes('spot') || lower.includes('playground') || lower.includes('venue')) {
-        return "Dubai features fantastic kid spots! Explore Dubai Hills Central Park, Arabian Ranches 2 Splash Pad, JBR Public Beach, or Mushrif Park. Browse or share neighborhood spots in our 'Spots' tab!";
-    }
-
-    if (lower.includes('exchange') || lower.includes('uniform') || lower.includes('toy') || lower.includes('book')) {
-        return "Our Pass-Along Exchange lets neighborhood parents share gently used school uniforms (DESS, DESC, Kings), books, strollers, and toys. Visit the 'Exchange' tab to browse listings or offer an item!";
-    }
-
-    if (lower.includes('playdate') || lower.includes('meetup') || lower.includes('activity')) {
-        return "Joining playdates is effortless! Browse upcoming activities on the Playdates feed, click '+ Join RSVP' to attend, or click '+ Playdate' to host park cycling, swimming, or sports games for local kids!";
-    }
-
-    if (lower.includes('lost') || lower.includes('found')) {
-        return "Lost a jacket or scooter at the park? Head over to the 'Lost & Found' tab to view reported items or post a lost item alert for neighbors!";
-    }
-
-    if (lower.includes('phone') || lower.includes('contact') || lower.includes('number') || lower.includes('profile')) {
-        return "To keep our parent community safe, a verified phone number is required before posting playdates or exchange items. You can easily manage your phone number in Account Settings!";
-    }
-
-    return "Thanks for reaching out! As DistrictBot, I'm here to assist with Dubai playdates, kid-friendly spots, uniform exchanges, and platform navigation. How can I assist you further?";
-}
 
 server.listen(PORT, () => {
     console.log(`\n====================================================`);
