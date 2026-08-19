@@ -330,8 +330,6 @@ export const db = {
         if (isSupabaseConfigured) {
             try {
                 await supabase.insert('users', [userObj]);
-                const token = generateToken(userId);
-                return { token, user: { ...userObj, children: [] } };
             } catch (err) {
                 console.error('[Supabase Error] registerUser fallback:', err.message);
             }
