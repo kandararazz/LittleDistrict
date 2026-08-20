@@ -152,8 +152,9 @@ function saveUserSession(token, user) {
         localStorage.setItem('ld_token', token);
     }
     if (user) {
-        state.user = user;
-        localStorage.setItem('ld_user', JSON.stringify(user));
+        // Merge with existing state.user so user name, district, avatar, and credentials are never lost
+        state.user = { ...(state.user || {}), ...user };
+        localStorage.setItem('ld_user', JSON.stringify(state.user));
     }
     updateUserUI();
 }

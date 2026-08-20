@@ -536,16 +536,48 @@ export const db = {
     updateProfile: async (updatedData) => {
         const userId = updatedData.id || 'user_1';
 
-        let u = memoryStore.users.find(x => x.id === userId);
-        if (!u) {
-            u = { id: userId, name: '', email: '', district: '', contact_preference: 'In-App Message', avatar_url: '', bio: '', is_verified: false, verification_method: '', children: [] };
-            memoryStore.users.push(u);
+        // Load existing user profile to ensure user name and email are never lost or reset to default
+        let existing = memoryStore.users.find(x => x.id === userId);
+        if (!existing) {
+            existing = await db.getUserById(userId);
         }
-        Object.assign(u, updatedData);
+
+        const baseUser = existing || {
+            id: userId,
+            name: 'Parent Resident',
+            email: '',
+            district: 'Dubai Hills',
+            phone: '',
+            contact_preference: 'In-App Message',
+            avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userId)}`,
+            bio: 'Active community parent',
+            is_developer: false,
+            developer_badge: '',
+            is_verified: false,
+            verification_method: '',
+            children: []
+        };
+
+        const mergedUser = {
+            ...baseUser,
+            ...updatedData,
+            name: (updatedData.name && updatedData.name.trim()) ? updatedData.name.trim() : baseUser.name,
+            email: (updatedData.email && updatedData.email.trim()) ? updatedData.email.trim() : baseUser.email,
+            district: (updatedData.district && updatedData.district.trim()) ? updatedData.district.trim() : baseUser.district,
+            phone: (updatedData.phone && updatedData.phone.trim()) ? updatedData.phone.trim() : baseUser.phone,
+            avatar_url: (updatedData.avatar_url && updatedData.avatar_url.trim()) ? updatedData.avatar_url.trim() : baseUser.avatar_url
+        };
+
+        let memIdx = memoryStore.users.findIndex(x => x.id === userId);
+        if (memIdx !== -1) {
+            memoryStore.users[memIdx] = mergedUser;
+        } else {
+            memoryStore.users.push(mergedUser);
+        }
 
         if (isSupabaseConfigured) {
             try {
-                await supabase.upsert('users', [u]);
+                await supabase.upsert('users', [mergedUser]);
             } catch (err) {}
         }
 
@@ -556,18 +588,18 @@ export const db = {
                     SET name = ?, email = ?, district = ?, phone = ?, contact_preference = ?, avatar_url = ?, bio = ?, is_developer = ?, developer_badge = ?, is_verified = ?, verification_method = ?, verification_document = ?
                     WHERE id = ?
                 `).run(
-                    u.name || '',
-                    u.email || '',
-                    u.district || '',
-                    u.phone || '',
-                    u.contact_preference || 'In-App Message',
-                    u.avatar_url || '',
-                    u.bio || '',
-                    u.is_developer ? 1 : 0,
-                    u.developer_badge || '',
-                    u.is_verified ? 1 : 0,
-                    u.verification_method || '',
-                    u.verification_document || '',
+                    mergedUser.name || '',
+                    mergedUser.email || '',
+                    mergedUser.district || '',
+                    mergedUser.phone || '',
+                    mergedUser.contact_preference || 'In-App Message',
+                    mergedUser.avatar_url || '',
+                    mergedUser.bio || '',
+                    mergedUser.is_developer ? 1 : 0,
+                    mergedUser.developer_badge || '',
+                    mergedUser.is_verified ? 1 : 0,
+                    mergedUser.verification_method || '',
+                    mergedUser.verification_document || '',
                     userId
                 );
             } catch (e) {
@@ -575,7 +607,7 @@ export const db = {
             }
         }
 
-        return u;
+        return mergedUser;
     },
 
     // Places

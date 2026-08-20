@@ -105,7 +105,7 @@ export default async function handler(req, res) {
             }
 
             const updated = await db.updateProfile({
-                id: user.id,
+                ...user,
                 is_verified: true,
                 verification_method: method,
                 verification_document: doc

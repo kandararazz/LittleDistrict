@@ -113,9 +113,10 @@ const server = http.createServer(async (req, res) => {
             if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
             const body = await parseBody(req);
             const updated = await db.updateProfile({
-                id: user.id,
+                ...user,
                 is_verified: true,
-                verification_method: body.verification_method || 'Ejari Lease Contract'
+                verification_method: body.verification_method || 'Ejari Lease Contract',
+                verification_document: body.verification_document || ''
             });
             return sendJSON(res, 200, { success: true, user: updated, message: 'Residency verified successfully!' });
         }
