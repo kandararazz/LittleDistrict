@@ -97,10 +97,18 @@ export default async function handler(req, res) {
         if (pathname === '/api/auth/verify' && req.method === 'POST') {
             if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
             const body = await parseBody(req);
+            const method = body.verification_method || 'Ejari Lease Contract';
+            const doc = body.verification_document || '';
+
+            if (method !== 'Neighborhood Code' && (!doc || !doc.trim())) {
+                return sendJSON(res, 400, { success: false, error: 'Photo of Ejari contract or DEWA bill is required for residency verification.' });
+            }
+
             const updated = await db.updateProfile({
                 id: user.id,
                 is_verified: true,
-                verification_method: body.verification_method || 'Ejari Lease Contract'
+                verification_method: method,
+                verification_document: doc
             });
             return sendJSON(res, 200, { success: true, user: updated, message: 'Residency verified successfully!' });
         }

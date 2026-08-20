@@ -275,8 +275,36 @@ async function handleSubmitVerification(e) {
         return;
     }
 
+    const alertEl = document.getElementById('verifyErrorAlert');
+    const msgEl = document.getElementById('verifyErrorMsg');
+    if (alertEl) alertEl.classList.add('hidden');
+
     const method = document.getElementById('verifyMethod')?.value || 'Ejari Lease Contract';
-    
+    const docUrl = document.getElementById('verifyDocUrl')?.value || '';
+    const codeVal = document.getElementById('verifyCodeInput')?.value?.trim() || '';
+
+    if (method === 'Neighborhood Code') {
+        if (!codeVal || codeVal.length < 4) {
+            if (alertEl && msgEl) {
+                msgEl.textContent = 'Please enter a valid 6-digit Neighborhood Verification Code.';
+                alertEl.classList.remove('hidden');
+            } else {
+                alert('Please enter a valid Neighborhood Verification Code.');
+            }
+            return;
+        }
+    } else {
+        if (!docUrl || docUrl.trim() === '') {
+            if (alertEl && msgEl) {
+                msgEl.textContent = 'Photo upload required! Please attach a photo of your Ejari lease contract or DEWA bill to complete verification.';
+                alertEl.classList.remove('hidden');
+            } else {
+                alert('Photo upload required! Please attach a photo of your Ejari lease contract or DEWA bill.');
+            }
+            return;
+        }
+    }
+
     try {
         const res = await fetch('/api/auth/verify', {
             method: 'POST',
@@ -284,7 +312,10 @@ async function handleSubmitVerification(e) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${state.token}`
             },
-            body: JSON.stringify({ verification_method: method })
+            body: JSON.stringify({
+                verification_method: method,
+                verification_document: docUrl
+            })
         });
         const data = await res.json();
         if (data.success && data.user) {
@@ -293,7 +324,12 @@ async function handleSubmitVerification(e) {
             showToast('🛡️ Congratulations! You are now a Verified Resident Neighbor!');
             await loadCurrentTabData();
         } else {
-            alert(data.error || 'Verification failed');
+            if (alertEl && msgEl) {
+                msgEl.textContent = data.error || 'Verification failed. Please upload a photo of your document.';
+                alertEl.classList.remove('hidden');
+            } else {
+                alert(data.error || 'Verification failed');
+            }
         }
     } catch (err) {
         alert('Error completing verification');
