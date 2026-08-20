@@ -230,11 +230,25 @@ if (DatabaseSync) {
                 email TEXT DEFAULT '',
                 password_hash TEXT DEFAULT '',
                 district TEXT DEFAULT '',
+                phone TEXT DEFAULT '',
                 contact_preference TEXT DEFAULT 'In-App Message',
                 avatar_url TEXT DEFAULT '',
                 bio TEXT DEFAULT '',
+                is_developer INTEGER DEFAULT 0,
+                developer_badge TEXT DEFAULT '',
+                is_verified INTEGER DEFAULT 0,
+                verification_method TEXT DEFAULT '',
+                verification_document TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now'))
             );
+
+            // Auto-migrate columns if missing
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''").run(); } catch(e) {}
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN is_developer INTEGER DEFAULT 0").run(); } catch(e) {}
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN developer_badge TEXT DEFAULT ''").run(); } catch(e) {}
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0").run(); } catch(e) {}
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN verification_method TEXT DEFAULT ''").run(); } catch(e) {}
+            try { sqlite.prepare("ALTER TABLE users ADD COLUMN verification_document TEXT DEFAULT ''").run(); } catch(e) {}
 
             CREATE TABLE IF NOT EXISTS children (
                 id TEXT PRIMARY KEY,
@@ -372,9 +386,9 @@ export const db = {
         if (sqlite) {
             try {
                 sqlite.prepare(`
-                    INSERT INTO users (id, name, email, password_hash, district, contact_preference, avatar_url, bio)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `).run(userId, userObj.name, userObj.email, userObj.password_hash, userObj.district, userObj.contact_preference, userObj.avatar_url, userObj.bio);
+                    INSERT INTO users (id, name, email, password_hash, district, phone, contact_preference, avatar_url, bio, is_developer, developer_badge, is_verified, verification_method, verification_document)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(userId, userObj.name, userObj.email, userObj.password_hash, userObj.district, userObj.phone || '', userObj.contact_preference, userObj.avatar_url, userObj.bio, isDev ? 1 : 0, userObj.developer_badge || '', userObj.is_verified ? 1 : 0, userObj.verification_method || '', userObj.verification_document || '');
             } catch (e) {}
         }
 
@@ -411,11 +425,15 @@ export const db = {
         const isDev = isDeveloperEmail(cleanEmail);
         const userWithDev = {
             ...fullUser,
-            is_developer: isDev || Boolean(fullUser.is_developer),
-            developer_badge: (isDev || fullUser.is_developer) ? 'Developer Badge 💻' : '',
-            is_verified: isDev ? true : Boolean(fullUser.is_verified),
-            verification_method: isDev ? 'Official Developer Credentials' : (fullUser.verification_method || '')
+            is_developer: isDev || Boolean(fullUser?.is_developer),
+            developer_badge: (isDev || fullUser?.is_developer) ? 'Developer Badge 💻' : '',
+            is_verified: isDev ? true : Boolean(fullUser?.is_verified),
+            verification_method: isDev ? 'Official Developer Credentials' : (fullUser?.verification_method || '')
         };
+
+        // Sync and persist updated user profile state
+        await db.updateProfile(userWithDev);
+
         return { token, user: userWithDev };
     },
 
@@ -529,6 +547,32 @@ export const db = {
             try {
                 await supabase.upsert('users', [u]);
             } catch (err) {}
+        }
+
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    UPDATE users
+                    SET name = ?, email = ?, district = ?, phone = ?, contact_preference = ?, avatar_url = ?, bio = ?, is_developer = ?, developer_badge = ?, is_verified = ?, verification_method = ?, verification_document = ?
+                    WHERE id = ?
+                `).run(
+                    u.name || '',
+                    u.email || '',
+                    u.district || '',
+                    u.phone || '',
+                    u.contact_preference || 'In-App Message',
+                    u.avatar_url || '',
+                    u.bio || '',
+                    u.is_developer ? 1 : 0,
+                    u.developer_badge || '',
+                    u.is_verified ? 1 : 0,
+                    u.verification_method || '',
+                    u.verification_document || '',
+                    userId
+                );
+            } catch (e) {
+                console.error('[SQLite Update Profile Error]', e);
+            }
         }
 
         return u;
