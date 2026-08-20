@@ -31,40 +31,72 @@
       ]
     },
     {
-      "id": "user_1787237324923_w4h9",
-      "name": "Playdate Tester",
-      "email": "playdatetest@littledistrict.ae",
+      "id": "user_1787237359102_fn56",
+      "name": "Parent A Host",
+      "email": "playdate_parent_a@littledistrict.ae",
       "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "district": "Dubai Hills",
       "phone": "+971 50 123 4567",
       "contact_preference": "In-App Message",
-      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Parent%20A%20Host",
       "bio": "Active community parent",
       "is_developer": false,
       "developer_badge": "",
       "is_verified": false,
       "verification_method": "",
       "children": []
+    },
+    {
+      "id": "user_1787237359111_gorr",
+      "name": "Parent B Viewer",
+      "email": "playdate_parent_b@littledistrict.ae",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "district": "Dubai Hills",
+      "phone": "+971 50 123 4567",
+      "contact_preference": "In-App Message",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Parent%20B%20Viewer",
+      "bio": "Active community parent",
+      "is_developer": false,
+      "developer_badge": "",
+      "is_verified": false,
+      "verification_method": "",
+      "children": []
+    },
+    {
+      "id": "user_1787237359120_57dg",
+      "name": "Raza Developer",
+      "email": "developer@littledistrict.ae",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "district": "Dubai Hills",
+      "phone": "+971 50 123 4567",
+      "contact_preference": "In-App Message",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Raza%20Developer",
+      "bio": "Official Platform Creator & Maintainer",
+      "is_developer": true,
+      "developer_badge": "Developer Badge 💻",
+      "is_verified": true,
+      "verification_method": "Official Developer Credentials",
+      "children": []
     }
   ],
   "places": [],
   "meetups": [
     {
-      "id": "meetup_1787237324929_6mkb",
-      "title": "Single Playdate Test Event",
+      "id": "meetup_1787237359142_apor",
+      "title": "Parent A Saturday Football Playdate",
       "district": "Dubai Hills",
       "public_location": "Central Park Grass Pitch",
       "place_id": "",
-      "date_time": "2026-08-25T17:00",
+      "date_time": "2026-08-26T17:00",
       "interest_tag": "Football",
       "min_age": 0,
       "max_age": 18,
-      "host_id": "user_1787237324923_w4h9",
-      "host_name": "Playdate Tester",
-      "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
+      "host_id": "user_1787237359102_fn56",
+      "host_name": "Parent A Host",
+      "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Parent%20A%20Host",
       "max_attendees": 10,
       "image_url": "",
-      "created_at": "2026-08-20T14:48:44.929Z"
+      "created_at": "2026-08-20T14:49:19.142Z"
     },
     {
       "id": "m_1",
@@ -81,7 +113,7 @@
       "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "max_attendees": 8,
       "image_url": "",
-      "created_at": "2026-08-20T14:48:42.701Z"
+      "created_at": "2026-08-20T14:49:16.787Z"
     },
     {
       "id": "m_2",
@@ -98,7 +130,7 @@
       "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "max_attendees": 10,
       "image_url": "",
-      "created_at": "2026-08-20T14:48:42.702Z"
+      "created_at": "2026-08-20T14:49:16.789Z"
     }
   ],
   "toys": [],
@@ -121,11 +153,19 @@
       "status": "attending"
     },
     {
-      "id": "rsvp_1787237324929",
-      "meetup_id": "meetup_1787237324929_6mkb",
-      "user_id": "user_1787237324923_w4h9",
-      "user_name": "Playdate Tester",
-      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
+      "id": "rsvp_1787237359126",
+      "meetup_id": "meetup_1787237359126_af41",
+      "user_id": "user_1787237359102_fn56",
+      "user_name": "Parent A Host",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Parent%20A%20Host",
+      "status": "attending"
+    },
+    {
+      "id": "rsvp_1787237359142",
+      "meetup_id": "meetup_1787237359142_apor",
+      "user_id": "user_1787237359102_fn56",
+      "user_name": "Parent A Host",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Parent%20A%20Host",
       "status": "attending"
     }
   ],
@@ -137,7 +177,7 @@
       "user_name": "Sarah Jenkins",
       "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "content": "Looking forward to meeting neighbor kids near the splash area!",
-      "created_at": "2026-08-20T14:48:42.702Z"
+      "created_at": "2026-08-20T14:49:16.789Z"
     }
   ],
   "direct_messages": []
