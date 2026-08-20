@@ -149,6 +149,63 @@ class SupabaseRestClient {
 
 const supabase = isSupabaseConfigured ? new SupabaseRestClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+
+const DATA_JSON_PATH = path.join(__dirname, 'data.json');
+
+function loadDataJson() {
+    try {
+        if (fs.existsSync(DATA_JSON_PATH)) {
+            const raw = fs.readFileSync(DATA_JSON_PATH, 'utf-8');
+            const data = JSON.parse(raw);
+            if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+                memoryStore.users = data.users;
+            }
+            if (data.places && Array.isArray(data.places) && data.places.length > 0) {
+                memoryStore.places = data.places;
+            }
+            if (data.meetups && Array.isArray(data.meetups) && data.meetups.length > 0) {
+                memoryStore.meetups = data.meetups;
+            }
+            if (data.toys && Array.isArray(data.toys) && data.toys.length > 0) {
+                memoryStore.toys = data.toys;
+            }
+            if (data.lost_found && Array.isArray(data.lost_found) && data.lost_found.length > 0) {
+                global._lostFoundStore = data.lost_found;
+            }
+            if (data.rsvps && Array.isArray(data.rsvps)) {
+                memoryStore.rsvps = data.rsvps;
+            }
+            if (data.comments && Array.isArray(data.comments)) {
+                memoryStore.comments = data.comments;
+            }
+            if (data.direct_messages && Array.isArray(data.direct_messages)) {
+                memoryStore.direct_messages = data.direct_messages;
+            }
+        }
+    } catch (err) {
+        console.warn('[DB] Failed to load data.json:', err.message);
+    }
+}
+
+function saveDataJson() {
+    try {
+        const payload = {
+            users: memoryStore.users || [],
+            places: memoryStore.places || [],
+            meetups: memoryStore.meetups || [],
+            toys: memoryStore.toys || [],
+            lost_found: global._lostFoundStore || [],
+            rsvps: memoryStore.rsvps || [],
+            comments: memoryStore.comments || [],
+            direct_messages: memoryStore.direct_messages || []
+        };
+        fs.writeFileSync(DATA_JSON_PATH, JSON.stringify(payload, null, 2), 'utf-8');
+    } catch (err) {
+        console.warn('[DB] Failed to save data.json:', err.message);
+    }
+}
+
+
 // --- IN-MEMORY DATA STORE FOR VERCEL & SERVERLESS FALLBACK ---
 const memoryStore = {
     users: [
@@ -320,7 +377,43 @@ if (DatabaseSync) {
                 content TEXT NOT NULL,
                 created_at TEXT DEFAULT (datetime('now'))
             );
+
+            CREATE TABLE IF NOT EXISTS toys (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                category TEXT DEFAULT 'School Uniform',
+                school_name TEXT DEFAULT '',
+                grade_level TEXT DEFAULT '',
+                district TEXT NOT NULL,
+                condition TEXT DEFAULT 'Gently Used',
+                swap_type TEXT DEFAULT 'Free Pass-Along',
+                price REAL DEFAULT 0,
+                user_id TEXT NOT NULL,
+                user_name TEXT NOT NULL,
+                user_contact TEXT DEFAULT '',
+                user_phone TEXT DEFAULT '',
+                image_url TEXT DEFAULT '',
+                description TEXT DEFAULT '',
+                status TEXT DEFAULT 'available',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS lost_found (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                category TEXT DEFAULT 'Item',
+                status TEXT DEFAULT 'Lost',
+                district TEXT NOT NULL,
+                location_detail TEXT DEFAULT '',
+                user_id TEXT DEFAULT '',
+                user_email TEXT DEFAULT '',
+                reported_by TEXT DEFAULT '',
+                user_phone TEXT DEFAULT '',
+                image_url TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
         `);
+        loadDataJson();
     } catch (sqliteErr) {
         console.warn('[DB Warning] SQLite fallback disabled:', sqliteErr.message);
         sqlite = null;
@@ -704,6 +797,7 @@ export const db = {
         }
 
         memoryStore.places.unshift(placeObj);
+        saveDataJson();
         return placeObj;
     },
 
@@ -848,7 +942,7 @@ export const db = {
 
         memoryStore.meetups.unshift(meetupObj);
         memoryStore.rsvps.push({ id: 'rsvp_' + Date.now(), meetup_id: id, user_id: hostId, user_name: hostName, user_avatar: hostAvatar, status: 'attending' });
-
+        saveDataJson();
         return db.getMeetupById(id);
     },
 
@@ -1071,36 +1165,54 @@ export const db = {
     },
 
     getToyItems: async (district) => {
+        let items = [];
         if (isSupabaseConfigured) {
             try {
                 const query = district && district !== 'All' ? { district: `eq.${district}` } : {};
                 const data = await supabase.select('toys', query);
-                if (data && Array.isArray(data) && data.length > 0) return data;
+                if (data && Array.isArray(data) && data.length > 0) items = data;
             } catch (err) {
                 console.error('[Supabase Error] getToyItems:', err.message);
             }
         }
 
-        const defaultToys = [
-            {
-                id: 'item_1',
-                title: 'DESC / DESS PE Kit & Sports Hoodie Set (Size 32 / Year 5-6)',
-                category: 'School Uniform',
-                school_name: 'DESC / DESS',
-                grade_level: 'Year 5 - Year 6',
-                district: 'Dubai Hills',
-                condition: 'Gently Used',
-                swap_type: 'Swap or Free Donation',
-                user_id: 'user_1',
-                user_name: 'Rachel S. (DESS Parent)',
-                user_contact: '+971 50 492 8172',
-                user_phone: '+971 50 492 8172',
-                status: 'available',
-                image_url: ''
-            }
-        ];
+        if (items.length === 0 && sqlite) {
+            try {
+                const rows = sqlite.prepare(`SELECT * FROM toys ORDER BY created_at DESC`).all();
+                if (rows && rows.length > 0) items = rows;
+            } catch (e) {}
+        }
 
-        let result = memoryStore.toys && memoryStore.toys.length > 0 ? memoryStore.toys : defaultToys;
+        if (items.length === 0) {
+            loadDataJson();
+            if (memoryStore.toys && memoryStore.toys.length > 0) {
+                items = memoryStore.toys;
+            }
+        }
+
+        if (items.length === 0) {
+            memoryStore.toys = [
+                {
+                    id: 'item_1',
+                    title: 'DESC / DESS PE Kit & Sports Hoodie Set (Size 32 / Year 5-6)',
+                    category: 'School Uniform',
+                    school_name: 'DESC / DESS',
+                    grade_level: 'Year 5 - Year 6',
+                    district: 'Dubai Hills',
+                    condition: 'Gently Used',
+                    swap_type: 'Swap or Free Donation',
+                    user_id: 'user_1',
+                    user_name: 'Rachel S. (DESS Parent)',
+                    user_contact: '+971 50 492 8172',
+                    user_phone: '+971 50 492 8172',
+                    status: 'available',
+                    image_url: ''
+                }
+            ];
+            items = memoryStore.toys;
+        }
+
+        let result = items;
         if (district && district !== 'All') {
             result = result.filter(t => t.district.toLowerCase() === district.toLowerCase());
         }
@@ -1109,7 +1221,7 @@ export const db = {
 
     addToyItem: async (toyData, user) => {
         const itemObj = {
-            id: 'item_' + Date.now(),
+            id: 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             title: toyData.title,
             category: toyData.category || 'School Uniform',
             school_name: toyData.school_name || 'General',
@@ -1136,8 +1248,20 @@ export const db = {
             }
         }
 
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO toys (id, title, category, school_name, grade_level, district, condition, swap_type, price, user_id, user_name, user_contact, user_phone, image_url, description, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(itemObj.id, itemObj.title, itemObj.category, itemObj.school_name, itemObj.grade_level, itemObj.district, itemObj.condition, itemObj.swap_type, itemObj.price, itemObj.user_id, itemObj.user_name, itemObj.user_contact, itemObj.user_phone, itemObj.image_url, itemObj.description, itemObj.status, itemObj.created_at);
+            } catch (e) {}
+        }
+
         if (!memoryStore.toys) memoryStore.toys = [];
-        memoryStore.toys.unshift(itemObj);
+        if (!memoryStore.toys.some(t => t.id === itemObj.id)) {
+            memoryStore.toys.unshift(itemObj);
+        }
+        saveDataJson();
         return itemObj;
     },
 
@@ -1185,22 +1309,34 @@ export const db = {
             }
         }
 
+        if (items.length === 0 && sqlite) {
+            try {
+                const rows = sqlite.prepare(`SELECT * FROM lost_found ORDER BY created_at DESC`).all();
+                if (rows && rows.length > 0) items = rows;
+            } catch (e) {}
+        }
+
         if (items.length === 0) {
-            if (!global._lostFoundStore) {
-                global._lostFoundStore = [
-                    {
-                        id: 'lost_1',
-                        title: 'Micro Maxi Scooter (Red, named "Leo")',
-                        category: 'Scooter / Bike',
-                        status: 'Lost',
-                        district: 'Dubai Hills',
-                        location_detail: 'Dropped along Central Park splash area walking track',
-                        reported_by: 'Sarah J. (050-XXXXXXX)',
-                        image_url: '',
-                        created_at: '2026-08-13T10:00:00.000Z'
-                    }
-                ];
+            loadDataJson();
+            if (global._lostFoundStore && global._lostFoundStore.length > 0) {
+                items = global._lostFoundStore;
             }
+        }
+
+        if (items.length === 0) {
+            global._lostFoundStore = [
+                {
+                    id: 'lost_1',
+                    title: 'Micro Maxi Scooter (Red, named "Leo")',
+                    category: 'Scooter / Bike',
+                    status: 'Lost',
+                    district: 'Dubai Hills',
+                    location_detail: 'Dropped along Central Park splash area walking track',
+                    reported_by: 'Sarah J. (050-XXXXXXX)',
+                    image_url: '',
+                    created_at: '2026-08-13T10:00:00.000Z'
+                }
+            ];
             items = global._lostFoundStore;
         }
 
@@ -1246,11 +1382,20 @@ export const db = {
             }
         }
 
+        if (sqlite) {
+            try {
+                sqlite.prepare(`
+                    INSERT INTO lost_found (id, title, category, status, district, location_detail, user_id, user_email, reported_by, user_phone, image_url, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(itemObj.id, itemObj.title, itemObj.category, itemObj.status, itemObj.district, itemObj.location_detail, itemObj.user_id, itemObj.user_email, itemObj.reported_by, itemObj.user_phone, itemObj.image_url, itemObj.created_at);
+            } catch (e) {}
+        }
+
         if (!global._lostFoundStore) await db.getLostFoundItems();
-        // Prevent duplicate insertion in memory store
         if (!global._lostFoundStore.some(i => i.id === itemObj.id)) {
             global._lostFoundStore.unshift(itemObj);
         }
+        saveDataJson();
         return itemObj;
     },
 

@@ -2,17 +2,158 @@
   "users": [
     {
       "id": "user_1",
-      "name": "",
-      "email": "",
-      "district": "",
+      "name": "Sarah Jenkins",
+      "email": "sarah@example.com",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "district": "Dubai Hills",
+      "phone": "+971 50 123 4567",
+      "contact_preference": "WhatsApp",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "bio": "Dubai Hills resident & mom of 2 active kids.",
+      "children": [
+        {
+          "id": "c1",
+          "nickname": "Leo",
+          "age": 6,
+          "hobbies": [
+            "Cycling",
+            "Roblox"
+          ]
+        },
+        {
+          "id": "c2",
+          "nickname": "Maya",
+          "age": 3,
+          "hobbies": [
+            "Splash Park"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "user_1787237161143_wgd7",
+      "name": "Reboot Parent",
+      "email": "reboottest@littledistrict.ae",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "district": "Dubai Hills",
+      "phone": "+971 50 123 4567",
       "contact_preference": "In-App Message",
-      "avatar_url": "",
-      "bio": "",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Reboot%20Parent",
+      "bio": "Active community parent",
+      "is_developer": false,
+      "developer_badge": "",
+      "is_verified": false,
+      "verification_method": "",
       "children": []
     }
   ],
   "places": [],
-  "meetups": [],
-  "rsvps": [],
-  "comments": []
+  "meetups": [
+    {
+      "id": "m_1",
+      "title": "Dubai Hills Weekend Park Cycling",
+      "district": "Dubai Hills",
+      "public_location": "Dubai Hills Central Park Playground",
+      "place_id": "place_1",
+      "date_time": "2026-08-22T09:00",
+      "interest_tag": "Cycling",
+      "min_age": 4,
+      "max_age": 10,
+      "host_id": "user_1",
+      "host_name": "Sarah Jenkins",
+      "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "max_attendees": 8,
+      "image_url": "",
+      "created_at": "2026-08-20T14:45:59.074Z"
+    },
+    {
+      "id": "m_2",
+      "title": "JBR Beach Splash & Sandcastles",
+      "district": "JBR",
+      "public_location": "JBR Public Beach Splash Pad",
+      "place_id": "place_3",
+      "date_time": "2026-08-23T16:30",
+      "interest_tag": "Swimming",
+      "min_age": 2,
+      "max_age": 7,
+      "host_id": "user_1",
+      "host_name": "Sarah Jenkins",
+      "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "max_attendees": 10,
+      "image_url": "",
+      "created_at": "2026-08-20T14:45:59.075Z"
+    }
+  ],
+  "toys": [],
+  "lost_found": [
+    {
+      "id": "lf_1787237182464_io8i",
+      "title": "Persistent Blue Helmet",
+      "category": "Helmet",
+      "status": "Lost",
+      "district": "Dubai Hills",
+      "location_detail": "Neighborhood path",
+      "user_id": "user_1787237182461_x33m",
+      "user_email": "reboottest2@littledistrict.ae",
+      "reported_by": "Reboot Parent",
+      "user_phone": "+971 50 123 4567",
+      "image_url": "",
+      "created_at": "2026-08-20T14:46:22.464Z"
+    },
+    {
+      "id": "lf_1787237161147_pgby",
+      "title": "Persistent Blue Helmet",
+      "category": "Helmet",
+      "status": "Lost",
+      "district": "Dubai Hills",
+      "location_detail": "Neighborhood path",
+      "user_id": "user_1787237161143_wgd7",
+      "user_email": "reboottest@littledistrict.ae",
+      "reported_by": "Reboot Parent",
+      "user_phone": "+971 50 123 4567",
+      "image_url": "",
+      "created_at": "2026-08-20T14:46:01.147Z"
+    },
+    {
+      "id": "lost_1",
+      "title": "Micro Maxi Scooter (Red, named \"Leo\")",
+      "category": "Scooter / Bike",
+      "status": "Lost",
+      "district": "Dubai Hills",
+      "location_detail": "Dropped along Central Park splash area walking track",
+      "reported_by": "Sarah J. (050-XXXXXXX)",
+      "image_url": "",
+      "created_at": "2026-08-13T10:00:00.000Z"
+    }
+  ],
+  "rsvps": [
+    {
+      "id": "r_1",
+      "meetup_id": "m_1",
+      "user_id": "user_1",
+      "user_name": "Sarah Jenkins",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "status": "attending"
+    },
+    {
+      "id": "r_2",
+      "meetup_id": "m_2",
+      "user_id": "user_1",
+      "user_name": "Sarah Jenkins",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "status": "attending"
+    }
+  ],
+  "comments": [
+    {
+      "id": "comm_1",
+      "meetup_id": "m_1",
+      "user_id": "user_1",
+      "user_name": "Sarah Jenkins",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      "content": "Looking forward to meeting neighbor kids near the splash area!",
+      "created_at": "2026-08-20T14:45:59.075Z"
+    }
+  ],
+  "direct_messages": []
 }
