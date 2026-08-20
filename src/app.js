@@ -653,6 +653,9 @@ function openPlaydateDetail(id) {
 }
 
 function renderPlaydateDetail(m) {
+    const isDevDetail = Boolean(state.user && (state.user.is_developer || state.user.role === 'admin'));
+    const isOwnerDetail = Boolean(state.user && ((state.user.id && state.user.id === m.host_id) || (state.user.name && state.user.name === m.host_name)));
+    const canDeleteDetail = isDevDetail || isOwnerDetail;
     const container = document.getElementById('playdateDetailContainer');
     if (!container) return;
 
@@ -690,9 +693,17 @@ function renderPlaydateDetail(m) {
                             </div>
                         </div>
 
-                        <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-[#006654] hover:bg-[#005243] text-white'} text-xs font-bold px-6 py-3 rounded-full transition-all shadow-xs">
-                            ${isAttending ? '✓ Attending' : '+ Join RSVP'}
-                        </button>
+                        <div class="flex items-center gap-3">
+                            ${canDeleteDetail ? `
+                                <button onclick="handleDeletePost('meetup', '${m.id}')" title="${isDevDetail && !isOwnerDetail ? 'Developer Override: Delete Playdate' : 'Remove your playdate'}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-5 py-3 rounded-full transition-all inline-flex items-center gap-1 shadow-xs">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span>${isDevDetail && !isOwnerDetail ? 'Dev Delete' : 'Delete'}</span>
+                                </button>
+                            ` : ''}
+                            <button onclick="handleRSVP('${m.id}')" class="${isAttending ? 'bg-amber-500 text-slate-900' : 'bg-[#006654] hover:bg-[#005243] text-white'} text-xs font-bold px-6 py-3 rounded-full transition-all shadow-xs">
+                                ${isAttending ? '✓ Attending' : '+ Join RSVP'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -889,6 +900,10 @@ function renderMeetups() {
         const isAttending = state.user && rsvps.some(r => r.user_id === state.user.id);
         const hasCustomImg = Boolean(m.image_url && m.image_url.trim() !== '' && !m.image_url.includes('/assets/') && !m.image_url.includes('logo') && !m.image_url.includes('unsplash.com'));
 
+        const isDev = Boolean(state.user && (state.user.is_developer || state.user.role === 'admin'));
+        const isOwner = Boolean(state.user && ((state.user.id && state.user.id === m.host_id) || (state.user.name && state.user.name === m.host_name)));
+        const canDelete = isDev || isOwner;
+
         return `
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group" onclick="openPlaydateDetail('${m.id}')">
                 <div>
@@ -952,6 +967,12 @@ function renderMeetups() {
                     </div>
 
                     <div class="flex items-center gap-2">
+                        ${canDelete ? `
+                            <button onclick="handleDeletePost('meetup', '${m.id}')" title="${isDev && !isOwner ? 'Developer Override: Delete post' : 'Remove your playdate'}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                <span>${isDev && !isOwner ? 'Dev Delete' : 'Delete'}</span>
+                            </button>
+                        ` : ''}
                         <button onclick="openPlaydateDetail('${m.id}')" class="p-2 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors" title="View Detail">
                             <span class="material-symbols-outlined text-lg">visibility</span>
                         </button>
@@ -969,7 +990,11 @@ function renderPlaces() {
     const grid = document.getElementById('placesGrid');
     if (!grid) return;
 
-    grid.innerHTML = state.places.map(p => {
+    grid.innerHTML = (state.places || []).map(p => {
+        const isDev = Boolean(state.user && (state.user.is_developer || state.user.role === 'admin'));
+        const isOwner = Boolean(state.user && ((state.user.id && state.user.id === p.added_by_user_id)));
+        const canDelete = isDev || isOwner;
+
         const hasCustomImg = Boolean(p.image_url && p.image_url.trim() !== '' && !p.image_url.includes('/assets/') && !p.image_url.includes('logo') && !p.image_url.includes('unsplash.com'));
 
         return `
@@ -996,6 +1021,14 @@ function renderPlaces() {
                         <p class="text-xs text-slate-600 leading-relaxed line-clamp-3">${escapeHTML(p.description || 'Verified local community spot.')}</p>
                     </div>
                 </div>
+                ${canDelete ? `
+                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+                        <button onclick="handleDeletePost('place', '${p.id}')" title="${isDev && !isOwner ? 'Developer Override: Delete spot' : 'Remove your spot'}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                            <span>${isDev && !isOwner ? 'Dev Delete' : 'Delete'}</span>
+                        </button>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
