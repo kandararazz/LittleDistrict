@@ -1122,6 +1122,52 @@ async function handleCreatePlace(e) {
     }
 }
 
+async function handleCreateLostFound(e) {
+    e.preventDefault();
+    if (!state.user) {
+        openModal('authModal');
+        showToast('Please sign in to report lost or found items');
+        return;
+    }
+
+    const phoneVal = document.getElementById('lostFoundPhone')?.value;
+    if (phoneVal && (!state.user.phone || state.user.phone !== phoneVal)) {
+        state.user.phone = phoneVal;
+    }
+
+    const payload = {
+        title: document.getElementById('lostFoundTitle').value,
+        status: document.getElementById('lostFoundStatus').value,
+        category: document.getElementById('lostFoundCategory').value,
+        district: document.getElementById('lostFoundDistrict').value,
+        location_detail: document.getElementById('lostFoundLocation').value,
+        user_phone: phoneVal || state.user.phone || '+971 50 123 4567',
+        image_url: document.getElementById('lostFoundImageUrl')?.value || ''
+    };
+
+    try {
+        const res = await fetch('/api/lost-found', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeModal('createLostFoundModal');
+            showToast('Lost & Found item reported!');
+            switchTab('lostFound');
+            await loadCurrentTabData();
+        } else {
+            alert(data.error || 'Failed to report item');
+        }
+    } catch (err) {
+        alert('Error reporting item');
+    }
+}
+
 async function handleRSVP(meetupId) {
     if (!state.user) {
         openModal('authModal');

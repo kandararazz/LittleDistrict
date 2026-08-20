@@ -877,6 +877,84 @@
         </div>
     </div>
 
+    <!-- CREATE LOST & FOUND MODAL -->
+    <div id="createLostFoundModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('createLostFoundModal')" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            
+            <div class="flex items-center gap-2.5 text-teal-800">
+                <span class="material-symbols-outlined text-3xl">find_in_page</span>
+                <div>
+                    <h3 class="font-display font-bold text-xl text-slate-900">Report Lost & Found Item</h3>
+                    <p class="text-xs text-slate-500 font-medium">Post a missing or misplaced item for neighborhood parents</p>
+                </div>
+            </div>
+
+            <form id="createLostFoundForm" onsubmit="handleCreateLostFound(event)" class="space-y-3.5 text-xs font-semibold text-slate-700">
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Item Title / Description *</label>
+                    <input type="text" id="lostFoundTitle" required placeholder="e.g. Red Micro Maxi Scooter, Blue Nike Water Bottle" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Status *</label>
+                        <select id="lostFoundStatus" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                            <option value="Lost">Lost Item</option>
+                            <option value="Found">Found Item</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-slate-800 font-bold">Category *</label>
+                        <select id="lostFoundCategory" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                            <option value="Scooter / Bike">Scooter / Bike</option>
+                            <option value="Clothing & Jackets">Clothing & Jackets</option>
+                            <option value="Water Bottles & Bags">Water Bottles & Bags</option>
+                            <option value="Toys & Plushies">Toys & Plushies</option>
+                            <option value="Electronics & Wearables">Electronics & Wearables</option>
+                            <option value="Other">Other Item</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
+                    <select id="lostFoundDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                        <option value="Dubai Hills">Dubai Hills</option>
+                        <option value="Arabian Ranches">Arabian Ranches</option>
+                        <option value="JBR">JBR & Marina</option>
+                        <option value="Mirdif">Mirdif</option>
+                        <option value="Silicon Oasis">Silicon Oasis</option>
+                        <option value="Downtown Dubai">Downtown Dubai</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Location Details / Spot *</label>
+                    <input type="text" id="lostFoundLocation" required placeholder="e.g. Left near Central Park splash pad seating area" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Contact Phone Number *</label>
+                    <input type="tel" id="lostFoundPhone" required placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-slate-800 font-bold">Photo URL (Optional)</label>
+                    <input type="url" id="lostFoundImageUrl" placeholder="https://..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-teal-800 hover:bg-teal-900 text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
+                        Publish Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- AUTH MODAL (Matching Screenshot 2 Design) -->
     <div id="authModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative border border-slate-200/90 text-center">
