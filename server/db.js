@@ -347,7 +347,7 @@ export const db = {
     isSupabase: isSupabaseConfigured,
 
     // Authentication Methods
-    registerUser: async ({ name, email, password, district, phone }) => {
+    registerUser: async ({ name, email, password, district, phone, avatar_url }) => {
         const cleanEmail = (email || '').trim().toLowerCase();
         if (!cleanEmail || !password) throw new Error('Email and password are required.');
 
@@ -356,7 +356,7 @@ export const db = {
 
         const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
         const passwordHash = hashPassword(password);
-        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Raza')}`;
+        const avatarUrl = (avatar_url && avatar_url.trim()) ? avatar_url.trim() : `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name || 'Raza')}`;
         const isDev = isDeveloperEmail(cleanEmail);
 
         const userObj = {

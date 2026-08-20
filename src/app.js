@@ -228,6 +228,7 @@ function toggleAuthMode() {
     const nameField = document.getElementById('nameField');
     const phoneField = document.getElementById('phoneField');
     const districtField = document.getElementById('districtAuthField');
+    const avatarField = document.getElementById('authAvatarSection');
     const submitBtn = document.getElementById('authSubmitBtn');
     const toggleBtn = document.getElementById('authToggleBtn');
 
@@ -235,12 +236,14 @@ function toggleAuthMode() {
         if (nameField) nameField.classList.remove('hidden');
         if (phoneField) phoneField.classList.remove('hidden');
         if (districtField) districtField.classList.remove('hidden');
+        if (avatarField) avatarField.classList.remove('hidden');
         if (submitBtn) submitBtn.textContent = 'Create Parent Account';
         if (toggleBtn) toggleBtn.textContent = 'Already have an account? Sign In';
     } else {
         if (nameField) nameField.classList.add('hidden');
         if (phoneField) phoneField.classList.add('hidden');
         if (districtField) districtField.classList.add('hidden');
+        if (avatarField) avatarField.classList.add('hidden');
         if (submitBtn) submitBtn.textContent = 'Sign In';
         if (toggleBtn) toggleBtn.textContent = 'Need an account? Register here';
     }
@@ -261,6 +264,7 @@ async function handleAuthSubmit(e) {
         payload.name = document.getElementById('authName').value;
         payload.phone = document.getElementById('authPhone').value;
         payload.district = document.getElementById('authDistrict').value;
+        payload.avatar_url = document.getElementById('authAvatarUrl')?.value || '';
     }
 
     try {
