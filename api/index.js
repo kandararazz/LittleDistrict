@@ -2,6 +2,16 @@
 import { db } from '../server/db.js';
 
 function parseBody(req) {
+    if (req.body && typeof req.body === 'object') {
+        return Promise.resolve(req.body);
+    }
+    if (typeof req.body === 'string') {
+        try {
+            return Promise.resolve(JSON.parse(req.body));
+        } catch (e) {
+            return Promise.resolve({});
+        }
+    }
     return new Promise((resolve) => {
         let body = '';
         req.on('data', chunk => body += chunk);
@@ -21,25 +31,34 @@ function sendJSON(res, status, data) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.status(status).json(data);
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
+
+    if (typeof res.status === 'function') {
+        if (typeof res.json === 'function') {
+            return res.status(status).json(data);
+        }
+        res.statusCode = status;
+    } else {
+        res.statusCode = status;
+    }
+    res.end(JSON.stringify(data));
 }
 
 export default async function handler(req, res) {
     if (req.method === 'OPTIONS') {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return res.status(204).end();
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
+        return res.status ? res.status(204).end() : (res.statusCode = 204, res.end());
     }
 
     const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const pathname = reqUrl.pathname;
+    const pathname = reqUrl.pathname.replace(/\/$/, '') || '/';
     const queryParams = Object.fromEntries(reqUrl.searchParams);
 
     const authHeader = req.headers['authorization'] || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
-    const user = token ? await db.getUserByToken(token) : null;
+    const user = token ? await db.getUserByToken(token).catch(() => null) : null;
 
     try {
         // AUTH
@@ -66,6 +85,24 @@ export default async function handler(req, res) {
         if (pathname === '/api/auth/me' && req.method === 'GET') {
             if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
             return sendJSON(res, 200, { success: true, user });
+        }
+
+        if (pathname === '/api/auth/profile' && req.method === 'PUT') {
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+            const body = await parseBody(req);
+            const updated = await db.updateProfile({ ...body, id: user.id });
+            return sendJSON(res, 200, { success: true, user: updated });
+        }
+
+        if (pathname === '/api/auth/verify' && req.method === 'POST') {
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+            const body = await parseBody(req);
+            const updated = await db.updateProfile({
+                id: user.id,
+                is_verified: true,
+                verification_method: body.verification_method || 'Ejari Lease Contract'
+            });
+            return sendJSON(res, 200, { success: true, user: updated, message: 'Residency verified successfully!' });
         }
 
         // MEETUPS / FEED
@@ -95,6 +132,35 @@ export default async function handler(req, res) {
             return sendJSON(res, 200, { success: true, data: updated });
         }
 
+        // DIRECT MESSAGES (DOUBLE-OPT-IN)
+        if (pathname.match(/^\/api\/meetups\/([^/]+)\/messages$/)) {
+            const meetupId = pathname.split('/')[3];
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+
+            if (req.method === 'GET') {
+                const recipientId = queryParams.withUserId;
+                if (!recipientId) return sendJSON(res, 400, { success: false, error: 'Recipient ID required' });
+                const result = await db.getDirectMessages(meetupId, user.id, recipientId);
+                return sendJSON(res, 200, { success: true, ...result });
+            }
+
+            if (req.method === 'POST') {
+                const body = await parseBody(req);
+                try {
+                    const msg = await db.sendDirectMessage({
+                        meetupId,
+                        sender: user,
+                        recipientId: body.recipientId,
+                        recipientName: body.recipientName,
+                        content: body.content
+                    });
+                    return sendJSON(res, 201, { success: true, data: msg });
+                } catch (err) {
+                    return sendJSON(res, 403, { success: false, error: err.message });
+                }
+            }
+        }
+
         // PLACES
         if (pathname === '/api/places' && req.method === 'GET') {
             const places = await db.getPlaces(queryParams.district);
@@ -107,7 +173,7 @@ export default async function handler(req, res) {
             return sendJSON(res, 201, { success: true, data: created });
         }
 
-        // EXCHANGE
+        // EXCHANGE / TOYS
         if ((pathname === '/api/toys' || pathname === '/api/v2/toys') && req.method === 'GET') {
             const toys = await db.getToyItems(queryParams.district);
             return sendJSON(res, 200, { success: true, data: toys });
@@ -131,8 +197,50 @@ export default async function handler(req, res) {
             return sendJSON(res, 201, { success: true, data: created });
         }
 
+        if (pathname.match(/^\/api\/lost-found\/([^/]+)\/found$/) && req.method === 'PUT') {
+            const itemId = pathname.split('/')[3];
+            const updated = await db.markLostFoundAsFound(itemId);
+            return sendJSON(res, 200, { success: true, data: updated });
+        }
+
+        // DISCOUNTS, SQUADS, EVENTS, CARPOOLS
+        if (pathname === '/api/discounts' && req.method === 'GET') {
+            const discounts = await db.getVenueDiscounts();
+            return sendJSON(res, 200, { success: true, data: discounts });
+        }
+
+        if (pathname === '/api/squads' && req.method === 'GET') {
+            const squads = await db.getSquads(queryParams.district);
+            return sendJSON(res, 200, { success: true, data: squads });
+        }
+
+        if (pathname === '/api/squads' && req.method === 'POST') {
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+            const body = await parseBody(req);
+            const squad = await db.createSquad(body, user);
+            return sendJSON(res, 201, { success: true, data: squad });
+        }
+
+        if (pathname === '/api/events' && req.method === 'GET') {
+            const events = await db.getEvents(queryParams.district);
+            return sendJSON(res, 200, { success: true, data: events });
+        }
+
+        if (pathname === '/api/carpools' && req.method === 'GET') {
+            const rides = await db.getCarpoolRides(queryParams.district);
+            return sendJSON(res, 200, { success: true, data: rides });
+        }
+
+        if (pathname === '/api/carpools' && req.method === 'POST') {
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized' });
+            const body = await parseBody(req);
+            const ride = await db.addCarpoolRide(body, user);
+            return sendJSON(res, 201, { success: true, data: ride });
+        }
+
         return sendJSON(res, 404, { success: false, error: 'API Route Not Found' });
     } catch (err) {
+        console.error('[Vercel API Error]', err);
         return sendJSON(res, 500, { success: false, error: err.message || 'Internal Server Error' });
     }
 }

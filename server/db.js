@@ -314,9 +314,6 @@ if (DatabaseSync) {
 }
 
 // --- DUAL MODE DB ADAPTER API ---
-export const db = {
-    isSupabase: isSupabaseConfigured,
-
 const DEV_EMAILS = [
     'kandararazz@gmail.com',
     'developer@littledistrict.ae',
@@ -331,6 +328,9 @@ function isDeveloperEmail(email) {
     const clean = email.trim().toLowerCase();
     return DEV_EMAILS.includes(clean) || clean.startsWith('dev.') || clean.includes('developer');
 }
+
+export const db = {
+    isSupabase: isSupabaseConfigured,
 
     // Authentication Methods
     registerUser: async ({ name, email, password, district, phone }) => {
