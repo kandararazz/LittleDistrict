@@ -211,6 +211,50 @@ export default async function handler(req, res) {
             return sendJSON(res, 200, { success: true, data: updated });
         }
 
+        if (pathname.match(/^\/api\/lost-found\/([^/]+)$/) && req.method === 'DELETE') {
+            const itemId = pathname.split('/')[3];
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized: Please log in to delete posts' });
+            try {
+                const result = await db.deleteLostFoundItem(itemId, user);
+                return sendJSON(res, 200, { success: true, data: result });
+            } catch (err) {
+                return sendJSON(res, 403, { success: false, error: err.message });
+            }
+        }
+
+        if (pathname.match(/^\/api\/meetups\/([^/]+)$/) && req.method === 'DELETE') {
+            const itemId = pathname.split('/')[3];
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized: Please log in to delete posts' });
+            try {
+                const result = await db.deleteMeetupItem(itemId, user);
+                return sendJSON(res, 200, { success: true, data: result });
+            } catch (err) {
+                return sendJSON(res, 403, { success: false, error: err.message });
+            }
+        }
+
+        if (pathname.match(/^\/api\/toys\/([^/]+)$/) && req.method === 'DELETE') {
+            const itemId = pathname.split('/')[3];
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized: Please log in to delete posts' });
+            try {
+                const result = await db.deleteToyItem(itemId, user);
+                return sendJSON(res, 200, { success: true, data: result });
+            } catch (err) {
+                return sendJSON(res, 403, { success: false, error: err.message });
+            }
+        }
+
+        if (pathname.match(/^\/api\/places\/([^/]+)$/) && req.method === 'DELETE') {
+            const itemId = pathname.split('/')[3];
+            if (!user) return sendJSON(res, 401, { success: false, error: 'Unauthorized: Please log in to delete posts' });
+            try {
+                const result = await db.deletePlaceItem(itemId, user);
+                return sendJSON(res, 200, { success: true, data: result });
+            } catch (err) {
+                return sendJSON(res, 403, { success: false, error: err.message });
+            }
+        }
+
         // DISCOUNTS, SQUADS, EVENTS, CARPOOLS
         if (pathname === '/api/discounts' && req.method === 'GET') {
             const discounts = await db.getVenueDiscounts();

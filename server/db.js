@@ -1098,33 +1098,48 @@ export const db = {
     },
 
     getLostFoundItems: async (district) => {
+        let items = [];
         if (isSupabaseConfigured) {
             try {
                 const query = district && district !== 'All' ? { district: `eq.${district}` } : {};
                 const data = await supabase.select('lost_found', query);
-                if (data && Array.isArray(data) && data.length > 0) return data;
+                if (data && Array.isArray(data) && data.length > 0) items = data;
             } catch (err) {
                 console.error('[Supabase Error] getLostFoundItems:', err.message);
             }
         }
 
-        if (!global._lostFoundStore) {
-            global._lostFoundStore = [
-                {
-                    id: 'lost_1',
-                    title: 'Micro Maxi Scooter (Red, named "Leo")',
-                    category: 'Scooter / Bike',
-                    status: 'Lost',
-                    district: 'Dubai Hills',
-                    location_detail: 'Dropped along Central Park splash area walking track',
-                    reported_by: 'Sarah J. (050-XXXXXXX)',
-                    image_url: '',
-                    created_at: '2026-08-13T10:00:00.000Z'
-                }
-            ];
+        if (items.length === 0) {
+            if (!global._lostFoundStore) {
+                global._lostFoundStore = [
+                    {
+                        id: 'lost_1',
+                        title: 'Micro Maxi Scooter (Red, named "Leo")',
+                        category: 'Scooter / Bike',
+                        status: 'Lost',
+                        district: 'Dubai Hills',
+                        location_detail: 'Dropped along Central Park splash area walking track',
+                        reported_by: 'Sarah J. (050-XXXXXXX)',
+                        image_url: '',
+                        created_at: '2026-08-13T10:00:00.000Z'
+                    }
+                ];
+            }
+            items = global._lostFoundStore;
         }
 
-        let result = global._lostFoundStore;
+        // Deduplicate items by ID or title+location_detail
+        const seen = new Set();
+        const uniqueItems = [];
+        for (const item of items) {
+            const key = item.id || `${item.title}-${item.location_detail}-${item.created_at}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueItems.push(item);
+            }
+        }
+
+        let result = uniqueItems;
         if (district && district !== 'All') {
             result = result.filter(item => item.district.toLowerCase() === district.toLowerCase());
         }
@@ -1133,13 +1148,16 @@ export const db = {
 
     addLostFoundItem: async (itemData, user) => {
         const itemObj = {
-            id: 'lf_' + Date.now(),
+            id: 'lf_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             title: itemData.title,
             category: itemData.category || 'Item',
             status: itemData.status || 'Lost',
             district: itemData.district || user.district || 'Dubai Hills',
             location_detail: itemData.location_detail || 'Neighborhood path',
+            user_id: user.id || 'user_1',
+            user_email: user.email || '',
             reported_by: user.name || 'Parent Resident',
+            user_phone: user.phone || itemData.user_phone || '+971 50 123 4567',
             image_url: itemData.image_url || '',
             created_at: new Date().toISOString()
         };
@@ -1153,7 +1171,10 @@ export const db = {
         }
 
         if (!global._lostFoundStore) await db.getLostFoundItems();
-        global._lostFoundStore.unshift(itemObj);
+        // Prevent duplicate insertion in memory store
+        if (!global._lostFoundStore.some(i => i.id === itemObj.id)) {
+            global._lostFoundStore.unshift(itemObj);
+        }
         return itemObj;
     },
 
@@ -1170,5 +1191,147 @@ export const db = {
         const item = global._lostFoundStore.find(i => i.id === id);
         if (item) item.status = 'Found';
         return item;
+    },
+
+    deleteLostFoundItem: async (id, user = {}) => {
+        if (!user || (!user.id && !user.email)) {
+            throw new Error('Unauthorized: Please log in to remove posts');
+        }
+
+        if (!global._lostFoundStore) await db.getLostFoundItems();
+        const item = (global._lostFoundStore || []).find(i => i.id === id);
+
+        const isDev = Boolean(user.is_developer || user.role === 'admin' || (user.email && isDeveloperEmail(user.email)));
+        const isOwner = Boolean(item && (
+            (user.id && item.user_id === user.id) ||
+            (user.name && item.reported_by && user.name.trim().toLowerCase() === item.reported_by.trim().toLowerCase()) ||
+            (user.email && item.user_email && user.email.trim().toLowerCase() === item.user_email.trim().toLowerCase())
+        ));
+
+        if (!isDev && !isOwner) {
+            throw new Error('Forbidden: You can only delete your own posts. Only official developers can remove posts by others.');
+        }
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.delete('lost_found', { id });
+            } catch (err) {
+                console.error('[Supabase Error] deleteLostFoundItem:', err.message);
+            }
+        }
+
+        if (global._lostFoundStore) {
+            global._lostFoundStore = global._lostFoundStore.filter(i => i.id !== id);
+        }
+        return { success: true, id };
+    },
+
+    deleteMeetupItem: async (id, user = {}) => {
+        if (!user || (!user.id && !user.email)) {
+            throw new Error('Unauthorized: Please log in to remove posts');
+        }
+
+        const meetups = await db.getMeetups();
+        const item = (meetups || []).find(m => m.id === id);
+
+        const isDev = Boolean(user.is_developer || user.role === 'admin' || (user.email && isDeveloperEmail(user.email)));
+        const isOwner = Boolean(item && (
+            (user.id && item.host_id === user.id) ||
+            (user.name && item.host_name && user.name.trim().toLowerCase() === item.host_name.trim().toLowerCase())
+        ));
+
+        if (!isDev && !isOwner) {
+            throw new Error('Forbidden: You can only delete your own posts. Only official developers can remove posts by others.');
+        }
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.delete('meetups', { id });
+                await supabase.delete('rsvps', { meetup_id: id });
+            } catch (err) {
+                console.error('[Supabase Error] deleteMeetupItem:', err.message);
+            }
+        }
+
+        if (sqlite) {
+            try {
+                sqlite.prepare(`DELETE FROM meetups WHERE id = ?`).run(id);
+                sqlite.prepare(`DELETE FROM rsvps WHERE meetup_id = ?`).run(id);
+            } catch (e) {}
+        }
+
+        if (memoryStore.meetups) {
+            memoryStore.meetups = memoryStore.meetups.filter(m => m.id !== id);
+        }
+        return { success: true, id };
+    },
+
+    deleteToyItem: async (id, user = {}) => {
+        if (!user || (!user.id && !user.email)) {
+            throw new Error('Unauthorized: Please log in to remove posts');
+        }
+
+        const toys = await db.getToyItems();
+        const item = (toys || []).find(t => t.id === id);
+
+        const isDev = Boolean(user.is_developer || user.role === 'admin' || (user.email && isDeveloperEmail(user.email)));
+        const isOwner = Boolean(item && (
+            (user.id && item.user_id === user.id) ||
+            (user.name && item.user_name && user.name.trim().toLowerCase() === item.user_name.trim().toLowerCase())
+        ));
+
+        if (!isDev && !isOwner) {
+            throw new Error('Forbidden: You can only delete your own posts. Only official developers can remove posts by others.');
+        }
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.delete('toys', { id });
+            } catch (err) {
+                console.error('[Supabase Error] deleteToyItem:', err.message);
+            }
+        }
+
+        if (memoryStore.toys) {
+            memoryStore.toys = memoryStore.toys.filter(t => t.id !== id);
+        }
+        return { success: true, id };
+    },
+
+    deletePlaceItem: async (id, user = {}) => {
+        if (!user || (!user.id && !user.email)) {
+            throw new Error('Unauthorized: Please log in to remove posts');
+        }
+
+        const places = await db.getPlaces();
+        const item = (places || []).find(p => p.id === id);
+
+        const isDev = Boolean(user.is_developer || user.role === 'admin' || (user.email && isDeveloperEmail(user.email)));
+        const isOwner = Boolean(item && (
+            (user.id && item.added_by_user_id === user.id)
+        ));
+
+        if (!isDev && !isOwner) {
+            throw new Error('Forbidden: You can only delete your own posts. Only official developers can remove posts by others.');
+        }
+
+        if (isSupabaseConfigured) {
+            try {
+                await supabase.delete('places', { id });
+            } catch (err) {
+                console.error('[Supabase Error] deletePlaceItem:', err.message);
+            }
+        }
+
+        if (sqlite) {
+            try {
+                sqlite.prepare(`DELETE FROM places WHERE id = ?`).run(id);
+            } catch (e) {}
+        }
+
+        if (memoryStore.places) {
+            memoryStore.places = memoryStore.places.filter(p => p.id !== id);
+        }
+        return { success: true, id };
     }
 };

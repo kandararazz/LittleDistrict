@@ -1,3 +1,39 @@
+async function handleDeletePost(type, id) {
+    if (!state.user) {
+        showToast('Please sign in to remove posts');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to remove this post?')) return;
+
+    let endpoint = '';
+    if (type === 'lostFound') endpoint = `/api/lost-found/${id}`;
+    else if (type === 'meetup') endpoint = `/api/meetups/${id}`;
+    else if (type === 'toy') endpoint = `/api/toys/${id}`;
+    else if (type === 'place') endpoint = `/api/places/${id}`;
+    else return;
+
+    try {
+        const res = await fetch(endpoint, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${state.token}`
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Post removed successfully!');
+            await loadCurrentTabData();
+        } else {
+            alert(data.error || 'Failed to remove post');
+        }
+    } catch (err) {
+        console.error('Error removing post:', err);
+        alert('Error removing post');
+    }
+}
+
+
 // Dubai Community Kids Client Application Logic
 
 let state = {
@@ -969,12 +1005,16 @@ function renderToys() {
     const grid = document.getElementById('toysGrid');
     if (!grid) return;
 
-    let filtered = state.toys;
+    let filtered = state.toys || [];
     if (state.filters.interest) {
         filtered = filtered.filter(t => (t.category || '').toLowerCase().includes(state.filters.interest.toLowerCase()));
     }
 
     grid.innerHTML = filtered.map(t => {
+        const isDev = Boolean(state.user && (state.user.is_developer || state.user.role === 'admin'));
+        const isOwner = Boolean(state.user && (state.user.name === t.user_name || state.user.id === t.user_id));
+        const canDelete = isDev || isOwner;
+
         const hasCustomImg = Boolean(t.image_url && t.image_url.trim() !== '' && !t.image_url.includes('/assets/') && !t.image_url.includes('logo') && !t.image_url.includes('unsplash.com'));
         const isSale = t.swap_type === 'For Sale' || (t.price && Number(t.price) > 0);
         const priceLabel = isSale ? `🏷️ AED ${t.price}` : (t.swap_type || '🎁 Free Pass-Along');
@@ -1028,10 +1068,18 @@ function renderToys() {
                         <span>Listed by <strong>${escapeHTML(t.user_name || 'Local Parent')}</strong></span>
                         <span class="text-teal-700 font-bold text-[11px]">📱 ${escapeHTML(t.user_phone || t.user_contact || 'Number required')}</span>
                     </div>
-                    <a href="tel:${t.user_phone || t.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
-                        <span class="material-symbols-outlined text-sm">call</span>
-                        <span>Call</span>
-                    </a>
+                    <div class="flex items-center gap-2">
+                        ${canDelete ? `
+                            <button onclick="handleDeletePost('toy', '${t.id}')" title="Remove Item (Developer/Owner Power)" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                <span>Delete</span>
+                            </button>
+                        ` : ''}
+                        <a href="tel:${t.user_phone || t.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                            <span class="material-symbols-outlined text-sm">call</span>
+                            <span>Call</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
@@ -1042,11 +1090,36 @@ function renderLostFound() {
     const grid = document.getElementById('lostFoundGrid');
     if (!grid) return;
 
-    grid.innerHTML = state.lostFound.map(lf => {
+    // Deduplicate items before rendering
+    const seen = new Set();
+    const uniqueList = [];
+    (state.lostFound || []).forEach(lf => {
+        const key = lf.id || `${lf.title}-${lf.location_detail}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueList.push(lf);
+        }
+    });
+
+    if (uniqueList.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full py-12 text-center bg-slate-50/80 rounded-3xl border border-dashed border-slate-200">
+                <span class="material-symbols-outlined text-4xl text-slate-400 mb-2">find_in_page</span>
+                <p class="font-display font-bold text-slate-700">No lost or found reports yet</p>
+                <p class="text-xs text-slate-500 mt-1">Be the first parent to post a lost item!</p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = uniqueList.map(lf => {
+        const isDev = Boolean(state.user && (state.user.is_developer || state.user.role === 'admin'));
+        const isOwner = Boolean(state.user && (state.user.name === lf.reported_by || state.user.id === lf.user_id));
+        const canDelete = isDev || isOwner;
+
         const hasCustomImg = Boolean(lf.image_url && lf.image_url.trim() !== '' && !lf.image_url.includes('/assets/') && !lf.image_url.includes('logo') && !lf.image_url.includes('unsplash.com'));
 
         return `
-            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative group">
                 <div>
                     ${hasCustomImg ? `
                         <div class="card-cover-box h-48 bg-slate-900 relative overflow-hidden">
@@ -1081,10 +1154,18 @@ function renderLostFound() {
                         <span>Reported by <strong>${escapeHTML(lf.reported_by || 'Resident')}</strong></span>
                         <span class="text-teal-700 font-bold text-[11px]">📱 ${escapeHTML(lf.user_phone || lf.user_contact || 'Number required')}</span>
                     </div>
-                    <a href="tel:${lf.user_phone || lf.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
-                        <span class="material-symbols-outlined text-sm">call</span>
-                        <span>Call Poster</span>
-                    </a>
+                    <div class="flex items-center gap-2">
+                        ${canDelete ? `
+                            <button onclick="handleDeletePost('lostFound', '${lf.id}')" title="${isDev && !isOwner ? 'Developer Override: Delete any post' : 'Remove your post'}" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                <span>${isDev && !isOwner ? 'Dev Delete' : 'Delete'}</span>
+                            </button>
+                        ` : ''}
+                        <a href="tel:${lf.user_phone || lf.user_contact || ''}" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all inline-flex items-center gap-1 shadow-xs">
+                            <span class="material-symbols-outlined text-sm">call</span>
+                            <span>Call</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
@@ -1231,6 +1312,15 @@ async function handleCreateLostFound(e) {
         return;
     }
 
+    const form = e.target;
+    const submitBtn = form ? form.querySelector('button[type=submit]') : null;
+    if (submitBtn) {
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+        submitBtn.dataset.origText = submitBtn.innerText;
+        submitBtn.innerText = 'Publishing...';
+    }
+
     const phoneVal = document.getElementById('lostFoundPhone')?.value;
     if (phoneVal && (!state.user.phone || state.user.phone !== phoneVal)) {
         state.user.phone = phoneVal;
@@ -1257,15 +1347,24 @@ async function handleCreateLostFound(e) {
         });
         const data = await res.json();
         if (data.success) {
+            if (form) form.reset();
+            const imgInput = document.getElementById('lostFoundImageUrl');
+            if (imgInput) imgInput.value = '';
+            const preview = document.getElementById('lostFoundPhotoPreview');
+            if (preview) preview.classList.add('hidden');
             closeModal('createLostFoundModal');
             showToast('Lost & Found item reported!');
             switchTab('lostFound');
-            await loadCurrentTabData();
         } else {
             alert(data.error || 'Failed to report item');
         }
     } catch (err) {
         alert('Error reporting item');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = submitBtn.dataset.origText || 'Publish Report';
+        }
     }
 }
 
