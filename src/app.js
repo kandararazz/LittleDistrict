@@ -2,7 +2,14 @@
 
 let state = {
     currentTab: 'feed',
-    user: null,
+    user: (() => {
+        try {
+            const cached = localStorage.getItem('ld_user');
+            return cached ? JSON.parse(cached) : null;
+        } catch (e) {
+            return null;
+        }
+    })(),
     token: localStorage.getItem('ld_token') || null,
     meetups: [],
     places: [],
@@ -22,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
     setupEventListeners();
+    updateUserUI(); // Render user session immediately from localStorage
     if (state.token) {
         await checkCurrentUser();
     }
@@ -102,6 +110,18 @@ function removeImagePreview(previewId, inputId, fileInputId) {
     }
 }
 
+function saveUserSession(token, user) {
+    if (token) {
+        state.token = token;
+        localStorage.setItem('ld_token', token);
+    }
+    if (user) {
+        state.user = user;
+        localStorage.setItem('ld_user', JSON.stringify(user));
+    }
+    updateUserUI();
+}
+
 async function checkCurrentUser() {
     try {
         const res = await fetch('/api/auth/me', {
@@ -109,13 +129,10 @@ async function checkCurrentUser() {
         });
         const data = await res.json();
         if (data.success && data.user) {
-            state.user = data.user;
-            updateUserUI();
-        } else {
-            logout();
+            saveUserSession(null, data.user);
         }
     } catch (err) {
-        console.error('Auth check failed:', err);
+        console.error('Auth check background sync failed:', err);
     }
 }
 
@@ -164,6 +181,7 @@ function logout() {
     state.token = null;
     state.user = null;
     localStorage.removeItem('ld_token');
+    localStorage.removeItem('ld_user');
     updateUserUI();
     showToast('Logged out successfully');
 }
@@ -216,10 +234,7 @@ async function handleAuthSubmit(e) {
         });
         const data = await res.json();
         if (data.success && data.token) {
-            state.token = data.token;
-            state.user = data.user;
-            localStorage.setItem('ld_token', data.token);
-            updateUserUI();
+            saveUserSession(data.token, data.user);
             closeModal('authModal');
             showToast(`Welcome ${data.user.name}!`);
         } else {
@@ -273,8 +288,7 @@ async function handleSubmitVerification(e) {
         });
         const data = await res.json();
         if (data.success && data.user) {
-            state.user = data.user;
-            updateUserUI();
+            saveUserSession(null, data.user);
             closeModal('verificationModal');
             showToast('🛡️ Congratulations! You are now a Verified Resident Neighbor!');
             await loadCurrentTabData();
@@ -376,8 +390,7 @@ async function handleSaveProfile(e) {
         });
         const data = await res.json();
         if (data.success && data.user) {
-            state.user = data.user;
-            updateUserUI();
+            saveUserSession(null, data.user);
             closeModal('accountSettingsModal');
             showToast('Account profile updated successfully!');
             await loadCurrentTabData();

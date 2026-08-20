@@ -492,6 +492,26 @@ export const db = {
 
         const memUser = memoryStore.users.find(u => u.id === id);
         if (memUser) return { ...memUser, children: memUser.children || [] };
+
+        if (id && id.startsWith('user_')) {
+            const fallbackUser = {
+                id: id,
+                name: 'Neighborhood Parent',
+                email: 'parent@littledistrict.ae',
+                district: 'Dubai Hills',
+                contact_preference: 'In-App Message',
+                avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(id)}`,
+                bio: 'Active community parent',
+                is_developer: false,
+                developer_badge: '',
+                is_verified: false,
+                verification_method: '',
+                children: []
+            };
+            memoryStore.users.push(fallbackUser);
+            return fallbackUser;
+        }
+
         return null;
     },
 
