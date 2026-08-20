@@ -868,6 +868,25 @@
                     <textarea id="placeDescription" rows="3" placeholder="e.g. Free admission, shaded seating, coffee shop nearby..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]"></textarea>
                 </div>
 
+                <!-- Spot Photo File Selection -->
+                <div class="space-y-2 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-[#006654]">Spot Photo from Device (Optional)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="placePhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'placePhotoPreview', 'placeImageUrl')" class="hidden">
+                        <button type="button" onclick="document.getElementById('placePhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-[#006654] px-4 py-2.5 rounded-2xl font-bold hover:bg-teal-100 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-lg">add_a_photo</span>
+                            <span>+ Choose Photo from Device</span>
+                        </button>
+                        <input type="hidden" id="placeImageUrl" value="">
+                    </div>
+                    <div id="placePhotoPreview" class="hidden mt-2 relative inline-block">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-teal-500 shadow-sm">
+                        <button type="button" onclick="removeImagePreview('placePhotoPreview', 'placeImageUrl', 'placePhotoFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
+                            <span class="material-symbols-outlined text-xs">close</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="pt-2">
                     <button type="submit" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
                         Save Community Spot
@@ -941,9 +960,23 @@
                     <input type="tel" id="lostFoundPhone" required placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Photo URL (Optional)</label>
-                    <input type="url" id="lostFoundImageUrl" placeholder="https://..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
+                <!-- Lost & Found Photo Selection from Device Gallery -->
+                <div class="space-y-2 border-t border-slate-100 pt-3">
+                    <label class="block font-bold text-teal-800">Item Photo from Device Gallery (Optional)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="lostFoundPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'lostFoundPhotoPreview', 'lostFoundImageUrl')" class="hidden">
+                        <button type="button" onclick="document.getElementById('lostFoundPhotoFile').click()" class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-2.5 rounded-2xl font-bold hover:bg-teal-100 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-lg">add_a_photo</span>
+                            <span>+ Choose Photo from Device</span>
+                        </button>
+                        <input type="hidden" id="lostFoundImageUrl" value="">
+                    </div>
+                    <div id="lostFoundPhotoPreview" class="hidden mt-2 relative inline-block">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-teal-600 shadow-sm">
+                        <button type="button" onclick="removeImagePreview('lostFoundPhotoPreview', 'lostFoundImageUrl', 'lostFoundPhotoFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
+                            <span class="material-symbols-outlined text-xs">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="pt-2">
