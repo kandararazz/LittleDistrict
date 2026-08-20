@@ -571,16 +571,8 @@
                 </div>
 
                 <div>
-                    <label class="block mb-1">Primary District *</label>
-                    <select id="profileDistrict" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
-                        <option value="Dubai Hills">Dubai Hills</option>
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="JBR">JBR & Marina</option>
-                        <option value="Mirdif">Mirdif</option>
-                        <option value="Silicon Oasis">Silicon Oasis</option>
-                        <option value="Downtown Dubai">Downtown Dubai</option>
-                        <option value="Palm Jumeirah">Palm Jumeirah</option>
-                    </select>
+                    <label class="block mb-1">Primary District / City *</label>
+                    <input type="text" id="profileDistrict" required list="districtSuggestions" placeholder="e.g. Dubai Hills, Damac Hills, Abu Dhabi..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
 
                 <!-- Profile Photo Upload -->
@@ -600,13 +592,13 @@
                 </div>
 
                 <div>
-                    <label class="block mb-1">Short Parent Bio</label>
-                    <textarea id="profileBio" rows="2" placeholder="e.g. Resident in Dubai Hills, parent of 2 kids." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
+                    <label class="block mb-1">Parent Bio / About Your Kids</label>
+                    <textarea id="profileBio" rows="2" placeholder="e.g. Mom of 2 kids (ages 4 & 7). Love park playdates and cycling!" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-xs">
-                        Save Profile Settings
+                    <button type="submit" class="w-full bg-[#006654] hover:bg-[#005243] text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
+                        Save Profile Details
                     </button>
                 </div>
             </form>
@@ -621,42 +613,27 @@
             </button>
             
             <div class="flex items-center gap-2.5 text-[#006654]">
-                <span class="material-symbols-outlined text-3xl">add_circle</span>
+                <span class="material-symbols-outlined text-3xl">celebration</span>
                 <div>
-                    <h3 class="font-display font-bold text-xl text-slate-900">Create New Playdate</h3>
-                    <p class="text-xs text-slate-500 font-medium">Host a neighborhood meetup for local Dubai kids</p>
+                    <h3 class="font-display font-bold text-xl text-slate-900">Host Neighborhood Playdate</h3>
+                    <p class="text-xs text-slate-500 font-medium">Organize a casual meet up for kids in your district</p>
                 </div>
             </div>
 
             <form id="createMeetupForm" onsubmit="handleCreateMeetup(event)" class="space-y-3.5 text-xs font-semibold text-slate-700">
                 <div class="space-y-1">
                     <label class="block text-slate-800 font-bold">Playdate Title *</label>
-                    <input type="text" id="meetupTitle" required placeholder="e.g. Saturday Morning Park Football & Picnic" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#006654] outline-none">
+                    <input type="text" id="meetupTitle" required placeholder="e.g. Dubai Hills Park Saturday Cycling & Playground" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
-                        <select id="meetupDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
-                            <option value="Dubai Hills">Dubai Hills</option>
-                            <option value="Arabian Ranches">Arabian Ranches</option>
-                            <option value="JBR">JBR & Marina</option>
-                            <option value="Mirdif">Mirdif</option>
-                            <option value="Silicon Oasis">Silicon Oasis</option>
-                            <option value="Downtown Dubai">Downtown Dubai</option>
-                            <option value="Palm Jumeirah">Palm Jumeirah</option>
-                        </select>
+                        <label class="block text-slate-800 font-bold">Neighborhood / City *</label>
+                        <input type="text" id="meetupDistrict" required list="districtSuggestions" placeholder="e.g. Dubai Hills, Damac Hills, Abu Dhabi..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Activity Category *</label>
-                        <select id="meetupInterest" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
-                            <option value="Sports">Sports & Football</option>
-                            <option value="Cycling">Cycling</option>
-                            <option value="Swimming">Swimming</option>
-                            <option value="Park Play">Park Play</option>
-                            <option value="Board Games">Board Games</option>
-                            <option value="Toddler Storytime">Toddler Storytime</option>
-                        </select>
+                        <label class="block text-slate-800 font-bold">Activity Category / Tag *</label>
+                        <input type="text" id="meetupInterest" required list="activitySuggestions" placeholder="e.g. Cycling, Roblox, Football, Chess..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
                 </div>
 
@@ -668,10 +645,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
                         <label class="block text-slate-800 font-bold">Date & Time *</label>
-                        <input type="text" id="meetupDateTime" required placeholder="e.g. August 16, 2026, 4:00 PM - 6:00 PM" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
+                        <input type="datetime-local" id="meetupDateTime" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Your Mobile Phone *</label>
+                        <label class="block text-slate-800 font-bold">Organizer Phone (For RSVPs)</label>
                         <input type="tel" id="meetupPhone" placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                     </div>
                 </div>
@@ -728,24 +705,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
                         <label class="block text-slate-800 font-bold">Category *</label>
-                        <select id="toyCategory" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="School Uniform">School Uniform</option>
-                            <option value="Books">Books & Storybooks</option>
-                            <option value="Toys & Games">Toys & Board Games</option>
-                            <option value="Baby Gear">Baby Gear & Stroller</option>
-                            <option value="Sports Equipment">Sports Equipment</option>
-                        </select>
+                        <input type="text" id="toyCategory" required list="toyCategorySuggestions" placeholder="e.g. School Uniform, Books, Toys, LEGO..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
-                        <select id="toyDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="Dubai Hills">Dubai Hills</option>
-                            <option value="Arabian Ranches">Arabian Ranches</option>
-                            <option value="JBR">JBR & Marina</option>
-                            <option value="Mirdif">Mirdif</option>
-                            <option value="Silicon Oasis">Silicon Oasis</option>
-                            <option value="Downtown Dubai">Downtown Dubai</option>
-                        </select>
+                        <label class="block text-slate-800 font-bold">Neighborhood / City *</label>
+                        <input type="text" id="toyDistrict" required list="districtSuggestions" placeholder="e.g. Dubai Hills, Mirdif, Sharjah..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
                 </div>
 
@@ -764,37 +728,25 @@
                     </div>
                 </div>
 
-                <!-- Listing Type & Price AED Fields -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Listing Type *</label>
-                        <select id="toySwapType" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="Free Pass-Along">🎁 Free Pass-Along (Giveaway)</option>
-                            <option value="For Sale">🏷️ For Sale (Set Price in AED)</option>
-                        </select>
+                        <label class="block text-slate-800 font-bold">Swap or Price (AED)</label>
+                        <input type="number" id="toyPrice" min="0" placeholder="0 for Free Pass-Along / Swap" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-slate-800 font-bold">Price in AED (0 if Free)</label>
-                        <div class="relative">
-                            <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold text-xs">AED</span>
-                            <input type="number" id="toyPrice" min="0" placeholder="0 (Free)" class="w-full pl-12 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-bold">
-                        </div>
+                        <label class="block text-slate-800 font-bold">Contact Phone *</label>
+                        <input type="tel" id="toyPhone" required placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Your Mobile Phone *</label>
-                    <input type="tel" id="toyPhone" placeholder="+971 50 123 4567" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500">
+                    <label class="block text-slate-800 font-bold">Description / Size Details</label>
+                    <textarea id="toyDescription" rows="2" placeholder="e.g. Size 32, fits Year 5-6 child. Clean, no stains..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Description / Size / Details</label>
-                    <textarea id="toyDescription" rows="2" placeholder="Provide size, grade level, or details for parents..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-                </div>
-
-                <!-- Exchange Item Photo Upload Field -->
+                <!-- Toy Photo Selection -->
                 <div class="space-y-2 border-t border-slate-100 pt-3">
-                    <label class="block font-bold text-amber-800">Item Photo (Optional)</label>
+                    <label class="block font-bold text-amber-700">Item Photo from Device (Optional)</label>
                     <div class="flex items-center gap-3">
                         <input type="file" id="toyPhotoFile" accept="image/*" onchange="handleImageFileSelect(event, 'toyPhotoPreview', 'toyImageUrl')" class="hidden">
                         <button type="button" onclick="document.getElementById('toyPhotoFile').click()" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl font-bold hover:bg-amber-100 transition-all shadow-xs">
@@ -804,7 +756,7 @@
                         <input type="hidden" id="toyImageUrl" value="">
                     </div>
                     <div id="toyPhotoPreview" class="hidden mt-2 relative inline-block">
-                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-amber-400 shadow-sm">
+                        <img src="" alt="Preview" class="h-28 w-auto rounded-2xl object-cover border-2 border-amber-500 shadow-sm">
                         <button type="button" onclick="removeImagePreview('toyPhotoPreview', 'toyImageUrl', 'toyPhotoFile')" class="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700">
                             <span class="material-symbols-outlined text-xs">close</span>
                         </button>
@@ -813,7 +765,7 @@
 
                 <div class="pt-3">
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3.5 rounded-full text-sm transition-all shadow-md">
-                        List Item for Exchange
+                        List Item for Neighborhood Exchange
                     </button>
                 </div>
             </form>
@@ -842,25 +794,13 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
-                    <select id="placeDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
-                        <option value="Dubai Hills">Dubai Hills</option>
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="JBR">JBR & Marina</option>
-                        <option value="Mirdif">Mirdif</option>
-                        <option value="Silicon Oasis">Silicon Oasis</option>
-                        <option value="Downtown Dubai">Downtown Dubai</option>
-                    </select>
+                    <label class="block text-slate-800 font-bold">Neighborhood / City *</label>
+                    <input type="text" id="placeDistrict" required list="districtSuggestions" placeholder="e.g. Dubai Hills, JBR & Marina..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
                 <div class="space-y-1">
                     <label class="block text-slate-800 font-bold">Spot Type *</label>
-                    <select id="placeSpotType" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
-                        <option value="Park">Park & Green Lawn</option>
-                        <option value="Playground">Shaded Playground</option>
-                        <option value="Splash Pad">Splash Pad & Pool</option>
-                        <option value="Sports Court">Sports Court</option>
-                    </select>
+                    <input type="text" id="placeSpotType" required list="spotTypeSuggestions" placeholder="e.g. Park, Playground, Splash Pad, Library..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
                 <div class="space-y-1">
@@ -927,27 +867,13 @@
                     </div>
                     <div class="space-y-1">
                         <label class="block text-slate-800 font-bold">Category *</label>
-                        <select id="lostFoundCategory" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
-                            <option value="Scooter / Bike">Scooter / Bike</option>
-                            <option value="Clothing & Jackets">Clothing & Jackets</option>
-                            <option value="Water Bottles & Bags">Water Bottles & Bags</option>
-                            <option value="Toys & Plushies">Toys & Plushies</option>
-                            <option value="Electronics & Wearables">Electronics & Wearables</option>
-                            <option value="Other">Other Item</option>
-                        </select>
+                        <input type="text" id="lostFoundCategory" required list="lostCategorySuggestions" placeholder="e.g. Scooter / Bike, Clothing, Water Bottle..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
                     </div>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-slate-800 font-bold">Neighborhood / District *</label>
-                    <select id="lostFoundDistrict" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
-                        <option value="Dubai Hills">Dubai Hills</option>
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="JBR">JBR & Marina</option>
-                        <option value="Mirdif">Mirdif</option>
-                        <option value="Silicon Oasis">Silicon Oasis</option>
-                        <option value="Downtown Dubai">Downtown Dubai</option>
-                    </select>
+                    <label class="block text-slate-800 font-bold">Neighborhood / City *</label>
+                    <input type="text" id="lostFoundDistrict" required list="districtSuggestions" placeholder="e.g. Dubai Hills, Arabian Ranches..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-700">
                 </div>
 
                 <div class="space-y-1">
@@ -995,34 +921,31 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
             
-            <!-- Logo Header -->
-            <div class="flex justify-center">
-                <img src="/assets/logo-full.png" alt="LittleDistrict Logo" class="h-10 w-auto object-contain">
+            <div class="space-y-2">
+                <img src="/assets/logo.png" alt="LittleDistrict Logo" class="h-12 w-auto mx-auto object-contain">
+                <h3 class="font-display font-extrabold text-2xl text-slate-900">Welcome to LittleDistrict</h3>
+                <p class="text-xs text-slate-500 font-medium">Dubai’s Community App for Kid Meetups & Family Exchange</p>
             </div>
 
-            <div class="space-y-1">
-                <h2 id="authHeading" class="font-display font-bold text-2xl text-[#006654] tracking-tight">Welcome back, Neighbor!</h2>
-                <p id="authSubheading" class="text-xs font-medium text-slate-500">Log in to connect with your local community.</p>
+            <!-- Error Alert -->
+            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-2xl flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm shrink-0">error</span>
+                <span id="authErrorMsg">Authentication failed</span>
             </div>
 
-            <!-- Inline Auth Error Banner -->
-            <div id="authErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-2xl">
-                <p id="authErrorMsg">Invalid credentials</p>
-            </div>
-
-            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left text-xs font-semibold text-slate-700">
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3.5 text-xs font-semibold text-left text-slate-700">
                 <div id="nameField" class="hidden space-y-1">
-                    <label class="block text-slate-700 font-bold">Your Full Name *</label>
+                    <label class="block text-slate-700 font-bold">Your Full Name</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">person</span>
-                        <input type="text" id="authName" placeholder="Sarah Mansour" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
+                        <input type="text" id="authName" placeholder="e.g. Raza Muhammed" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
                     </div>
                 </div>
 
                 <div id="phoneField" class="hidden space-y-1">
-                    <label class="block text-slate-700 font-bold">Mobile Phone Number (Required) *</label>
+                    <label class="block text-slate-700 font-bold">Mobile Phone Number</label>
                     <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">call</span>
+                        <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg">phone</span>
                         <input type="tel" id="authPhone" placeholder="+971 50 123 4567" class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#006654] transition-all">
                     </div>
                 </div>
@@ -1045,13 +968,8 @@
                 </div>
 
                 <div id="districtAuthField" class="hidden space-y-1">
-                    <label class="block text-slate-700 font-bold">Primary District</label>
-                    <select id="authDistrict" class="w-full p-2.5 bg-slate-50/80 border border-slate-200 rounded-xl">
-                        <option value="Dubai Hills">Dubai Hills</option>
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="JBR">JBR & Marina</option>
-                        <option value="Mirdif">Mirdif</option>
-                    </select>
+                    <label class="block text-slate-700 font-bold">Primary District / City</label>
+                    <input type="text" id="authDistrict" list="districtSuggestions" placeholder="e.g. Dubai Hills, Damac Hills, Abu Dhabi..." class="w-full p-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-[#006654]">
                 </div>
 
                 <div class="flex items-center pt-1">
@@ -1076,7 +994,67 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Global Datalists for Customizable Neighborhoods, Cities & Activities -->
+    <datalist id="districtSuggestions">
+        <option value="Dubai Hills">
+        <option value="Arabian Ranches">
+        <option value="JBR & Marina">
+        <option value="Mirdif">
+        <option value="Silicon Oasis">
+        <option value="Downtown Dubai">
+        <option value="Palm Jumeirah">
+        <option value="Damac Hills">
+        <option value="Business Bay">
+        <option value="Jumeirah Village Circle (JVC)">
+        <option value="Jumeirah Islands">
+        <option value="Abu Dhabi - Al Reem">
+        <option value="Sharjah">
+    </datalist>
+
+    <datalist id="activitySuggestions">
+        <option value="Cycling">
+        <option value="Swimming">
+        <option value="Park Play">
+        <option value="Roblox & Gaming">
+        <option value="Football">
+        <option value="Basketball">
+        <option value="Padel & Tennis">
+        <option value="Board Games">
+        <option value="Arts & Crafts">
+        <option value="Toddler Splash">
+        <option value="Lego Building">
+        <option value="Storytime">
+    </datalist>
+
+    <datalist id="toyCategorySuggestions">
+        <option value="School Uniform">
+        <option value="Books & Storybooks">
+        <option value="Toys & Board Games">
+        <option value="Baby Gear & Strollers">
+        <option value="Sports Equipment">
+        <option value="Costumes & Dress Up">
+        <option value="Bikes & Scooters">
+    </datalist>
+
+    <datalist id="spotTypeSuggestions">
+        <option value="Park & Green Lawn">
+        <option value="Shaded Playground">
+        <option value="Splash Pad & Pool">
+        <option value="Sports Court">
+        <option value="Children Library">
+        <option value="Indoor Playroom">
+    </datalist>
+
+    <datalist id="lostCategorySuggestions">
+        <option value="Scooter / Bike">
+        <option value="Clothing & Jackets">
+        <option value="Water Bottles & Bags">
+        <option value="Toys & Plushies">
+        <option value="Electronics & Wearables">
+        <option value="Glasses & Accessories">
+    </datalist>
+
+    <!-- Application JavaScript Entry Point -->
     <script src="/src/app.js"></script>
 
 </body>

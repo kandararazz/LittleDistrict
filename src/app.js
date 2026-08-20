@@ -488,6 +488,58 @@ async function loadCurrentTabData() {
             console.error('Failed to load lost found items:', err);
         }
     }
+    updateDynamicFilterOptions();
+}
+
+function updateDynamicFilterOptions() {
+    const defaultDistricts = ['Dubai Hills', 'Arabian Ranches', 'JBR & Marina', 'Mirdif', 'Silicon Oasis', 'Downtown Dubai', 'Palm Jumeirah', 'Damac Hills', 'Business Bay', 'Jumeirah Village Circle (JVC)', 'Abu Dhabi', 'Sharjah'];
+    const customDistricts = new Set(defaultDistricts);
+
+    [...state.meetups, ...state.places, ...state.toys, ...state.lostFound].forEach(item => {
+        if (item.district && item.district.trim()) {
+            customDistricts.add(item.district.trim());
+        }
+    });
+
+    const allDistricts = Array.from(customDistricts).sort();
+
+    const districtDatalist = document.getElementById('districtSuggestions');
+    if (districtDatalist) {
+        districtDatalist.innerHTML = allDistricts.map(d => `<option value="${escapeHTML(d)}">`).join('');
+    }
+
+    ['districtFilter', 'mobileDistrictFilter'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            const currentVal = sel.value;
+            sel.innerHTML = `<option value="">All Districts & Cities</option>` +
+                allDistricts.map(d => `<option value="${escapeHTML(d)}">${escapeHTML(d)}</option>`).join('');
+            sel.value = currentVal;
+        }
+    });
+
+    const defaultActivities = ['Cycling', 'Swimming', 'Park Play', 'Roblox & Gaming', 'Football', 'Basketball', 'Tennis / Padel', 'Board Games', 'School Uniform', 'Books', 'Toys & Games', 'Baby Gear'];
+    const customActivities = new Set(defaultActivities);
+
+    state.meetups.forEach(m => { if (m.interest_tag) customActivities.add(m.interest_tag); });
+    state.toys.forEach(t => { if (t.category) customActivities.add(t.category); });
+    state.places.forEach(p => { if (p.public_spot_type) customActivities.add(p.public_spot_type); });
+    state.lostFound.forEach(lf => { if (lf.category) customActivities.add(lf.category); });
+
+    const allActivities = Array.from(customActivities).sort();
+
+    const activityDatalist = document.getElementById('activitySuggestions');
+    if (activityDatalist) {
+        activityDatalist.innerHTML = allActivities.map(a => `<option value="${escapeHTML(a)}">`).join('');
+    }
+
+    const interestSel = document.getElementById('interestFilter');
+    if (interestSel) {
+        const currentVal = interestSel.value;
+        interestSel.innerHTML = `<option value="">All Categories & Activities</option>` +
+            allActivities.map(a => `<option value="${escapeHTML(a)}">${escapeHTML(a)}</option>`).join('');
+        interestSel.value = currentVal;
+    }
 }
 
 function renderCurrentTab() {
