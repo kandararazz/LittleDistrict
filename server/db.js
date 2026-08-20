@@ -150,12 +150,19 @@ class SupabaseRestClient {
 const supabase = isSupabaseConfigured ? new SupabaseRestClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 
-const DATA_JSON_PATH = path.join(__dirname, 'data.json');
+const TMP_DATA_PATH = path.join('/tmp', 'littledistrict_data.json');
+const LOCAL_DATA_PATH = path.join(__dirname, 'data.json');
 
 function loadDataJson() {
     try {
-        if (fs.existsSync(DATA_JSON_PATH)) {
-            const raw = fs.readFileSync(DATA_JSON_PATH, 'utf-8');
+        let raw = null;
+        if (fs.existsSync(TMP_DATA_PATH)) {
+            raw = fs.readFileSync(TMP_DATA_PATH, 'utf-8');
+        } else if (fs.existsSync(LOCAL_DATA_PATH)) {
+            raw = fs.readFileSync(LOCAL_DATA_PATH, 'utf-8');
+        }
+
+        if (raw) {
             const data = JSON.parse(raw);
             if (data.users && Array.isArray(data.users) && data.users.length > 0) {
                 memoryStore.users = data.users;
@@ -199,7 +206,15 @@ function saveDataJson() {
             comments: memoryStore.comments || [],
             direct_messages: memoryStore.direct_messages || []
         };
-        fs.writeFileSync(DATA_JSON_PATH, JSON.stringify(payload, null, 2), 'utf-8');
+        const content = JSON.stringify(payload, null, 2);
+
+        try {
+            fs.writeFileSync(TMP_DATA_PATH, content, 'utf-8');
+        } catch (e) {}
+
+        try {
+            fs.writeFileSync(LOCAL_DATA_PATH, content, 'utf-8');
+        } catch (e) {}
     } catch (err) {
         console.warn('[DB] Failed to save data.json:', err.message);
     }
@@ -705,6 +720,7 @@ export const db = {
 
     // Places
     getPlaces: async (district) => {
+        loadDataJson();
         const defaultPlaces = [
             {
                 id: 'place_1',
@@ -803,6 +819,7 @@ export const db = {
 
     // Meetups
     getMeetups: async ({ district, interest, minAge, maxAge, search } = {}) => {
+        loadDataJson();
         let meetups = [];
 
         if (isSupabaseConfigured) {
