@@ -848,6 +848,18 @@ export const db = {
             );
         }
 
+        // Deduplicate meetups by ID or title+date_time
+        const seenM = new Set();
+        const uniqueMeetups = [];
+        for (const m of meetups) {
+            const key = m.id || `${m.title}-${m.date_time}-${m.host_id}`;
+            if (!seenM.has(key)) {
+                seenM.add(key);
+                uniqueMeetups.push(m);
+            }
+        }
+        meetups = uniqueMeetups;
+
         return meetups.map(m => {
             let meetupRsvps = [];
             let meetupComments = [];
@@ -940,7 +952,10 @@ export const db = {
             } catch (e) {}
         }
 
-        memoryStore.meetups.unshift(meetupObj);
+        if (!memoryStore.meetups) memoryStore.meetups = [];
+        if (!memoryStore.meetups.some(m => m.id === meetupObj.id)) {
+            memoryStore.meetups.unshift(meetupObj);
+        }
         memoryStore.rsvps.push({ id: 'rsvp_' + Date.now(), meetup_id: id, user_id: hostId, user_name: hostName, user_avatar: hostAvatar, status: 'attending' });
         saveDataJson();
         return db.getMeetupById(id);

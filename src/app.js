@@ -877,7 +877,18 @@ function renderMeetups() {
     const grid = document.getElementById('meetupsGrid');
     if (!grid) return;
 
-    let filtered = state.meetups;
+    // Deduplicate state.meetups before filtering and rendering
+    const seenM = new Set();
+    const uniqueMeetups = [];
+    (state.meetups || []).forEach(m => {
+        const key = m.id || `${m.title}-${m.date_time}-${m.host_id}`;
+        if (!seenM.has(key)) {
+            seenM.add(key);
+            uniqueMeetups.push(m);
+        }
+    });
+
+    let filtered = uniqueMeetups;
     if (state.filters.interest) {
         filtered = filtered.filter(m => m.interest_tag === state.filters.interest);
     }
@@ -1218,6 +1229,15 @@ async function handleCreateMeetup(e) {
         return;
     }
 
+    const form = e.target;
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    if (submitBtn) {
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+        submitBtn.dataset.origText = submitBtn.innerText;
+        submitBtn.innerText = 'Publishing...';
+    }
+
     const phoneVal = document.getElementById('meetupPhone')?.value;
     if (phoneVal && (!state.user.phone || state.user.phone !== phoneVal)) {
         state.user.phone = phoneVal;
@@ -1246,6 +1266,11 @@ async function handleCreateMeetup(e) {
         });
         const data = await res.json();
         if (data.success) {
+            if (form) form.reset();
+            const imgInput = document.getElementById('meetupImageUrl');
+            if (imgInput) imgInput.value = '';
+            const preview = document.getElementById('meetupPhotoPreview');
+            if (preview) preview.classList.add('hidden');
             closeModal('createMeetupModal');
             showToast('Playdate created successfully!');
             await loadCurrentTabData();
@@ -1254,6 +1279,11 @@ async function handleCreateMeetup(e) {
         }
     } catch (err) {
         alert('Error publishing playdate');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = submitBtn.dataset.origText || 'Publish Playdate';
+        }
     }
 }
 

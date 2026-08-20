@@ -31,14 +31,14 @@
       ]
     },
     {
-      "id": "user_1787237161143_wgd7",
-      "name": "Reboot Parent",
-      "email": "reboottest@littledistrict.ae",
+      "id": "user_1787237324923_w4h9",
+      "name": "Playdate Tester",
+      "email": "playdatetest@littledistrict.ae",
       "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "district": "Dubai Hills",
       "phone": "+971 50 123 4567",
       "contact_preference": "In-App Message",
-      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Reboot%20Parent",
+      "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
       "bio": "Active community parent",
       "is_developer": false,
       "developer_badge": "",
@@ -49,6 +49,23 @@
   ],
   "places": [],
   "meetups": [
+    {
+      "id": "meetup_1787237324929_6mkb",
+      "title": "Single Playdate Test Event",
+      "district": "Dubai Hills",
+      "public_location": "Central Park Grass Pitch",
+      "place_id": "",
+      "date_time": "2026-08-25T17:00",
+      "interest_tag": "Football",
+      "min_age": 0,
+      "max_age": 18,
+      "host_id": "user_1787237324923_w4h9",
+      "host_name": "Playdate Tester",
+      "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
+      "max_attendees": 10,
+      "image_url": "",
+      "created_at": "2026-08-20T14:48:44.929Z"
+    },
     {
       "id": "m_1",
       "title": "Dubai Hills Weekend Park Cycling",
@@ -64,7 +81,7 @@
       "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "max_attendees": 8,
       "image_url": "",
-      "created_at": "2026-08-20T14:45:59.074Z"
+      "created_at": "2026-08-20T14:48:42.701Z"
     },
     {
       "id": "m_2",
@@ -81,51 +98,11 @@
       "host_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "max_attendees": 10,
       "image_url": "",
-      "created_at": "2026-08-20T14:45:59.075Z"
+      "created_at": "2026-08-20T14:48:42.702Z"
     }
   ],
   "toys": [],
-  "lost_found": [
-    {
-      "id": "lf_1787237182464_io8i",
-      "title": "Persistent Blue Helmet",
-      "category": "Helmet",
-      "status": "Lost",
-      "district": "Dubai Hills",
-      "location_detail": "Neighborhood path",
-      "user_id": "user_1787237182461_x33m",
-      "user_email": "reboottest2@littledistrict.ae",
-      "reported_by": "Reboot Parent",
-      "user_phone": "+971 50 123 4567",
-      "image_url": "",
-      "created_at": "2026-08-20T14:46:22.464Z"
-    },
-    {
-      "id": "lf_1787237161147_pgby",
-      "title": "Persistent Blue Helmet",
-      "category": "Helmet",
-      "status": "Lost",
-      "district": "Dubai Hills",
-      "location_detail": "Neighborhood path",
-      "user_id": "user_1787237161143_wgd7",
-      "user_email": "reboottest@littledistrict.ae",
-      "reported_by": "Reboot Parent",
-      "user_phone": "+971 50 123 4567",
-      "image_url": "",
-      "created_at": "2026-08-20T14:46:01.147Z"
-    },
-    {
-      "id": "lost_1",
-      "title": "Micro Maxi Scooter (Red, named \"Leo\")",
-      "category": "Scooter / Bike",
-      "status": "Lost",
-      "district": "Dubai Hills",
-      "location_detail": "Dropped along Central Park splash area walking track",
-      "reported_by": "Sarah J. (050-XXXXXXX)",
-      "image_url": "",
-      "created_at": "2026-08-13T10:00:00.000Z"
-    }
-  ],
+  "lost_found": [],
   "rsvps": [
     {
       "id": "r_1",
@@ -142,6 +119,14 @@
       "user_name": "Sarah Jenkins",
       "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "status": "attending"
+    },
+    {
+      "id": "rsvp_1787237324929",
+      "meetup_id": "meetup_1787237324929_6mkb",
+      "user_id": "user_1787237324923_w4h9",
+      "user_name": "Playdate Tester",
+      "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Playdate%20Tester",
+      "status": "attending"
     }
   ],
   "comments": [
@@ -152,7 +137,7 @@
       "user_name": "Sarah Jenkins",
       "user_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
       "content": "Looking forward to meeting neighbor kids near the splash area!",
-      "created_at": "2026-08-20T14:45:59.075Z"
+      "created_at": "2026-08-20T14:48:42.702Z"
     }
   ],
   "direct_messages": []
